@@ -4,6 +4,19 @@ Status:
 - draft optional profile
 - not part of the stable `v0.1.9` baseline
 - intended for projects that need more than current-state memory and want a thin historical chain for why major memory-relevant changes happened
+- v0.2.1 triage status: `needs dogfood trace`
+
+## v0.2.1 Triage Note
+
+Status: `needs dogfood trace`
+
+Minimal adoption contract:
+- `why_lineage`
+- `invariant_revision_lineage`
+
+Do not use when:
+- Git history plus lessons already make conceptual ancestry easy enough to recover
+- the project has not yet produced enough meaningful phase shifts to justify a lineage layer
 
 ## Purpose
 

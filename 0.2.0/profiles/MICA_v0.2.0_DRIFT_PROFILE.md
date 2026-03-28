@@ -4,6 +4,19 @@ Status:
 - draft optional profile
 - not part of the stable `v0.1.9` baseline
 - intended for projects where divergence between code, docs, playbook, and archive creates recurring confusion
+- v0.2.1 triage status: `adopt now`
+
+## v0.2.1 Triage Note
+
+Status: `adopt now`
+
+Minimal adoption contract:
+- `drift_response_policy`
+- `source_classes`
+
+Do not use when:
+- the project is too small to have meaningful multi-surface divergence
+- there is no stable playbook, docs, or archive surface to compare against
 
 ## Purpose
 

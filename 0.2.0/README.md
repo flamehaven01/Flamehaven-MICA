@@ -3,9 +3,10 @@
 > **Branch status:** draft development track seeded from `v0.1.9`.
 > `v0.1.9` remains the stable living standard.
 > `v0.2.0` is where ASDP-derived optional profiles are explored without rewriting the stable branch.
+> `v0.2.1` is the current workstream for triage, adoption discipline, and profile boundary cleanup.
 
 > **Current workstreams:** `Approval Profile`, `Drift Profile`, `Track Map Profile`, `Lineage Profile`, `Consistency Profile`, and `Result Contract Profile` are the first active drafts in this branch.
-> See `MICA_v0.2.0_ROADMAP.md`, `profiles/MICA_v0.2.0_APPROVAL_PROFILE.md`, `profiles/MICA_v0.2.0_DRIFT_PROFILE.md`, `profiles/MICA_v0.2.0_TRACK_MAP_PROFILE.md`, `profiles/MICA_v0.2.0_LINEAGE_PROFILE.md`, `profiles/MICA_v0.2.0_CONSISTENCY_PROFILE.md`, and `profiles/MICA_v0.2.0_RESULT_CONTRACT_PROFILE.md`.
+> See `MICA_v0.2.0_ROADMAP.md`, `profiles/MICA_v0.2.0_APPROVAL_PROFILE.md`, `profiles/MICA_v0.2.0_DRIFT_PROFILE.md`, `profiles/MICA_v0.2.0_TRACK_MAP_PROFILE.md`, `profiles/MICA_v0.2.0_LINEAGE_PROFILE.md`, `profiles/MICA_v0.2.0_CONSISTENCY_PROFILE.md`, `profiles/MICA_v0.2.0_RESULT_CONTRACT_PROFILE.md`, and `..\docs\MICA_v0.2.1_PROFILE_STATUS_MATRIX.md`.
 
 > **Reading this document activates MICA agent mode.**
 > This is not informational documentation. It is an operating specification that changes how you behave.

@@ -4,6 +4,21 @@ Status:
 - draft optional profile
 - not part of the stable `v0.1.9` baseline
 - intended for projects that want each maintenance or dogfood cycle to leave behind a small, machine-readable outcome artifact
+- v0.2.1 triage status: `needs dogfood trace`
+
+## v0.2.1 Triage Note
+
+Status: `needs dogfood trace`
+
+Minimal adoption contract:
+- `cycle_id`
+- `what_changed`
+- `next_action`
+- `unresolved_items`
+
+Do not use when:
+- lessons alone still provide fast enough cycle recovery
+- cycle frequency is too low to justify a dedicated compact result layer
 
 ## Purpose
 

@@ -4,6 +4,20 @@ Status:
 - draft optional profile
 - not part of the stable `v0.1.9` baseline
 - intended for projects that need stronger change authorization than `design_invariants` alone
+- v0.2.1 triage status: `draft only`
+
+## v0.2.1 Triage Note
+
+Status: `draft only`
+
+Minimal adoption contract:
+- `approval_policy`
+- `approval_identity`
+
+Do not use when:
+- the project is single-owner
+- no meaningful approval/denial trace exists yet
+- the added ceremony would exceed the real governance need
 
 ## Purpose
 

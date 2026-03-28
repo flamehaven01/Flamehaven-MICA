@@ -1,7 +1,7 @@
 # MICA — Memory Invocation & Context Archive for AI
 
 **Current stable version**: v0.1.9 — Living Standard
-**Next development track**: v0.2.0 — Draft branch for ASDP-derived profiles
+**Current development workstream**: v0.2.1 — Triage and adoption discipline for the `v0.2.0` profile set
 **Type**: AI Memory Layer / Composition Contract Standard
 **Scope**: Not a program. A memory layer pattern — companion files inserted into AI projects.
 
@@ -107,6 +107,7 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 
 | Version | Status | Key addition |
 |---------|--------|--------------|
+| **v0.2.1** | Workstream | Triage, adoption discipline, and profile boundary cleanup on top of the `v0.2.0` candidate set |
 | **v0.2.0** | Draft | Forward development branch for optional ASDP-derived profiles |
 | **v0.1.9** | ✅ Current stable | `mica.yaml` composition contract, 3 placement contexts, PCT-* self-tests |
 | v0.1.8.1 | Preserved | Archive schema patch: self-test expressions, runtime declaration, track authority |
@@ -172,3 +173,5 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 |------|------|
 | `0.2.0` draft branch entry point | `0.2.0\README.md` |
 | ASDP-derived extension candidates | `0.2.0\MICA_v0.2.0_PROFILE_CANDIDATES.md` |
+| `0.2.1` release intent | `docs\MICA_v0.2.1_RELEASE_PLAN.md` |
+| `0.2.1` profile readiness matrix | `docs\MICA_v0.2.1_PROFILE_STATUS_MATRIX.md` |

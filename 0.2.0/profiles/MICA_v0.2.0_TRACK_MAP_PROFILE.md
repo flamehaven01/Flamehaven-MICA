@@ -4,6 +4,19 @@ Status:
 - draft optional profile
 - not part of the stable `v0.1.9` baseline
 - intended for projects whose memory should be organized by meaningful internal subdomains rather than treated as one flat whole
+- v0.2.1 triage status: `adopt now`
+
+## v0.2.1 Triage Note
+
+Status: `adopt now`
+
+Minimal adoption contract:
+- `track_map`
+- optional `track_authority_hint`
+
+Do not use when:
+- the project is genuinely single-surface
+- track labels would add classification ceremony without reducing ambiguity
 
 ## Purpose
 

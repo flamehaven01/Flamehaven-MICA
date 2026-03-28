@@ -4,6 +4,19 @@ Status:
 - draft optional profile
 - not part of the stable `v0.1.9` baseline
 - intended for projects where repeated AI sessions should converge on similar interpretations of the same memory state
+- v0.2.1 triage status: `needs dogfood trace`
+
+## v0.2.1 Triage Note
+
+Status: `needs dogfood trace`
+
+Minimal adoption contract:
+- `calibration_anchors`
+- `pre_update_validation_gate`
+
+Do not use when:
+- anchor definitions would be mostly ceremonial
+- the project does not yet show real interpretive variance across sessions
 
 ## Purpose
 
