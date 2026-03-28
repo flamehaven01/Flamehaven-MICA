@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica-v0.1.9-archive-changes.schema.json",
+  "title": "MICA Archive Schema v0.1.9 — Changes from v0.1.8.1",
+  "description": "This document is the normative v0.1.9 archive schema specification. It defines ONLY the changes from v0.1.8.1. All $defs and properties not listed here are inherited unchanged from mica-v0.1.8.1-universal.schema.json. This patch-as-spec approach ensures the diff is the contract — no silent divergence from copying.",
+
+  "patch_metadata": {
+    "base_schema": "mica-v0.1.8.1-universal.schema.json",
+    "patch_version": "0.1.9",
+    "patch_type": "additive",
+    "breaking_changes": false,
+    "description": "Additive changes: (1) mica_spec optional field added to archive root; (2) mica_schema_version const updated to '0.1.9'; (3) invocation_protocol.primary_pattern enum extended with 'agent_yaml_bootstrap' for Agent OS integration. Legacy archives missing mica_spec are valid but flagged as legacy.",
+    "changes": [
+      {
+        "field": "mica_schema_version",
+        "change_type": "const_update",
+        "v0.1.8.1": { "const": "0.1.8.1" },
+        "v0.1.9": { "enum": ["0.1.9"] },
+        "note": "New archives must use '0.1.9'. Existing archives with '0.1.8.1' or 'baseline-draft' are legacy-valid but not v0.1.9-compliant."
+      },
+      {
+        "field": "mica_spec",
+        "change_type": "field_added",
+        "required": false,
+        "v0.1.8.1": "field did not exist",
+        "v0.1.9": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Version of the mica.yaml composition contract spec that governs this archive's package. When present, must match mica.yaml mica_spec. Mismatch is a machine-detectable drift condition.",
+          "examples": ["0.1.9"]
+        },
+        "note": "Optional. Absence is legacy. When present and != mica.yaml mica_spec, this is a DRIFT condition (severity: warning)."
+      },
+      {
+        "field": "invocation_protocol.primary_pattern",
+        "change_type": "enum_extended",
+        "v0.1.8.1": { "enum": ["readme_protocol", "global_skill", "workspace_directive", "explicit"] },
+        "v0.1.9": { "enum": ["readme_protocol", "global_skill", "workspace_directive", "explicit", "agent_yaml_bootstrap"] },
+        "note": "New value 'agent_yaml_bootstrap' supports Context 2 (Agent OS) integration. When agent.yaml owns the root, agent.yaml instructions declare MICA loading, making agent.yaml the bootstrap entry point rather than README."
+      }
+    ]
+  },
+
+  "root_level_property_changes": {
+    "mica_schema_version": {
+      "description": "Schema version identifier. v0.1.9 archives must use '0.1.9'.",
+      "type": "string",
+      "enum": ["0.1.9"],
+      "migration_note": "If your archive has '0.1.8.1', update to '0.1.9' on next version bump. If 'baseline-draft', retain as-is (template marker) or update when instantiating."
+    },
+    "mica_spec": {
+      "description": "Version of the mica.yaml spec governing this archive's package. Must match mica.yaml mica_spec when both are present. Absence = legacy-valid. Mismatch = drift warning.",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    }
+  },
+
+  "compatibility_rules": {
+    "rule_1": {
+      "id": "COMPAT-001",
+      "name": "missing_mica_spec_is_legacy",
+      "condition": "archive.mica_spec is absent",
+      "verdict": "legacy-valid",
+      "action": "readable, no validation error. Flag for migration on next version bump.",
+      "severity": "info"
+    },
+    "rule_2": {
+      "id": "COMPAT-002",
+      "name": "mica_spec_version_mismatch",
+      "condition": "archive.mica_spec != mica.yaml.mica_spec",
+      "verdict": "drift-warning",
+      "action": "Both files are readable, but they are on different version axes. Update archive mica_spec on next version bump.",
+      "severity": "warning"
+    },
+    "rule_3": {
+      "id": "COMPAT-003",
+      "name": "mica_spec_aligned",
+      "condition": "archive.mica_spec == mica.yaml.mica_spec",
+      "verdict": "aligned",
+      "action": "Full machine-verifiable contract. No action needed.",
+      "severity": "pass"
+    },
+    "rule_4": {
+      "id": "COMPAT-004",
+      "name": "baseline_draft_preserved",
+      "condition": "archive.mica_schema_version == 'baseline-draft'",
+      "verdict": "template-valid",
+      "action": "This is a MICA template (not an instance). Treat as readable but not validatable against v0.1.9 instance rules.",
+      "severity": "info"
+    }
+  },
+
+  "migration_guidance": {
+    "description": "How to apply the compatibility rules to any archive encountered in the wild. The COMPAT rules above are exhaustive — every archive state maps to exactly one rule. No per-project tracking belongs in this spec. Each artifact evolves independently and lands in a COMPAT rule by its own state.",
+    "decision_procedure": "Read archive root. Does mica_spec exist? → No: COMPAT-001. Yes, and mica_schema_version == 'baseline-draft': COMPAT-004. Yes, and matches mica.yaml mica_spec: COMPAT-003. Yes, but differs from mica.yaml mica_spec: COMPAT-002.",
+    "update_procedure": "On the artifact's next version bump — not before — add mica_spec and update mica_schema_version at archive root. Never force an update on a live archive mid-cycle."
+  }
+}

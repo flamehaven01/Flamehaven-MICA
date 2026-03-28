@@ -1,0 +1,14 @@
+{
+  "schema": "mica_lab_anchor_artifact_manifest_v1",
+  "generated_at_utc": "",
+  "entries": [
+    {
+      "name": "example",
+      "path": "",
+      "exists": false,
+      "sha256": "",
+      "size_bytes": 0,
+      "generated_at_utc": ""
+    }
+  ]
+}

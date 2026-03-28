@@ -1,0 +1,17 @@
+{
+  "schema": "mica_lab_anchor_verdict_benchmark_v1",
+  "generated_at_utc": "",
+  "dataset": {
+    "n_samples": 0,
+    "n_arm_rows": 0
+  },
+  "metrics": {
+    "sample_accuracy": null,
+    "sample_balanced_accuracy": null,
+    "arm_accuracy": null,
+    "arm_balanced_accuracy": null,
+    "dangerous_pass_rate": null,
+    "false_reject_rate": null
+  },
+  "status": "pending"
+}

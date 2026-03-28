@@ -1,0 +1,15 @@
+{
+  "schema": "mica_lab_anchor_deviation_log_v1",
+  "generated_at_utc": "",
+  "entries": [
+    {
+      "id": "DEV-001",
+      "category": "config|code|data|runtime",
+      "description": "",
+      "justification": "",
+      "impact": "low|medium|high",
+      "approved_by": "",
+      "approved_at_utc": ""
+    }
+  ]
+}

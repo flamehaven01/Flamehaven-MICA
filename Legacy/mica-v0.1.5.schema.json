@@ -1,0 +1,1923 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flamehaven.ai/schemas/mica-v0.1.5.schema.json",
+  "title": "Flamehaven MICA v0.1.5",
+  "description": "Memory Invocation & Context Archive for AI -- Consolidated schema (v0.1.1 base + v0.1.2 validation tightening + v0.1.3 structural consistency + v0.1.4 semantic enforcement + v0.1.5 governance-stability hardening)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project",
+    "design_invariants",
+    "source_kinds",
+    "canonical_models",
+    "invoke_role_semantics",
+    "normalization_policy",
+    "collector_pipeline",
+    "scoring_policy",
+    "dedup_policy",
+    "budget_policy",
+    "mapping_rules",
+    "handoff_policy",
+    "artifact_handle_policy",
+    "error_policy",
+    "ledger_policy",
+    "cache_policy",
+    "schema_migration",
+    "observability",
+    "acceptance_criteria",
+    "non_goals",
+    "provenance_registry",
+    "cycle_meta",
+    "artifact_manifest",
+    "deviation_log",
+    "prompt_safety_profile",
+    "semantic_validation_policy"
+  ],
+  "properties": {
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "design_invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "source_kinds": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/sourceKind"
+      }
+    },
+    "canonical_models": {
+      "$ref": "#/$defs/canonicalModels"
+    },
+    "invoke_role_semantics": {
+      "$ref": "#/$defs/invokeRoleSemantics"
+    },
+    "normalization_policy": {
+      "$ref": "#/$defs/normalizationPolicy"
+    },
+    "collector_pipeline": {
+      "$ref": "#/$defs/collectorPipeline"
+    },
+    "scoring_policy": {
+      "$ref": "#/$defs/scoringPolicy"
+    },
+    "dedup_policy": {
+      "$ref": "#/$defs/dedupPolicy"
+    },
+    "budget_policy": {
+      "$ref": "#/$defs/budgetPolicy"
+    },
+    "mapping_rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mappingRule"
+      }
+    },
+    "handoff_policy": {
+      "$ref": "#/$defs/handoffPolicy"
+    },
+    "artifact_handle_policy": {
+      "$ref": "#/$defs/artifactHandlePolicy"
+    },
+    "error_policy": {
+      "$ref": "#/$defs/errorPolicy"
+    },
+    "ledger_policy": {
+      "$ref": "#/$defs/ledgerPolicy"
+    },
+    "cache_policy": {
+      "$ref": "#/$defs/cachePolicy"
+    },
+    "schema_migration": {
+      "$ref": "#/$defs/schemaMigration"
+    },
+    "observability": {
+      "$ref": "#/$defs/observability"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "examples": {
+      "$ref": "#/$defs/examples"
+    },
+    "provenance_registry": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/provenanceRecord"
+      }
+    },
+    "cycle_meta": {
+      "$ref": "#/$defs/cycleMeta"
+    },
+    "artifact_manifest": {
+      "$ref": "#/$defs/artifactManifest"
+    },
+    "deviation_log": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/deviationLogEntry"
+      }
+    },
+    "prompt_safety_profile": {
+      "$ref": "#/$defs/promptSafetyProfile"
+    },
+    "semantic_validation_policy": {
+      "$ref": "#/$defs/semanticValidationPolicy"
+    }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "full_name",
+        "version",
+        "status",
+        "purpose",
+        "canonical_statement"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "full_name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "status": {
+          "type": "string"
+        },
+        "lineage": {
+          "$ref": "#/$defs/stringList"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "canonical_statement": {
+          "type": "string"
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "$ref": "#/$defs/stringList"
+        },
+        "exclude": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "sourceKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "default_tier",
+        "trust_class"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "default_tier": {
+          "type": "string",
+          "enum": [
+            "session",
+            "memory",
+            "artifact_ref",
+            "working"
+          ]
+        },
+        "trust_class": {
+          "type": "string",
+          "enum": [
+            "canonical",
+            "distilled",
+            "raw",
+            "symbolic"
+          ]
+        }
+      }
+    },
+    "canonicalModels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance",
+        "context_item",
+        "context_budget",
+        "context_ledger_entry",
+        "working_context",
+        "compiled_view"
+      ],
+      "properties": {
+        "provenance": {
+          "$ref": "#/$defs/modelShapeDescriptor"
+        },
+        "context_item": {
+          "$ref": "#/$defs/modelShapeDescriptor"
+        },
+        "context_budget": {
+          "$ref": "#/$defs/modelShapeDescriptor"
+        },
+        "context_ledger_entry": {
+          "$ref": "#/$defs/modelShapeDescriptor"
+        },
+        "working_context": {
+          "$ref": "#/$defs/modelShapeDescriptor"
+        },
+        "compiled_view": {
+          "$ref": "#/$defs/modelShapeDescriptor"
+        }
+      }
+    },
+    "modelShapeDescriptor": {
+      "description": "Spec-level shape descriptor only. This defines the expected field names and their roles for documentation and spec validation. It is NOT a runtime instance validator. Runtime validation must use dedicated Pydantic/TypeScript models.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "required": {
+          "$ref": "#/$defs/stringList"
+        },
+        "optional": {
+          "$ref": "#/$defs/stringList"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "memory_exclusion_scope": {
+          "type": "string"
+        },
+        "budget_defaults": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "invokeRoleSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_type",
+        "note",
+        "roles"
+      ],
+      "properties": {
+        "rule_type": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "none",
+            "hint",
+            "bridge",
+            "anchor"
+          ],
+          "properties": {
+            "none": {
+              "$ref": "#/$defs/invokeRoleRule"
+            },
+            "hint": {
+              "$ref": "#/$defs/invokeRoleRule"
+            },
+            "bridge": {
+              "$ref": "#/$defs/invokeRoleRule"
+            },
+            "anchor": {
+              "$ref": "#/$defs/invokeRoleRule"
+            }
+          }
+        }
+      }
+    },
+    "invokeRoleRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "meaning",
+        "score_bonus",
+        "pin_behavior",
+        "compile_behavior",
+        "eviction_priority"
+      ],
+      "properties": {
+        "meaning": {
+          "type": "string"
+        },
+        "score_bonus": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "pin_behavior": {
+          "type": "string"
+        },
+        "compile_behavior": {
+          "type": "string"
+        },
+        "eviction_priority": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "normalizationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preserve_verbatim_where_possible",
+        "keep_category_order",
+        "unknown_date_token",
+        "canonical_export_dedup",
+        "whitespace_normalization",
+        "case_normalization_for_hashing",
+        "structural_projection_is_canonical"
+      ],
+      "properties": {
+        "preserve_verbatim_where_possible": {
+          "type": "boolean"
+        },
+        "keep_category_order": {
+          "$ref": "#/$defs/stringList"
+        },
+        "unknown_date_token": {
+          "type": "string"
+        },
+        "canonical_export_dedup": {
+          "type": "boolean"
+        },
+        "whitespace_normalization": {
+          "type": "string"
+        },
+        "case_normalization_for_hashing": {
+          "type": "boolean"
+        },
+        "structural_projection_is_canonical": {
+          "type": "boolean"
+        },
+        "notes": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "collectorPipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "steps": {
+          "$ref": "#/$defs/stringList"
+        },
+        "source_priority": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "scoringPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_range",
+        "one_shot_invoke_bonus",
+        "one_shot_rule_text",
+        "function",
+        "components",
+        "tie_breakers"
+      ],
+      "properties": {
+        "output_range": {
+          "type": "string"
+        },
+        "one_shot_invoke_bonus": {
+          "type": "boolean",
+          "const": true
+        },
+        "one_shot_rule_text": {
+          "type": "string"
+        },
+        "function": {
+          "type": "string"
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sim",
+            "recency",
+            "invoke",
+            "trust",
+            "continuity"
+          ],
+          "properties": {
+            "sim": {
+              "$ref": "#/$defs/simComponent"
+            },
+            "recency": {
+              "$ref": "#/$defs/recencyComponent"
+            },
+            "invoke": {
+              "$ref": "#/$defs/invokeComponent"
+            },
+            "trust": {
+              "$ref": "#/$defs/trustComponent"
+            },
+            "continuity": {
+              "$ref": "#/$defs/continuityComponent"
+            }
+          }
+        },
+        "tie_breakers": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "simComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "preferred_metric",
+        "fallback_metric",
+        "normalization"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "preferred_metric": {
+          "type": "string"
+        },
+        "fallback_metric": {
+          "type": "string"
+        },
+        "normalization": {
+          "type": "string"
+        }
+      }
+    },
+    "recencyComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "function",
+        "unknown_date_recency"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "function": {
+          "type": "string"
+        },
+        "unknown_date_recency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "value",
+            "rationale"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "fixed"
+              ]
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "rationale": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "invokeComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "mapping"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "none",
+            "hint",
+            "bridge",
+            "anchor"
+          ],
+          "properties": {
+            "none": {
+              "type": "number"
+            },
+            "hint": {
+              "type": "number"
+            },
+            "bridge": {
+              "type": "number"
+            },
+            "anchor": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "trustComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "mapping",
+        "normalization"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "canonical",
+            "distilled",
+            "raw",
+            "symbolic"
+          ],
+          "properties": {
+            "canonical": {
+              "type": "number"
+            },
+            "distilled": {
+              "type": "number"
+            },
+            "raw": {
+              "type": "number"
+            },
+            "symbolic": {
+              "type": "number"
+            }
+          }
+        },
+        "normalization": {
+          "type": "string"
+        }
+      }
+    },
+    "continuityComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "function"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "function": {
+          "type": "string"
+        }
+      }
+    },
+    "dedupPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compile_time_dedup",
+        "exact_within_tier",
+        "semantic_cross_tier",
+        "fidelity_order",
+        "preserve_rules"
+      ],
+      "properties": {
+        "compile_time_dedup": {
+          "type": "boolean"
+        },
+        "exact_within_tier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "key"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        "semantic_cross_tier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "threshold",
+            "action"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "threshold": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "action": {
+              "type": "string"
+            }
+          }
+        },
+        "fidelity_order": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "canonical"
+            },
+            {
+              "const": "distilled"
+            },
+            {
+              "const": "raw"
+            },
+            {
+              "const": "symbolic"
+            }
+          ],
+          "minItems": 4,
+          "maxItems": 4,
+          "items": false
+        },
+        "preserve_rules": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "evictionPhase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "order": {
+          "$ref": "#/$defs/stringList"
+        },
+        "action": {
+          "type": "string"
+        },
+        "guard": {
+          "type": "string"
+        }
+      }
+    },
+    "budgetPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_tokens",
+        "estimation_method",
+        "overflow_strategy",
+        "anchor_cap",
+        "tier_priority",
+        "eviction_strategy",
+        "failure_condition"
+      ],
+      "properties": {
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "estimation_method": {
+          "type": "string"
+        },
+        "overflow_strategy": {
+          "type": "string"
+        },
+        "anchor_cap": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tier_priority": {
+          "$ref": "#/$defs/stringList"
+        },
+        "eviction_strategy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase_1",
+            "phase_2",
+            "phase_3",
+            "phase_4",
+            "phase_5"
+          ],
+          "properties": {
+            "phase_1": {
+              "$ref": "#/$defs/evictionPhase"
+            },
+            "phase_2": {
+              "$ref": "#/$defs/evictionPhase"
+            },
+            "phase_3": {
+              "$ref": "#/$defs/evictionPhase"
+            },
+            "phase_4": {
+              "$ref": "#/$defs/evictionPhase"
+            },
+            "phase_5": {
+              "$ref": "#/$defs/evictionPhase"
+            }
+          }
+        },
+        "failure_condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "if_budget_still_exceeded"
+          ],
+          "properties": {
+            "if_budget_still_exceeded": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "mappingTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tier",
+        "trust_class"
+      ],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "enum": [
+            "session",
+            "memory",
+            "artifact_ref"
+          ]
+        },
+        "invoke_role": {
+          "type": "string",
+          "enum": [
+            "none",
+            "hint",
+            "bridge",
+            "anchor"
+          ]
+        },
+        "trust_class": {
+          "type": "string",
+          "enum": [
+            "canonical",
+            "distilled",
+            "raw",
+            "symbolic"
+          ]
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "mappingRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "match",
+        "to_context_item"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "match": {
+          "type": "string"
+        },
+        "to_context_item": {
+          "$ref": "#/$defs/mappingTarget"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "memory_export"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "to_context_item": {
+                "properties": {
+                  "tier": {
+                    "const": "memory"
+                  },
+                  "trust_class": {
+                    "const": "canonical"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "ccq_capsule"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "to_context_item": {
+                "properties": {
+                  "tier": {
+                    "const": "artifact_ref"
+                  },
+                  "trust_class": {
+                    "const": "distilled"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "cxc_export"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "to_context_item": {
+                "properties": {
+                  "tier": {
+                    "const": "artifact_ref"
+                  },
+                  "trust_class": {
+                    "const": "raw"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "flamecache_scroll"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "to_context_item": {
+                "properties": {
+                  "tier": {
+                    "const": "artifact_ref"
+                  },
+                  "trust_class": {
+                    "const": "symbolic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "handoffPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_targets",
+        "max_context_depth",
+        "allow_memory",
+        "allow_artifact_refs",
+        "require_provenance",
+        "redact",
+        "deny_patterns",
+        "memory_scope_rule",
+        "enforcement"
+      ],
+      "properties": {
+        "allowed_targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "modal_router",
+              "fusion_oracle"
+            ]
+          }
+        },
+        "max_context_depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "allow_memory": {
+          "type": "boolean"
+        },
+        "allow_artifact_refs": {
+          "type": "boolean"
+        },
+        "require_provenance": {
+          "type": "boolean"
+        },
+        "redact": {
+          "$ref": "#/$defs/stringList"
+        },
+        "deny_patterns": {
+          "$ref": "#/$defs/stringList"
+        },
+        "memory_scope_rule": {
+          "type": "string"
+        },
+        "enforcement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "prefilter",
+            "target_compile",
+            "output"
+          ],
+          "properties": {
+            "prefilter": {
+              "$ref": "#/$defs/stringList"
+            },
+            "target_compile": {
+              "$ref": "#/$defs/stringList"
+            },
+            "output": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "view_hash",
+                "degraded_flag"
+              ],
+              "properties": {
+                "view_hash": {
+                  "type": "string"
+                },
+                "degraded_flag": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "artifactHandlePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signed_handles",
+        "signing_algorithm",
+        "expiry_required",
+        "default_ttl_seconds",
+        "inline_small_artifacts",
+        "signing_triggers",
+        "handle_gap_policy",
+        "access_audit_required"
+      ],
+      "properties": {
+        "signed_handles": {
+          "type": "boolean",
+          "const": true
+        },
+        "signing_algorithm": {
+          "type": "string",
+          "enum": [
+            "ed25519"
+          ]
+        },
+        "expiry_required": {
+          "type": "boolean",
+          "const": true
+        },
+        "default_ttl_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "inline_small_artifacts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "max_bytes"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "max_bytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "signing_triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "handle_gap_policy": {
+          "type": "string"
+        },
+        "access_audit_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "errorRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "severity"
+      ],
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "warning",
+            "error",
+            "critical"
+          ]
+        }
+      }
+    },
+    "errorPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parse_failure",
+        "provenance_resolution_failure",
+        "source_hash_mismatch",
+        "dedup_failure",
+        "scoring_failure",
+        "budget_compile_failure",
+        "ledger_commit_failure",
+        "target_policy_violation"
+      ],
+      "properties": {
+        "parse_failure": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "provenance_resolution_failure": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "source_hash_mismatch": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "dedup_failure": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "scoring_failure": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "budget_compile_failure": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "ledger_commit_failure": {
+          "$ref": "#/$defs/errorRule"
+        },
+        "target_policy_violation": {
+          "$ref": "#/$defs/errorRule"
+        }
+      }
+    },
+    "ledgerPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_digest_only",
+        "hash_chain",
+        "payload_fields",
+        "context_hash_formula",
+        "audit_chain"
+      ],
+      "properties": {
+        "content_digest_only": {
+          "type": "boolean",
+          "const": true
+        },
+        "hash_chain": {
+          "type": "boolean",
+          "const": true
+        },
+        "payload_fields": {
+          "$ref": "#/$defs/stringList"
+        },
+        "context_hash_formula": {
+          "type": "string"
+        },
+        "audit_chain": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "cachePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key_formula",
+        "fail_safe",
+        "note"
+      ],
+      "properties": {
+        "key_formula": {
+          "type": "string"
+        },
+        "fail_safe": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "schemaMigration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "versioning",
+        "compatibility_rules",
+        "migration_strategy",
+        "reproducibility_gate"
+      ],
+      "properties": {
+        "versioning": {
+          "type": "string",
+          "enum": [
+            "semver"
+          ]
+        },
+        "compatibility_rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "patch",
+            "minor",
+            "major"
+          ],
+          "properties": {
+            "patch": {
+              "type": "string"
+            },
+            "minor": {
+              "type": "string"
+            },
+            "major": {
+              "type": "string"
+            }
+          }
+        },
+        "migration_strategy": {
+          "$ref": "#/$defs/stringList"
+        },
+        "reproducibility_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required_match_rate",
+            "sample_scope"
+          ],
+          "properties": {
+            "required_match_rate": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "sample_scope": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metrics",
+        "slo_hints"
+      ],
+      "properties": {
+        "metrics": {
+          "$ref": "#/$defs/stringList"
+        },
+        "slo_hints": {
+          "type": "object",
+          "description": "Recommended SLO guardrails. Cross-field ordering constraints (p95 <= p99, degraded_rate_warn < degraded_rate_critical) cannot be enforced by JSON Schema alone. These MUST be validated by application-level validators (e.g. Pydantic model_validator) or CI semantic checks.",
+          "additionalProperties": false,
+          "required": [
+            "p95_context_compile_ms",
+            "p99_context_compile_ms",
+            "budget_failure_rate_max",
+            "degraded_rate_warn",
+            "degraded_rate_critical",
+            "handoff_leak_target",
+            "audit_link_integrity_target"
+          ],
+          "properties": {
+            "p95_context_compile_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Must be <= p99_context_compile_ms. Enforced by application validator."
+            },
+            "p99_context_compile_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Must be >= p95_context_compile_ms. Enforced by application validator."
+            },
+            "budget_failure_rate_max": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "degraded_rate_warn": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Must be < degraded_rate_critical. Enforced by application validator."
+            },
+            "degraded_rate_critical": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Must be > degraded_rate_warn. Enforced by application validator."
+            },
+            "handoff_leak_target": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "audit_link_integrity_target": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            }
+          }
+        }
+      }
+    },
+    "compiledViewExample": {
+      "type": "object",
+      "required": [
+        "target",
+        "view_hash",
+        "working_context"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "view_hash": {
+          "type": "string"
+        },
+        "degraded": {
+          "type": "boolean"
+        },
+        "memory_exclusion_scope": {
+          "type": "string"
+        },
+        "working_context": {
+          "type": "object",
+          "required": [
+            "items",
+            "budget"
+          ],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "budget": {
+              "type": "object",
+              "required": [
+                "max_tokens",
+                "used_tokens"
+              ],
+              "properties": {
+                "max_tokens": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "used_tokens": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "dedupExample": {
+      "type": "object",
+      "required": [
+        "scenario",
+        "result"
+      ],
+      "properties": {
+        "scenario": {
+          "type": "string"
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "kept_primary",
+            "canonical_source_row_deleted"
+          ],
+          "properties": {
+            "kept_primary": {
+              "type": "string"
+            },
+            "attached_supporting_ref": {
+              "type": "string"
+            },
+            "canonical_source_row_deleted": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "examples": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance_records",
+        "compiled_view_example",
+        "dedup_example",
+        "unknown_date_recency_example"
+      ],
+      "properties": {
+        "provenance_uris": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "compiled_view_example": {
+          "$ref": "#/$defs/compiledViewExample"
+        },
+        "dedup_example": {
+          "$ref": "#/$defs/dedupExample"
+        },
+        "unknown_date_recency_example": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "input_date",
+            "applied_recency",
+            "reason"
+          ],
+          "properties": {
+            "input_date": {
+              "type": "string"
+            },
+            "applied_recency": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        "provenance_records": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/provenanceRecord"
+          }
+        }
+      }
+    },
+    "sha256Hex": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
+    "provenanceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uri",
+        "sha256",
+        "kind",
+        "created_at",
+        "trust_class"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256Hex"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "file",
+            "url",
+            "memory_export",
+            "artifact_ref",
+            "session_note"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "trust_class": {
+          "type": "string",
+          "enum": [
+            "canonical",
+            "distilled",
+            "raw",
+            "symbolic"
+          ]
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "parityContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "target_value",
+        "must_pass_before_extension"
+      ],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "enum": [
+            "sample_arm_balanced_accuracy"
+          ]
+        },
+        "target_value": {
+          "type": "number",
+          "const": 1.0
+        },
+        "must_pass_before_extension": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    },
+    "extensionContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_after_parity_pass",
+        "track_order",
+        "hold_behavior"
+      ],
+      "properties": {
+        "allowed_after_parity_pass": {
+          "type": "boolean",
+          "const": true
+        },
+        "track_order": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "Track-A"
+            },
+            {
+              "const": "Track-B"
+            },
+            {
+              "const": "Track-C"
+            },
+            {
+              "const": "Track-D"
+            }
+          ],
+          "minItems": 4,
+          "maxItems": 4,
+          "items": false
+        },
+        "hold_behavior": {
+          "type": "string",
+          "enum": [
+            "rerun_from_first_failed_gate"
+          ]
+        }
+      }
+    },
+    "cycleMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exp_id",
+        "baseline_ref",
+        "objective",
+        "parity_contract",
+        "extension_contract",
+        "governance_decision_mode",
+        "stage_gate_final",
+        "first_failed_gate",
+        "rerun_count",
+        "track_status"
+      ],
+      "properties": {
+        "exp_id": {
+          "type": "string",
+          "pattern": "^EXP-\\d{3}[A-Za-z0-9\\-]*$"
+        },
+        "baseline_ref": {
+          "type": "string"
+        },
+        "objective": {
+          "type": "string"
+        },
+        "parity_contract": {
+          "$ref": "#/$defs/parityContract"
+        },
+        "extension_contract": {
+          "$ref": "#/$defs/extensionContract"
+        },
+        "governance_decision_mode": {
+          "type": "string",
+          "enum": [
+            "observer",
+            "audit",
+            "enforce"
+          ]
+        },
+        "stage_gate_final": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "PASS_CORE",
+            "HOLD",
+            "FAIL"
+          ]
+        },
+        "first_failed_gate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rerun_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "track_status": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "track_a",
+            "track_b",
+            "track_c",
+            "track_d"
+          ],
+          "properties": {
+            "track_a": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "pass",
+                "hold",
+                "fail",
+                "blocked"
+              ]
+            },
+            "track_b": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "pass",
+                "hold",
+                "fail",
+                "blocked"
+              ]
+            },
+            "track_c": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "pass",
+                "hold",
+                "fail",
+                "blocked"
+              ]
+            },
+            "track_d": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "pass",
+                "hold",
+                "fail",
+                "blocked"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "artifactManifestEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "path",
+        "sha256",
+        "required",
+        "produced_by_track"
+      ],
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256Hex"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "produced_by_track": {
+          "type": "string",
+          "enum": [
+            "Track-A",
+            "Track-B",
+            "Track-C",
+            "Track-D"
+          ]
+        },
+        "exists": {
+          "type": "boolean"
+        }
+      }
+    },
+    "artifactManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_at_utc",
+        "root",
+        "entries"
+      ],
+      "properties": {
+        "generated_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "root": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/artifactManifestEntry"
+          }
+        }
+      }
+    },
+    "deviationLogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change_id",
+        "timestamp_utc",
+        "gate",
+        "reason",
+        "before_hash",
+        "after_hash",
+        "approved_by",
+        "rollback_ready"
+      ],
+      "properties": {
+        "change_id": {
+          "type": "string"
+        },
+        "timestamp_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "gate": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "before_hash": {
+          "$ref": "#/$defs/sha256Hex"
+        },
+        "after_hash": {
+          "$ref": "#/$defs/sha256Hex"
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "rollback_ready": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "promptSafetyProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_name",
+        "allowed_scope",
+        "blocked_claim_types",
+        "enforcement_mode",
+        "redact_patterns"
+      ],
+      "properties": {
+        "profile_name": {
+          "type": "string",
+          "enum": [
+            "methodology_governance_repro_only"
+          ]
+        },
+        "allowed_scope": {
+          "$ref": "#/$defs/stringList"
+        },
+        "blocked_claim_types": {
+          "$ref": "#/$defs/stringList"
+        },
+        "enforcement_mode": {
+          "type": "string",
+          "enum": [
+            "hard_block"
+          ]
+        },
+        "redact_patterns": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "semanticRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "expression",
+        "severity",
+        "on_fail"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "warning",
+            "error",
+            "critical"
+          ]
+        },
+        "on_fail": {
+          "type": "string"
+        }
+      }
+    },
+    "semanticValidationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine",
+        "json_schema_limits_note",
+        "rules"
+      ],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "application_validator"
+          ]
+        },
+        "json_schema_limits_note": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/semanticRule"
+          }
+        }
+      }
+    }
+  }
+}

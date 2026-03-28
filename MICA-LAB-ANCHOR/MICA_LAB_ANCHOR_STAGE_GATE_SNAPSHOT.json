@@ -1,0 +1,38 @@
+{
+  "schema": "mica_lab_anchor_stage_gate_snapshot_v1",
+  "generated_at_utc": "",
+  "overall_status": "HOLD",
+  "first_failed_gate": "",
+  "gates": [
+    {
+      "gate_id": "Gate-1",
+      "name": "parity_verdict",
+      "status": "PENDING",
+      "reason": ""
+    },
+    {
+      "gate_id": "Gate-2",
+      "name": "artifact_hash_integrity",
+      "status": "PENDING",
+      "reason": ""
+    },
+    {
+      "gate_id": "Gate-3",
+      "name": "multiaxis_compare",
+      "status": "PENDING",
+      "reason": ""
+    },
+    {
+      "gate_id": "Gate-4",
+      "name": "scope_guard",
+      "status": "PENDING",
+      "reason": ""
+    },
+    {
+      "gate_id": "Gate-5",
+      "name": "go_no_go",
+      "status": "PENDING",
+      "reason": ""
+    }
+  ]
+}
