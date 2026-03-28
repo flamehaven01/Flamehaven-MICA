@@ -1,6 +1,7 @@
 # MICA — Memory Invocation & Context Archive for AI
 
 **Current stable version**: v0.1.9 — Living Standard
+**Next development track**: v0.2.0 — Draft branch for ASDP-derived profiles
 **Type**: AI Memory Layer / Composition Contract Standard
 **Scope**: Not a program. A memory layer pattern — companion files inserted into AI projects.
 
@@ -65,6 +66,17 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 ├── README.md                         <- you are here (AI + human entry point)
 ├── MICA_Week1_Technical_Rationale.md <- cross-version design rationale doc
 │
+├── 0.2.0/                            <- NEXT DEVELOPMENT TRACK (draft, not yet normative)
+│   ├── README.md                                   (agentic modal draft branch)
+│   ├── mica.yaml.schema.json                       (copied baseline for forward edits)
+│   ├── MICA_v0.2.0_COMPOSITION_CONTRACT.md         (next composition contract draft)
+│   ├── MICA_v0.2.0_EXAMPLES.md                     (next examples draft)
+│   ├── MICA_v0.2.0_MIGRATION_GUIDE.md              (forward migration draft)
+│   ├── mica-v0.2.0-archive-changes.schema.json     (next archive patch draft)
+│   ├── mica-v0.2.0-self-test-expansion.schema.json (next PCT patch draft)
+│   ├── MICA_v0.2.0_SELF_TEST_EXAMPLES.md           (next PCT examples draft)
+│   └── MICA_v0.2.0_PROFILE_CANDIDATES.md           (ASDP-derived extension candidates)
+│
 ├── 0.1.9/                            <- CURRENT STABLE VERSION (living standard)
 │   ├── mica.yaml.schema.json                       (mica.yaml JSON Schema, normative)
 │   ├── MICA_v0.1.9_COMPOSITION_CONTRACT.md         (placement rules + field reference)
@@ -95,6 +107,7 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 
 | Version | Status | Key addition |
 |---------|--------|--------------|
+| **v0.2.0** | Draft | Forward development branch for optional ASDP-derived profiles |
 | **v0.1.9** | ✅ Current stable | `mica.yaml` composition contract, 3 placement contexts, PCT-* self-tests |
 | v0.1.8.1 | Preserved | Archive schema patch: self-test expressions, runtime declaration, track authority |
 | v0.1.8 | Preserved | Universal model with self-test architecture |
@@ -102,6 +115,13 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 | v0.1.3–v0.1.6 | Legacy | Schema evolution history |
 
 ---
+
+## Branching Rule
+
+- `0.1.9/` is frozen as the current stable living standard.
+- `0.2.0/` is the forward development branch.
+- New version work happens in a new folder, never by overwriting the stable branch.
+- Root `README.md` is the only moving pointer between stable and draft tracks.
 
 ---
 
@@ -145,3 +165,10 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 | PCT-* 체크 정의 | `0.1.9\mica-v0.1.9-self-test-expansion.schema.json` |
 | mica.yaml JSON Schema | `0.1.9\mica.yaml.schema.json` |
 | archive JSON 기반 스키마 | `0.1.8.1\mica-v0.1.8.1-universal.schema.json` |
+
+### 다음 버전 설계 작업
+
+| 목적 | 파일 |
+|------|------|
+| `0.2.0` draft branch entry point | `0.2.0\README.md` |
+| ASDP-derived extension candidates | `0.2.0\MICA_v0.2.0_PROFILE_CANDIDATES.md` |

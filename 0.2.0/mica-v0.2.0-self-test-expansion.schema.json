@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica-v0.2.0-self-test-expansion.schema.json",
+  "title": "MICA self_test_policy Expansion v0.2.0 — Package Completeness Checks",
+  "description": "Additive patch to v0.1.8.1 selfTestCheck.$defs. Adds 7 new check_type values and 1 new severity value (info). All existing check_types and severities are unchanged. This document is the normative spec for the package-completeness check axis.",
+
+  "patch_metadata": {
+    "base_schema": "mica-v0.1.8.1-universal.schema.json",
+    "patch_version": "0.2.0",
+    "patch_type": "additive",
+    "breaking_changes": false,
+    "changes": [
+      {
+        "target": "$defs.selfTestCheck.properties.severity.enum",
+        "change_type": "enum_value_added",
+        "added": "info",
+        "note": "info = legacy detection / alignment status. No action required. Existing values (warning, error, critical) unchanged."
+      },
+      {
+        "target": "$defs.selfTestCheck.properties.check_type.enum",
+        "change_type": "enum_values_added",
+        "added": [
+          "mica_yaml_present",
+          "mica_yaml_fields_valid",
+          "mica_yaml_paths_exist",
+          "mica_yaml_mode_coherent",
+          "mica_spec_present",
+          "mica_spec_aligned",
+          "mica_package_complete"
+        ]
+      }
+    ]
+  },
+
+  "severity_tier_mapping": {
+    "description": "3-tier severity model for package completeness checks. Clarifies when to fail hard vs warn vs log.",
+    "tiers": {
+      "critical": {
+        "label": "hard-fail",
+        "meaning": "Contract is broken. Session cannot proceed in a trustworthy state.",
+        "on_failure_default": "block_session",
+        "examples": ["mica.yaml missing", "declared archive path does not exist"]
+      },
+      "error": {
+        "label": "warning-block",
+        "meaning": "Contract is incomplete. Session can proceed but operator must acknowledge.",
+        "on_failure_default": "require_acknowledgment",
+        "examples": ["mode-required layer missing", "mode mismatch between mica.yaml and archive"]
+      },
+      "warning": {
+        "label": "drift-signal",
+        "meaning": "Contract exists but version axes are misaligned. Readable but not machine-verified.",
+        "on_failure_default": "warn_continue",
+        "examples": ["mica_spec mismatch between mica.yaml and archive"]
+      },
+      "info": {
+        "label": "legacy-status",
+        "meaning": "Legacy state. Fully readable. No action required now; note for next version bump.",
+        "on_failure_default": "warn_continue",
+        "examples": ["archive missing mica_spec (COMPAT-001)", "mica_schema_version is baseline-draft (COMPAT-004)"]
+      }
+    }
+  },
+
+  "new_check_types": {
+
+    "mica_yaml_present": {
+      "axis": "composition_completeness",
+      "description": "Verifies that mica.yaml (composition contract) exists at the expected location in this project. Absence means the MICA package has no composition declaration — the fundamental contract is missing.",
+      "recommended_severity": "critical",
+      "recommended_on_fail": "block_session",
+      "expression_pattern": "file_exists('mica.yaml') or file_exists('memory/mica.yaml')",
+      "target_convention": "project root or memory/ directory",
+      "compat_rule": null
+    },
+
+    "mica_yaml_fields_valid": {
+      "axis": "composition_completeness",
+      "description": "Verifies that mica.yaml contains required fields: mica_spec, mode, and at least 2 layers (archive + playbook). Catches partially-written mica.yaml that exists but is incomplete.",
+      "recommended_severity": "critical",
+      "recommended_on_fail": "block_session",
+      "expression_pattern": "exists($.mica_spec) and exists($.mode) and len($.layers) >= 2",
+      "target_convention": "mica.yaml root fields",
+      "compat_rule": null
+    },
+
+    "mica_yaml_paths_exist": {
+      "axis": "path_coherence",
+      "description": "Verifies that every path declared in mica.yaml layers (where required != false) corresponds to an actual file or directory. A declared path that doesn't exist means the composition contract references a ghost file.",
+      "recommended_severity": "critical",
+      "recommended_on_fail": "block_session",
+      "expression_pattern": "all($.layers[?(@.required != false)], file_exists($.path))",
+      "target_convention": "mica.yaml layers[].path",
+      "compat_rule": null
+    },
+
+    "mica_yaml_mode_coherent": {
+      "axis": "mode_coherence",
+      "description": "Verifies that mode-specific required layers are present. memory_injection requires archive + playbook layers. protocol_evolution additionally requires a lessons layer. Mismatch means the declared mode does not match the actual package composition.",
+      "recommended_severity": "error",
+      "recommended_on_fail": "require_acknowledgment",
+      "expression_pattern": {
+        "memory_injection": "any($.layers, $.name == 'archive') and any($.layers, $.name == 'playbook')",
+        "protocol_evolution": "any($.layers, $.name == 'archive') and any($.layers, $.name == 'playbook') and any($.layers, $.name == 'lessons')"
+      },
+      "target_convention": "mica.yaml mode + layers[].name",
+      "compat_rule": null
+    },
+
+    "mica_spec_present": {
+      "axis": "archive_compatibility",
+      "description": "Checks whether the archive JSON contains a mica_spec field. Absence is legacy-valid (COMPAT-001) but signals that the archive is not yet on the v0.2.0 version axis. Not a failure — an alignment status signal.",
+      "recommended_severity": "info",
+      "recommended_on_fail": "warn_continue",
+      "expression_pattern": "exists($.mica_spec)",
+      "target_convention": "archive JSON root",
+      "compat_rule": "COMPAT-001"
+    },
+
+    "mica_spec_aligned": {
+      "axis": "drift_signals",
+      "description": "Verifies that mica.yaml.mica_spec and archive.mica_spec are equal when both are present. When both exist and differ, the package composition contract and the archive body are on different version axes — a machine-detectable drift condition. When archive.mica_spec is absent, this check should not fire (use mica_spec_present instead).",
+      "recommended_severity": "warning",
+      "recommended_on_fail": "warn_continue",
+      "expression_pattern": "not exists($.mica_spec) or ($.mica_spec == mica_yaml.mica_spec)",
+      "target_convention": "archive JSON mica_spec vs mica.yaml mica_spec",
+      "compat_rule": "COMPAT-002 / COMPAT-003"
+    },
+
+    "mica_package_complete": {
+      "axis": "composition_completeness",
+      "description": "Umbrella check. Passes only when all of the following are true: mica.yaml exists, required fields are valid, all required layer paths exist, mode coherence is satisfied, and no critical drift signals are present. This is the single check that answers: 'Is this MICA package in a closed, trustworthy contract state?' Recommended as the final check in any self_test_policy block.",
+      "recommended_severity": "error",
+      "recommended_on_fail": "require_acknowledgment",
+      "expression_pattern": "mica_yaml_present.pass and mica_yaml_fields_valid.pass and mica_yaml_paths_exist.pass and mica_yaml_mode_coherent.pass",
+      "target_convention": "synthesizes results of all package-completeness checks",
+      "compat_rule": null
+    }
+  },
+
+  "check_axis_summary": {
+    "composition_completeness": {
+      "checks": ["mica_yaml_present", "mica_yaml_fields_valid", "mica_package_complete"],
+      "question": "Does the mica.yaml composition contract exist and is it well-formed?"
+    },
+    "path_coherence": {
+      "checks": ["mica_yaml_paths_exist"],
+      "question": "Do all declared layer paths actually exist on disk?"
+    },
+    "mode_coherence": {
+      "checks": ["mica_yaml_mode_coherent"],
+      "question": "Does the declared mode have the required layers?"
+    },
+    "archive_compatibility": {
+      "checks": ["mica_spec_present"],
+      "question": "Is the archive on the v0.2.0 version axis?"
+    },
+    "drift_signals": {
+      "checks": ["mica_spec_aligned"],
+      "question": "Are mica.yaml and archive JSON on the same version axis?"
+    }
+  },
+
+  "recommended_check_ordering": {
+    "description": "Run checks in this order. Hard-fail checks first so the session stops before executing softer checks on a broken base.",
+    "order": [
+      "1. mica_yaml_present        (critical  → stop immediately if missing)",
+      "2. mica_yaml_fields_valid   (critical  → stop if contract malformed)",
+      "3. mica_yaml_paths_exist    (critical  → stop if ghost paths detected)",
+      "4. mica_yaml_mode_coherent  (error     → acknowledge if mode gap)",
+      "5. mica_spec_present        (info      → log legacy status)",
+      "6. mica_spec_aligned        (warning   → flag drift)",
+      "7. mica_package_complete    (error     → umbrella verdict)",
+      "8+ existing v0.1.8.1 checks (unchanged order)"
+    ]
+  }
+}
+
