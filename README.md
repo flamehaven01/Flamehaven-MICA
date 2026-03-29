@@ -58,6 +58,39 @@ D:\Sanctum\Claude-Skills\mica-context-loader\SKILL.md
 
 ---
 
+## Start Here By Goal
+
+### I want the stable standard
+
+Read:
+
+1. `0.1.9\README.md`
+2. `0.1.9\MICA_v0.1.9_COMPOSITION_CONTRACT.md`
+3. `0.1.9\MICA_v0.1.9_EXAMPLES.md`
+
+### I want to insert MICA into a project
+
+Read:
+
+1. `installer\README.md`
+2. `installer\install-mica.ps1`
+
+### I want the draft next-generation work
+
+Read:
+
+1. `0.2.0\README.md`
+2. `0.2.0\profiles\README.md`
+3. `docs\MICA_v0.2.1_PROFILE_STATUS_MATRIX.md`
+
+### I want comparison / evaluation material
+
+Read:
+
+1. `docs\README.md`
+
+---
+
 ## Folder Structure
 
 ```
@@ -75,7 +108,8 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 │   ├── mica-v0.2.0-archive-changes.schema.json     (next archive patch draft)
 │   ├── mica-v0.2.0-self-test-expansion.schema.json (next PCT patch draft)
 │   ├── MICA_v0.2.0_SELF_TEST_EXAMPLES.md           (next PCT examples draft)
-│   └── MICA_v0.2.0_PROFILE_CANDIDATES.md           (ASDP-derived extension candidates)
+│   ├── MICA_v0.2.0_PROFILE_CANDIDATES.md           (ASDP-derived extension candidates)
+│   └── profiles\README.md                          (profile index + adoption status)
 │
 ├── 0.1.9/                            <- CURRENT STABLE VERSION (living standard)
 │   ├── mica.yaml.schema.json                       (mica.yaml JSON Schema, normative)
@@ -91,6 +125,9 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 │   ├── MICA_v0.1.8.1_UNIVERSAL_USAGE.md
 │   ├── PLAYBOOK.md
 │   └── README.md
+│
+├── docs/                             <- ANALYSIS + COMPARISON + RELEASE PLANNING
+│   └── README.md                                   (docs index)
 │
 ├── Legacy/                           <- PRESERVED (v0.1.3 through v0.1.8 history)
 │   ├── mica-v0.1.8-minimal-instance.json  (archive bootstrap reference structure)
@@ -175,3 +212,4 @@ Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
 | ASDP-derived extension candidates | `0.2.0\MICA_v0.2.0_PROFILE_CANDIDATES.md` |
 | `0.2.1` release intent | `docs\MICA_v0.2.1_RELEASE_PLAN.md` |
 | `0.2.1` profile readiness matrix | `docs\MICA_v0.2.1_PROFILE_STATUS_MATRIX.md` |
+| `vNext` Ghost-derived primitive candidates | `docs\MICA_vNEXT_GHOST_DERIVED_PRIMITIVES.md` |
