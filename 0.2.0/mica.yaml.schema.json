@@ -84,6 +84,11 @@
       "type": "string",
       "description": "Optional human-readable note about this MICA package's purpose.",
       "maxLength": 300
+    },
+
+    "drift_profile": {
+      "$ref": "#/$defs/driftProfile",
+      "description": "Optional v0.2.0 Drift Profile activation. Classifies and responds to surface divergence inside the MICA-managed project."
     }
   },
 
@@ -152,6 +157,68 @@
           "description": "How long to keep archived versions. 'indefinite' recommended for MICA (institutional memory).",
           "pattern": "^(indefinite|\\d+[dmy])$",
           "examples": ["indefinite", "7y", "90d"]
+        }
+      }
+    },
+
+    "driftClass": {
+      "type": "object",
+      "description": "A single named drift class with severity and response action.",
+      "required": ["id", "label", "severity", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable identifier for this drift class. Recommended format: DRF-NNN.",
+          "pattern": "^[A-Z][A-Z0-9]*-[0-9]{3}$",
+          "examples": ["DRF-001", "DRF-002"]
+        },
+        "label": {
+          "type": "string",
+          "description": "Snake-case label for this drift class.",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "examples": ["code_playbook_divergence", "version_reference_staleness"]
+        },
+        "severity": {
+          "type": "string",
+          "description": "How serious this drift class is when detected.",
+          "enum": ["warning", "error", "critical"]
+        },
+        "action": {
+          "type": "string",
+          "description": "Session-level behavior when this drift class is detected.",
+          "enum": ["block_session", "require_acknowledgment", "warn_continue", "log_only"]
+        }
+      }
+    },
+
+    "driftProfile": {
+      "type": "object",
+      "description": "Drift Profile: defines source surfaces and response classes for surface divergence detection.",
+      "required": ["enabled", "source_classes", "classes"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the Drift Profile is active for this package."
+        },
+        "default_action": {
+          "type": "string",
+          "description": "Fallback action when drift is detected but no specific class matches.",
+          "enum": ["block_session", "require_acknowledgment", "warn_continue", "log_only"]
+        },
+        "source_classes": {
+          "type": "array",
+          "description": "Which project surfaces are compared for drift. Choose only those that actually matter.",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "examples": [["code", "playbook", "archive", "readme", "changelog"]]
+        },
+        "classes": {
+          "type": "array",
+          "description": "Named drift classes with severity and response actions.",
+          "items": { "$ref": "#/$defs/driftClass" },
+          "minItems": 1
         }
       }
     }
