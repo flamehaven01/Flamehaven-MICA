@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica-v0.2.4-archive-di-binding.schema.json",
+  "title": "MICA v0.2.4 Archive DI Binding Extension",
+  "description": "Patch schema governing the binding property on design_invariants entries in MICA archive JSON. Supplements mica-v0.1.8.1-universal.schema.json (designInvariantEntry) by adding the optional binding block. Uses allOf composition to extend the base entry rather than redefining it, preserving backward compatibility with legacy fields (e.g. rationale) present in pre-v0.2.3 archives.",
+  "type": "object",
+  "$defs": {
+    "diBinding": {
+      "type": "object",
+      "description": "Evidence block linking a design invariant to the episode that created it.",
+      "required": ["origin_episode"],
+      "additionalProperties": false,
+      "properties": {
+        "origin_episode": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Human-readable description of the event that motivated this invariant. Must name the specific incident, not just describe the rule."
+        },
+        "violation_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of recorded violations. Updated manually when a new violation is logged."
+        },
+        "lesson_ref": {
+          "type": "string",
+          "description": "Relative path from project root to a lesson file. Validated by PCT-011 for file existence. A dead link is a binding integrity failure."
+        },
+        "last_triggered": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "ISO date (YYYY-MM-DD) of the most recent known violation."
+        }
+      }
+    },
+    "designInvariantEntryV024": {
+      "description": "Extends designInvariantEntry (mica-v0.1.8.1-universal.schema.json/$defs/designInvariantEntry) with the optional binding property via allOf composition. additionalProperties is intentionally NOT applied at the combined level so that legacy fields (e.g. rationale, track, note) in pre-v0.2.3 archives pass validation without modification.",
+      "allOf": [
+        {
+          "type": "object",
+          "required": ["id", "label", "statement", "severity"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^DI-\\d+$",
+              "description": "Design invariant identifier. Must be unique within the archive."
+            },
+            "label": {
+              "type": "string",
+              "description": "Short kebab/snake-case slug."
+            },
+            "statement": {
+              "type": "string",
+              "description": "Full rule text. Describe what must not happen, precisely."
+            },
+            "severity": {
+              "type": "string",
+              "enum": ["critical", "high", "medium", "low"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "$ref": "#/$defs/diBinding"
+            },
+            "rationale": {
+              "type": "string",
+              "description": "Legacy prose field from pre-binding archives. Superseded by binding.origin_episode for new entries. Retained for backward compatibility."
+            },
+            "track": {
+              "type": "string",
+              "description": "Track ID this DI applies to. Absent means all tracks."
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "design_invariants": {
+      "type": "array",
+      "description": "Array of design invariant entries. Each entry must satisfy designInvariantEntryV024.",
+      "items": {
+        "$ref": "#/$defs/designInvariantEntryV024"
+      }
+    }
+  },
+  "$comment": "PCT-010 checks binding.origin_episode on archive design_invariants[severity==critical]. PCT-011 checks binding.lesson_ref path existence. This schema formally governs the archive domain. The mica.yaml domain (drift_profile.classes[].binding) is governed by mica.yaml.schema.json/$defs/driftClass."
+}

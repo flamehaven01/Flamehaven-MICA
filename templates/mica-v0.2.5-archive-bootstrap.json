@@ -1,0 +1,100 @@
+{
+  "_comment": "MICA v0.2.5 archive bootstrap template. Keep package memory narrow. Populate invariants from real maintenance work, not speculation. Add binding blocks to critical DIs as violations are observed -- not speculatively.",
+  "mica_spec": "0.2.5",
+  "mica_schema_version": "0.2.5",
+  "project": {
+    "name": "[project-name-kebab-case]",
+    "full_name": "[Project Display Name]",
+    "version": "1.0.0",
+    "status": "active",
+    "primary_language": "[Python | TypeScript | JavaScript | etc.]",
+    "repo_path": "[path relative to workspace root]",
+    "canonical_statement": "[What the project does and what role the AI maintainer plays. Derive from real code and README.]"
+  },
+  "scope": {
+    "include": ["[main source dir]/", "README.md"],
+    "exclude": ["__pycache__/", "*.pyc", "node_modules/", ".git/"]
+  },
+  "design_invariants": [],
+  "_design_invariants_note": "Leave empty on bootstrap. Add real invariants from the first maintenance session. For critical DIs, add binding.origin_episode when the first violation is observed. Example critical DI with full binding shown below.",
+  "_design_invariants_example": {
+    "id": "DI-001",
+    "label": "example-invariant-label",
+    "statement": "Describe what must not happen, precisely.",
+    "severity": "critical",
+    "binding": {
+      "origin_episode": "EXP-NNN: describe the specific incident that motivated this rule",
+      "violation_count": 0,
+      "lesson_ref": "memory/lessons/YYYY-MM-incident-name.md",
+      "last_triggered": "YYYY-MM-DD"
+    },
+    "_binding_note": "Only add binding.origin_episode after a real episode. lesson_ref must exist on disk before PCT-011 runs. Remove _binding_note and _design_invariants_example before use."
+  },
+  "provenance_registry": [],
+  "invocation_protocol": {
+    "primary_pattern": "[readme_protocol | hook_trigger | agent_yaml_bootstrap | global_skill | workspace_directive | explicit]",
+    "self_test_runtime": "readme_protocol_ai_session",
+    "hook_script": "[relative/path/to/hook.py -- hook_trigger only; omit for other patterns]",
+    "hook_output_prefix": "[MICA]",
+    "hook_output": {
+      "_note": "Optional v0.2.4+ volume control. Remove this block to emit all DIs. Only meaningful when primary_pattern=hook_trigger.",
+      "max_di_lines": 0,
+      "di_filter": "all"
+    },
+    "loading_order": [
+      "1. Resolve mica.yaml or legacy archive",
+      "2. Run tools/mica_pct.py",
+      "3. Run tools/mica_runtime.py",
+      "4. Load archive layer",
+      "5. Load playbook layer",
+      "6. Treat surfaced critical DI candidates as active session guards"
+    ]
+  },
+  "self_test_policy": {
+    "enabled": true,
+    "run_on": ["session_start"],
+    "on_failure": "warn_continue",
+    "checks": [
+      { "id": "PCT-001", "check_type": "mica_yaml_present", "severity": "critical" },
+      { "id": "PCT-002", "check_type": "mica_yaml_fields_valid", "severity": "critical" },
+      { "id": "PCT-003", "check_type": "mica_yaml_paths_exist", "severity": "critical" },
+      { "id": "PCT-004", "check_type": "mica_yaml_mode_coherent", "severity": "error" },
+      { "id": "PCT-005", "check_type": "mica_spec_present", "severity": "info" },
+      { "id": "PCT-006", "check_type": "mica_spec_aligned", "severity": "warning" },
+      { "id": "PCT-007", "check_type": "mica_package_complete", "severity": "error" },
+      {
+        "id": "PCT-010",
+        "check_type": "di_binding_completeness",
+        "severity": "warning",
+        "description": "All critical DIs have binding.origin_episode. WARN does not break CLOSED CONTRACT. Escalates to FAIL when binding_required: true is set (planned v0.2.6)."
+      },
+      {
+        "id": "PCT-011",
+        "check_type": "lesson_ref_existence",
+        "severity": "warning",
+        "description": "All binding.lesson_ref paths exist on disk. A dead lesson_ref is worse than no lesson_ref. WARN does not break CLOSED CONTRACT."
+      }
+    ]
+  },
+  "operation_meta": {
+    "mica_schema_version": "0.2.5",
+    "archive_id": "[PROJECT-NAME-UPPERCASE]-MICA-001",
+    "update_count": 0,
+    "last_updated": "[YYYY-MM-DD]",
+    "session_count": 0,
+    "bootstrap_note": "MICA v0.2.5 bootstrap. Leave design_invariants and provenance_registry empty until the first real maintenance session."
+  },
+  "deviation_log": [],
+  "artifact_manifest": {
+    "generated_at_utc": "[YYYY-MM-DDTHH:MM:SSZ]",
+    "root": ".",
+    "entries": []
+  },
+  "prompt_safety_profile": {
+    "profile_name": "universal_operational_archive",
+    "allowed_scope": ["maintenance", "operations", "documentation"],
+    "blocked_claim_types": ["efficacy_claims"],
+    "enforcement_mode": "warn_and_redact",
+    "redact_patterns": []
+  }
+}

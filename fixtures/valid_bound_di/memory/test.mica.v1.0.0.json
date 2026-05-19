@@ -1,0 +1,32 @@
+{
+  "mica_spec": "0.2.5",
+  "mica_schema_version": "0.2.5",
+  "project": {
+    "name": "valid-bound-di-fixture",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "no-destructive-reset",
+      "statement": "Never run git reset --hard without explicit user acknowledgment.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-017: force-reset deleted uncommitted work, 2026-04-07"
+      }
+    },
+    {
+      "id": "DI-002",
+      "label": "no-schema-drift",
+      "statement": "Schema, config, types, and docs must evolve together.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-019: schema changed without doc update caused silent validator failure"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-05-19"
+  }
+}

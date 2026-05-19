@@ -1,0 +1,24 @@
+{
+  "mica_spec": "0.2.6",
+  "project": {
+    "name": "binding-required-fail-fixture",
+    "full_name": "Binding Required Fail Fixture",
+    "version": "0.1.0",
+    "status": "active",
+    "canonical_statement": "Fixture demonstrating PCT-010 FAIL when di_policy.critical_binding_required=true and critical DIs have no binding."
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "unbound-critical-invariant",
+      "statement": "A critical invariant without binding.origin_episode, used to trigger PCT-010 FAIL.",
+      "severity": "critical"
+    }
+  ],
+  "operation_meta": {
+    "mica_schema_version": "0.2.6",
+    "archive_id": "BINDING-REQUIRED-FAIL-MICA-001",
+    "update_count": 0,
+    "last_updated": "2026-05-19"
+  }
+}

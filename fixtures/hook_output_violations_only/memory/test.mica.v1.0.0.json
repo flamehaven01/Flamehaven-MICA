@@ -1,0 +1,43 @@
+{
+  "mica_spec": "0.2.5",
+  "mica_schema_version": "0.2.5",
+  "project": {
+    "name": "hook-output-test",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "first-violated-di",
+      "statement": "Rule with recorded violations.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-001: first violation episode",
+        "violation_count": 3
+      }
+    },
+    {
+      "id": "DI-002",
+      "label": "second-violated-di",
+      "statement": "Another rule with one recorded violation.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-002: second violation episode",
+        "violation_count": 1
+      }
+    },
+    {
+      "id": "DI-003",
+      "label": "unviolated-di",
+      "statement": "Rule with binding but no recorded violations yet.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-003: added proactively after near-miss"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-05-19"
+  }
+}

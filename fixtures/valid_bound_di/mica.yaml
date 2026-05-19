@@ -1,0 +1,20 @@
+mica_spec: "0.2.5"
+name: valid-bound-di-fixture
+mode: memory_injection
+description: "Fixture: all critical DIs have binding.origin_episode. PCT-010 PASS."
+
+layers:
+  - name: archive
+    path: memory/test.mica.v1.0.0.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/test-playbook.v1.0.0.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+
+update_triggers:
+  - on_explicit_save

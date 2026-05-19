@@ -1,215 +1,140 @@
-# MICA — Memory Invocation & Context Archive for AI
+# MICA v0.2.6 — Binding Enforcement Edition
 
-**Current stable version**: v0.1.9 — Living Standard
-**Current development workstream**: v0.2.1 — Triage and adoption discipline for the `v0.2.0` profile set
-**Type**: AI Memory Layer / Composition Contract Standard
-**Scope**: Not a program. A memory layer pattern — companion files inserted into AI projects.
+MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
----
+This repository tracks MICA from v0.2.6 onward. Legacy versions (v0.2.5 and earlier)
+are in the `Legacy/` directory and are not tracked by git.
 
-## What is MICA?
+## What MICA is
 
-MICA gives an AI project **persistent memory** across sessions.
+Three assets form a MICA package:
 
-It is not a framework. It is not an agent OS. It is a **memory layer contract** — a declaration of what the AI should remember, how that memory is structured, and when it gets updated.
+| Asset | Format | Role |
+|-------|--------|------|
+| `mica.yaml` | YAML | Composition contract — what files exist and how the package is invoked |
+| `*.mica.*.json` | JSON | Archive — institutional memory, design invariants, provenance |
+| `*-playbook.*.md` | Markdown | Playbook — human + AI operating guide |
 
-**Three files make a MICA package:**
+Tools validate and summarize the package at session start.
+
+## What v0.2.6 adds over v0.2.5
+
+| Change | Impact |
+|--------|--------|
+| `di_policy.critical_binding_required: true` | PCT-010 escalates from WARN to FAIL (opt-in) |
+| PCT-010 added to `HARD_FAIL_CHECKS` | Contract breaks when flag is set and DIs are unbound |
+| `fixtures/binding_required_fail/` | New fixture demonstrating PCT-010 FAIL |
+| `tests/test_pct_fixtures.py` | 5 pytest tests covering all fixtures |
+| `.github/workflows/ci.yml` | CI: pytest + ruff on Python 3.9, 3.11, 3.12 |
+| `pyproject.toml` + `requirements-dev.txt` | Tooling config |
+| `mica.yaml.schema.json` | `di_policy` block added |
+
+Packages that do not set `critical_binding_required` behave identically to v0.2.5.
+
+## Package Structure
+
+| Component | Format | Role |
+|-----------|--------|------|
+| `mica.yaml` | YAML | Composition contract |
+| `*.mica.*.json` | JSON | Archive / institutional memory |
+| `*-playbook.*.md` | Markdown | Human + AI operating guide |
+
+Tools:
 
 | File | Role |
 |------|------|
-| `mica.yaml` | Composition contract — declares what MICA contains and how it operates |
-| `*.mica.*.json` | Archive — machine-readable memory store (persists across sessions) |
-| `*-playbook.*.md` | Playbook — human + AI readable context and operating procedures |
+| `tools/mica_core.py` | Shared PCT judgment and YAML loading |
+| `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-011) |
+| `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
 
-**Two modes:**
+Fixtures:
 
-| Mode | Pattern |
-|------|---------|
-| `memory_injection` | Maintenance done → learnings injected into archive → next AI session reads it |
-| `protocol_evolution` | Experiment cycle closes → lessons accumulate → archive evolves → next cycle improves |
+| Directory | Purpose |
+|-----------|---------|
+| `fixtures/valid_bound_di/` | PCT-010 PASS scenario |
+| `fixtures/unbound_critical_di/` | PCT-010 WARN scenario (CLOSED preserved) |
+| `fixtures/dead_lesson_ref/` | PCT-011 WARN scenario |
+| `fixtures/hook_output_violations_only/` | Hook output filter demo |
+| `fixtures/binding_required_fail/` | PCT-010 FAIL scenario (v0.2.6 new) |
 
-**Three placement contexts** (where `mica.yaml` lives):
+## Quick Start
 
-| Project type | mica.yaml location |
-|---|---|
-| Standalone project (no agent.yaml, no SKILL.md) | `[project-root]/mica.yaml` |
-| Agent OS project (has agent.yaml / AGENTS.md) | `memory/mica.yaml` |
-| Skill project (SKILL.md entry point) | `memory/mica.yaml` |
+```bash
+# Validate a project
+python tools/mica_pct.py [project_root]
 
----
+# Runtime summary
+python tools/mica_runtime.py [project_root] --format text
+python tools/mica_runtime.py [project_root] --format hook
 
-## Quick Start: Add MICA to a Project
-
-Use the `mica-installer` skill — it handles all three contexts and both modes:
-
-```
-D:\Sanctum\Claude-Skills\mica-installer\SKILL.md
-```
-
----
-
-## Quick Start: Load MICA in an Existing Project
-
-Use the `mica-context-loader` skill — it auto-detects MICA files and activates them:
-
-```
-D:\Sanctum\Claude-Skills\mica-context-loader\SKILL.md
+# Run PCT fixture tests
+python tools/mica_pct.py fixtures/valid_bound_di
+python tools/mica_pct.py fixtures/unbound_critical_di
+python tools/mica_pct.py fixtures/dead_lesson_ref
+python tools/mica_pct.py fixtures/binding_required_fail
+python tools/mica_runtime.py fixtures/hook_output_violations_only --format hook
 ```
 
----
+## Development
 
-## Start Here By Goal
-
-### I want the stable standard
-
-Read:
-
-1. `0.1.9\README.md`
-2. `0.1.9\MICA_v0.1.9_COMPOSITION_CONTRACT.md`
-3. `0.1.9\MICA_v0.1.9_EXAMPLES.md`
-
-### I want to insert MICA into a project
-
-Read:
-
-1. `installer\README.md`
-2. `installer\install-mica.ps1`
-
-### I want the draft next-generation work
-
-Read:
-
-1. `0.2.0\README.md`
-2. `0.2.0\profiles\README.md`
-3. `docs\MICA_v0.2.1_PROFILE_STATUS_MATRIX.md`
-
-### I want comparison / evaluation material
-
-Read:
-
-1. `docs\README.md`
-
----
-
-## Folder Structure
-
-```
-Flamehaven MICA 0.1.3 - Memory Invocation & Context Archive for AI/
-│
-├── README.md                         <- you are here (AI + human entry point)
-├── MICA_Week1_Technical_Rationale.md <- cross-version design rationale doc
-│
-├── 0.2.0/                            <- NEXT DEVELOPMENT TRACK (draft, not yet normative)
-│   ├── README.md                                   (agentic modal draft branch)
-│   ├── mica.yaml.schema.json                       (copied baseline for forward edits)
-│   ├── MICA_v0.2.0_COMPOSITION_CONTRACT.md         (next composition contract draft)
-│   ├── MICA_v0.2.0_EXAMPLES.md                     (next examples draft)
-│   ├── MICA_v0.2.0_MIGRATION_GUIDE.md              (forward migration draft)
-│   ├── mica-v0.2.0-archive-changes.schema.json     (next archive patch draft)
-│   ├── mica-v0.2.0-self-test-expansion.schema.json (next PCT patch draft)
-│   ├── MICA_v0.2.0_SELF_TEST_EXAMPLES.md           (next PCT examples draft)
-│   ├── MICA_v0.2.0_PROFILE_CANDIDATES.md           (ASDP-derived extension candidates)
-│   └── profiles\README.md                          (profile index + adoption status)
-│
-├── 0.1.9/                            <- CURRENT STABLE VERSION (living standard)
-│   ├── mica.yaml.schema.json                       (mica.yaml JSON Schema, normative)
-│   ├── MICA_v0.1.9_COMPOSITION_CONTRACT.md         (placement rules + field reference)
-│   ├── MICA_v0.1.9_EXAMPLES.md                     (reference examples, both modes)
-│   ├── MICA_v0.1.9_MIGRATION_GUIDE.md              (0.1.8.1 -> 0.1.9 migration + compat)
-│   ├── mica-v0.1.9-archive-changes.schema.json     (archive schema diff, patch-as-spec)
-│   ├── mica-v0.1.9-self-test-expansion.schema.json (PCT-* check definitions)
-│   └── MICA_v0.1.9_SELF_TEST_EXAMPLES.md           (PCT-* check examples, both projects)
-│
-├── 0.1.8.1/                          <- PRESERVED (reference + rollback point)
-│   ├── mica-v0.1.8.1-universal.schema.json (base archive JSON schema, normative)
-│   ├── MICA_v0.1.8.1_UNIVERSAL_USAGE.md
-│   ├── PLAYBOOK.md
-│   └── README.md
-│
-├── docs/                             <- ANALYSIS + COMPARISON + RELEASE PLANNING
-│   └── README.md                                   (docs index)
-│
-├── Legacy/                           <- PRESERVED (v0.1.3 through v0.1.8 history)
-│   ├── mica-v0.1.8-minimal-instance.json  (archive bootstrap reference structure)
-│   ├── mica-v0.1.8-fill-template.json     (authoring aid, not schema-valid)
-│   └── [all prior schema versions v0.1.3-v0.1.8]
-│
-└── MICA-LAB-ANCHOR/                  <- PRESERVED (lab experiment artifacts)
-    └── [lab benchmark and traceability files]
+```bash
+pip install -r requirements-dev.txt
+pytest -v
+ruff check tools/ tests/
 ```
 
----
+## Enabling Binding Enforcement
 
-## Version History
+Add to `mica.yaml`:
 
-| Version | Status | Key addition |
-|---------|--------|--------------|
-| **v0.2.1** | Workstream | Triage, adoption discipline, and profile boundary cleanup on top of the `v0.2.0` candidate set |
-| **v0.2.0** | Draft | Forward development branch for optional ASDP-derived profiles |
-| **v0.1.9** | ✅ Current stable | `mica.yaml` composition contract, 3 placement contexts, PCT-* self-tests |
-| v0.1.8.1 | Preserved | Archive schema patch: self-test expressions, runtime declaration, track authority |
-| v0.1.8 | Preserved | Universal model with self-test architecture |
-| v0.1.7 | Legacy | Universal usage discipline |
-| v0.1.3–v0.1.6 | Legacy | Schema evolution history |
+```yaml
+di_policy:
+  critical_binding_required: true
+```
 
----
+Then run `python tools/mica_pct.py .` — PCT-010 will FAIL for any critical DI
+without `binding.origin_episode`. Add binding blocks until CLOSED CONTRACT.
 
-## Branching Rule
+## Compatibility
 
-- `0.1.9/` is frozen as the current stable living standard.
-- `0.2.0/` is the forward development branch.
-- New version work happens in a new folder, never by overwriting the stable branch.
-- Root `README.md` is the only moving pointer between stable and draft tracks.
+- v0.2.6 is non-breaking over v0.2.5
+- `mica.yaml` and archive format unchanged
+- Packages without `di_policy` behave identically to v0.2.5
+- `pct=` field in hook output may change from CLOSED to INCOMPLETE for packages
+  that set `critical_binding_required: true` with unbound DIs — this is the intended behavior
 
----
+## Document Map
 
-## v0.1.9 Key Design Decisions
+| Document | Role |
+|----------|------|
+| [README.md](README.md) | Entry document (this file) |
+| [MICA_v0.2.6_CHANGELOG.md](MICA_v0.2.6_CHANGELOG.md) | Release delta from v0.2.5 |
+| [MICA_v0.2.6_RELEASE_NOTES.md](MICA_v0.2.6_RELEASE_NOTES.md) | Release rationale |
+| [MICA_v0.2.6_MIGRATION_GUIDE.md](MICA_v0.2.6_MIGRATION_GUIDE.md) | v0.2.5 to v0.2.6 migration |
+| [fixtures/README.md](fixtures/README.md) | Fixture map and expected outputs |
 
-1. **`mica.yaml` composition contract**: A single file declares "this project's MICA consists of these files". Fills the v0.1.8.x gap where nothing declared what a MICA package *was*.
-2. **patch-as-spec**: v0.1.9 changes to archive JSON are expressed as diff documents (`mica-v0.1.9-archive-changes.schema.json`), not copies. Prevents silent two-file divergence.
-3. **`additionalProperties: false` everywhere**: Prevents gitagent's mistake where example fields existed outside the schema.
-4. **STC-* vs PCT-* separation**: STC = internal JSON consistency (v0.1.8.1), PCT = package completeness (v0.1.9 new). Orthogonal layers.
-5. **3 placement contexts**: MICA adapts to standalone, Agent OS, and Skill project structures without schema changes.
+v0.2.6 docs:
 
----
+| Document | Role |
+|----------|------|
+| [docs/MICA_v0.2.6_APPROVAL_NOTE.md](docs/MICA_v0.2.6_APPROVAL_NOTE.md) | v0.2.6 approval rationale |
+| [docs/MICA_v0.2.5_TO_v0.2.6_COMPARISON.md](docs/MICA_v0.2.5_TO_v0.2.6_COMPARISON.md) | Structured comparison with v0.2.5 |
+| [templates/mica-v0.2.6-archive-bootstrap.json](templates/mica-v0.2.6-archive-bootstrap.json) | Bootstrap template (v0.2.6) |
 
-## Live Deployments (v0.1.9)
+Carried forward from v0.2.5:
 
-| Project | Mode | mica.yaml |
-|---------|------|-----------|
-| `flamehaven-space` | `memory_injection` | `D:\Sanctum\WEB 5.0+AI\web 5.0\flamehaven-space\mica.yaml` |
-| `CareChainGovernanceEngine` | `protocol_evolution` | `D:\Sanctum\CareChainGovernanceEngine\mica.yaml` |
-
----
-
-## AI Entry Points
-
-### 최우선 진입점 (여기서 시작)
-
-> AI가 MICA를 처음 다룰 때는 이 파일 하나만 읽으면 된다:
-> **`0.1.9\README.md`** — MICA Agentic Modal
->
-> 이 문서 하나로 삽입(insertion), 인보케이션(invocation), 레이어 처리,
-> AI 행동 통합, 갱신, 거버넌스, PCT 자가 진단까지 전부 커버된다.
-
-### 세부 참조 문서
-
-| 목적 | 파일 |
-|------|------|
-| **MICA 전체 운영 모달 (AI 필독)** | `0.1.9\README.md` |
-| mica.yaml 전체 필드 + placement 규칙 | `0.1.9\MICA_v0.1.9_COMPOSITION_CONTRACT.md` |
-| mica.yaml 예제 (두 모드 모두) | `0.1.9\MICA_v0.1.9_EXAMPLES.md` |
-| v0.1.8.1 → v0.1.9 마이그레이션 | `0.1.9\MICA_v0.1.9_MIGRATION_GUIDE.md` |
-| PCT-* 체크 정의 | `0.1.9\mica-v0.1.9-self-test-expansion.schema.json` |
-| mica.yaml JSON Schema | `0.1.9\mica.yaml.schema.json` |
-| archive JSON 기반 스키마 | `0.1.8.1\mica-v0.1.8.1-universal.schema.json` |
-
-### 다음 버전 설계 작업
-
-| 목적 | 파일 |
-|------|------|
-| `0.2.0` draft branch entry point | `0.2.0\README.md` |
-| ASDP-derived extension candidates | `0.2.0\MICA_v0.2.0_PROFILE_CANDIDATES.md` |
-| `0.2.1` release intent | `docs\MICA_v0.2.1_RELEASE_PLAN.md` |
-| `0.2.1` profile readiness matrix | `docs\MICA_v0.2.1_PROFILE_STATUS_MATRIX.md` |
-| `vNext` Ghost-derived primitive candidates | `docs\MICA_vNEXT_GHOST_DERIVED_PRIMITIVES.md` |
+| Document | Role |
+|----------|------|
+| [MICA_v0.2.5_CHANGELOG.md](MICA_v0.2.5_CHANGELOG.md) | v0.2.5 release delta |
+| [MICA_v0.2.5_RELEASE_NOTES.md](MICA_v0.2.5_RELEASE_NOTES.md) | v0.2.5 release rationale |
+| [MICA_v0.2.5_RUNTIME_PROTOCOL.md](MICA_v0.2.5_RUNTIME_PROTOCOL.md) | Guard surface vs enforcement |
+| [MICA_v0.2.5_MIGRATION_GUIDE.md](MICA_v0.2.5_MIGRATION_GUIDE.md) | v0.2.4 to v0.2.5 migration |
+| [MICA_v0.2.4_COMPOSITION_CONTRACT.md](MICA_v0.2.4_COMPOSITION_CONTRACT.md) | mica.yaml field reference |
+| [MICA_v0.2.4_EXAMPLES.md](MICA_v0.2.4_EXAMPLES.md) | Canonical mica.yaml examples |
+| [MICA_v0.2.4_SELF_TEST_EXAMPLES.md](MICA_v0.2.4_SELF_TEST_EXAMPLES.md) | PCT-010/011 self-test examples |
+| [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema (v0.2.6: di_policy added) |
+| [mica-v0.2.4-archive-di-binding.schema.json](mica-v0.2.4-archive-di-binding.schema.json) | Archive DI binding schema |
+| [docs/MICA_v0.2.5_APPROVAL_NOTE.md](docs/MICA_v0.2.5_APPROVAL_NOTE.md) | v0.2.5 approval rationale |
+| [docs/MICA_v0.2.4_TO_v0.2.5_COMPARISON.md](docs/MICA_v0.2.4_TO_v0.2.5_COMPARISON.md) | v0.2.4 to v0.2.5 comparison |
+| [templates/mica-v0.2.5-archive-bootstrap.json](templates/mica-v0.2.5-archive-bootstrap.json) | Bootstrap template (v0.2.5) |
+| profiles/ | DI binding, hook output, hook trigger, runtime portability profiles |

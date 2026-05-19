@@ -1,0 +1,26 @@
+{
+  "mica_spec": "0.2.5",
+  "mica_schema_version": "0.2.5",
+  "project": {
+    "name": "dead-lesson-ref-fixture",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "no-destructive-reset",
+      "statement": "Never run git reset --hard without explicit user acknowledgment.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-017: force-reset deleted uncommitted work, 2026-04-07",
+        "violation_count": 1,
+        "lesson_ref": "memory/lessons/missing.md",
+        "last_triggered": "2026-04-07"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-05-19"
+  }
+}

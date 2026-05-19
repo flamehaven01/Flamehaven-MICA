@@ -1,0 +1,19 @@
+mica_spec: "0.2.6"
+mode: memory_injection
+
+di_policy:
+  critical_binding_required: true
+
+layers:
+  - name: archive
+    path: memory/fixture.mica.001.json
+    format: json
+    required: true
+  - name: playbook
+    path: memory/playbook.md
+    format: markdown
+    required: true
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  hook_output_prefix: "[MICA]"

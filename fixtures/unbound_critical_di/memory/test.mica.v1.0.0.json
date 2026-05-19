@@ -1,0 +1,20 @@
+{
+  "mica_spec": "0.2.5",
+  "mica_schema_version": "0.2.5",
+  "project": {
+    "name": "unbound-critical-di-fixture",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "no-destructive-reset",
+      "statement": "Never run git reset --hard without explicit user acknowledgment.",
+      "severity": "critical"
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-05-19"
+  }
+}
