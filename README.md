@@ -108,33 +108,40 @@ without `binding.origin_episode`. Add binding blocks until CLOSED CONTRACT.
 | Document | Role |
 |----------|------|
 | [README.md](README.md) | Entry document (this file) |
-| [MICA_v0.2.6_CHANGELOG.md](MICA_v0.2.6_CHANGELOG.md) | Release delta from v0.2.5 |
-| [MICA_v0.2.6_RELEASE_NOTES.md](MICA_v0.2.6_RELEASE_NOTES.md) | Release rationale |
-| [MICA_v0.2.6_MIGRATION_GUIDE.md](MICA_v0.2.6_MIGRATION_GUIDE.md) | v0.2.5 to v0.2.6 migration |
 | [fixtures/README.md](fixtures/README.md) | Fixture map and expected outputs |
+
+Schemas:
+
+| Document | Role |
+|----------|------|
+| [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema (v0.2.6: di_policy added) |
+| [mica-v0.2.4-archive-di-binding.schema.json](mica-v0.2.4-archive-di-binding.schema.json) | Archive DI binding schema |
 
 v0.2.6 docs:
 
 | Document | Role |
 |----------|------|
+| [docs/MICA_v0.2.6_CHANGELOG.md](docs/MICA_v0.2.6_CHANGELOG.md) | Release delta from v0.2.5 |
+| [docs/MICA_v0.2.6_RELEASE_NOTES.md](docs/MICA_v0.2.6_RELEASE_NOTES.md) | Release rationale |
+| [docs/MICA_v0.2.6_MIGRATION_GUIDE.md](docs/MICA_v0.2.6_MIGRATION_GUIDE.md) | v0.2.5 to v0.2.6 migration |
 | [docs/MICA_v0.2.6_APPROVAL_NOTE.md](docs/MICA_v0.2.6_APPROVAL_NOTE.md) | v0.2.6 approval rationale |
 | [docs/MICA_v0.2.5_TO_v0.2.6_COMPARISON.md](docs/MICA_v0.2.5_TO_v0.2.6_COMPARISON.md) | Structured comparison with v0.2.5 |
 | [templates/mica-v0.2.6-archive-bootstrap.json](templates/mica-v0.2.6-archive-bootstrap.json) | Bootstrap template (v0.2.6) |
 
-Carried forward from v0.2.5:
+Carried forward from v0.2.5 and earlier:
 
 | Document | Role |
 |----------|------|
-| [MICA_v0.2.5_CHANGELOG.md](MICA_v0.2.5_CHANGELOG.md) | v0.2.5 release delta |
-| [MICA_v0.2.5_RELEASE_NOTES.md](MICA_v0.2.5_RELEASE_NOTES.md) | v0.2.5 release rationale |
-| [MICA_v0.2.5_RUNTIME_PROTOCOL.md](MICA_v0.2.5_RUNTIME_PROTOCOL.md) | Guard surface vs enforcement |
-| [MICA_v0.2.5_MIGRATION_GUIDE.md](MICA_v0.2.5_MIGRATION_GUIDE.md) | v0.2.4 to v0.2.5 migration |
-| [MICA_v0.2.4_COMPOSITION_CONTRACT.md](MICA_v0.2.4_COMPOSITION_CONTRACT.md) | mica.yaml field reference |
-| [MICA_v0.2.4_EXAMPLES.md](MICA_v0.2.4_EXAMPLES.md) | Canonical mica.yaml examples |
-| [MICA_v0.2.4_SELF_TEST_EXAMPLES.md](MICA_v0.2.4_SELF_TEST_EXAMPLES.md) | PCT-010/011 self-test examples |
-| [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema (v0.2.6: di_policy added) |
-| [mica-v0.2.4-archive-di-binding.schema.json](mica-v0.2.4-archive-di-binding.schema.json) | Archive DI binding schema |
+| [docs/MICA_v0.2.5_CHANGELOG.md](docs/MICA_v0.2.5_CHANGELOG.md) | v0.2.5 release delta |
+| [docs/MICA_v0.2.5_RELEASE_NOTES.md](docs/MICA_v0.2.5_RELEASE_NOTES.md) | v0.2.5 release rationale |
+| [docs/MICA_v0.2.5_RUNTIME_PROTOCOL.md](docs/MICA_v0.2.5_RUNTIME_PROTOCOL.md) | Guard surface vs enforcement |
+| [docs/MICA_v0.2.5_MIGRATION_GUIDE.md](docs/MICA_v0.2.5_MIGRATION_GUIDE.md) | v0.2.4 to v0.2.5 migration |
 | [docs/MICA_v0.2.5_APPROVAL_NOTE.md](docs/MICA_v0.2.5_APPROVAL_NOTE.md) | v0.2.5 approval rationale |
 | [docs/MICA_v0.2.4_TO_v0.2.5_COMPARISON.md](docs/MICA_v0.2.4_TO_v0.2.5_COMPARISON.md) | v0.2.4 to v0.2.5 comparison |
+| [docs/MICA_v0.2.4_COMPOSITION_CONTRACT.md](docs/MICA_v0.2.4_COMPOSITION_CONTRACT.md) | mica.yaml field reference |
+| [docs/MICA_v0.2.4_EXAMPLES.md](docs/MICA_v0.2.4_EXAMPLES.md) | Canonical mica.yaml examples |
+| [docs/MICA_v0.2.4_SELF_TEST_EXAMPLES.md](docs/MICA_v0.2.4_SELF_TEST_EXAMPLES.md) | PCT-010/011 self-test examples |
+| [docs/MICA_v0.2.4_APPROVAL_NOTE.md](docs/MICA_v0.2.4_APPROVAL_NOTE.md) | v0.2.4 approval rationale |
+| [docs/MICA_v0.2.3_TO_v0.2.4_COMPARISON.md](docs/MICA_v0.2.3_TO_v0.2.4_COMPARISON.md) | v0.2.3 to v0.2.4 comparison |
 | [templates/mica-v0.2.5-archive-bootstrap.json](templates/mica-v0.2.5-archive-bootstrap.json) | Bootstrap template (v0.2.5) |
 | profiles/ | DI binding, hook output, hook trigger, runtime portability profiles |
