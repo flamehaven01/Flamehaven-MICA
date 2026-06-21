@@ -17,6 +17,25 @@ every time.
 This keeps output consistent, on-brand, and cheap. Internet searches give
 different results every time -- the manifest gives a deterministic answer.
 
+## DI-SDK-002 -- Agent-Judged Selection
+
+> Which modal goes in which section is decided by the AI agent reasoning over
+> each entry's `when` trigger and the rules in
+> [SELECTION_PROTOCOL.md](SELECTION_PROTOCOL.md) -- not by a hardcoded table.
+
+The agent classifies the section's content type, queries the manifest, prefers
+internal vocabulary, applies the interaction policy, and applies the honesty
+rule (evidence level drives visual intensity). Bindings are recorded so the
+choice is auditable.
+
+## Interaction Policy
+
+Functional interaction (hover-preview, collapsible, copy, tabs, click-expand,
+keyboard-nav, jump-links) is **allowed** where it aids the reader. Decorative
+motion (parallax, particles, entrance/scroll animation) is **banned** -- it
+turns evidence back into persuasion. Each manifest entry declares its
+`interaction` class.
+
 ## Structure
 
 | Path | Role |
