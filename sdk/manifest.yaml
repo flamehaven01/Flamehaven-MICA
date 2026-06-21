@@ -1,0 +1,173 @@
+# Flamehaven Document SDK -- Component Manifest
+# Query index for reusable HTML design functions / modals used in CAS reports
+# and Flamehaven document artifacts.
+#
+# RULE (DI-SDK-001): When a document needs a visual function (chart, modal,
+# badge, timeline, comparison table, collapsible, etc.), query THIS manifest
+# FIRST. Only search externally if no entry fits. See sdk/README.md.
+#
+# These are common HTML design techniques, not protected expression. CAS
+# components are RE-WRITTEN from these patterns, not copied -- so deliverables
+# carry no attribution burden. The only attribution is the vendored verbatim
+# copy under vendor/, which keeps its own LICENSE (Apache-2.0). See NOTICE.md.
+
+sdk_version: "0.1.0"
+created: "2026-06-21"
+
+license_policy:
+  vendored_verbatim: "keep upstream LICENSE in vendor/<source>/ + one NOTICE.md pointer"
+  our_components: "pattern re-implemented = our own expression = no attribution owed"
+  client_deliverables: "built from our_components = zero license burden"
+
+# ---------------------------------------------------------------------------
+# Internal components (Flamehaven-owned, license 100% ours)
+# Source: hsp01-governance-artifact dossier-site. The proven CAS visual vocab.
+# ---------------------------------------------------------------------------
+internal:
+  - id: badge-verdict
+    function: "status declaration block (PASS/WARN/FAIL/NOTE color-coded)"
+    cas_use: "verdict surface; evidence level drives color intensity"
+    interactivity: static
+  - id: chip
+    function: "inline pill tag (evidence level, failure type, severity)"
+    cas_use: "finding metadata"
+    interactivity: static
+  - id: metric
+    function: "big-number + label tile"
+    cas_use: "top-line scores (suitability, pass rate, coverage)"
+    interactivity: static
+  - id: card-panel
+    function: "container surface with header/kicker"
+    cas_use: "section wrapper"
+    interactivity: static
+  - id: list-card
+    function: "titled bullet list block"
+    cas_use: "what-it-proves / why-it-matters columns"
+    interactivity: static
+  - id: code-frame
+    function: "evidence excerpt with copy-to-clipboard button"
+    cas_use: "claim-to-code proof, gate excerpts"
+    interactivity: "copy button (vanilla JS)"
+  - id: callout
+    function: "provenance / scope note with accent border"
+    cas_use: "'all evidence comes from real emitted files' style notes"
+    interactivity: static
+  - id: evidence-table
+    function: "inspectability ladder table"
+    cas_use: "what a buyer can independently inspect"
+    interactivity: static
+  - id: preview-dock
+    function: "hover-preview fixed bottom panel + reader routing index"
+    cas_use: "multi-page report navigation"
+    interactivity: "hover/focus (vanilla JS)"
+
+# ---------------------------------------------------------------------------
+# Vendored reference library (Apache-2.0, ThariqS/html-effectiveness)
+# Full verbatim copies under vendor/html-effectiveness/. Use as PATTERN source:
+# read the file, re-implement the technique into a CAS component.
+# ---------------------------------------------------------------------------
+vendor_html_effectiveness:
+  source: "https://github.com/ThariqS/html-effectiveness"
+  license: "Apache-2.0"
+  path: "vendor/html-effectiveness/"
+  demos:
+    - id: exploration-code-approaches
+      file: "01-exploration-code-approaches.html"
+      function: "side-by-side comparison of N approaches with inline trade-offs"
+      cas_use: "remediation options; architecture decision records"
+      interactivity: static
+    - id: exploration-visual-designs
+      file: "02-exploration-visual-designs.html"
+      function: "live-rendered layout/palette options"
+      cas_use: "report theme selection"
+      interactivity: static
+    - id: code-review-pr
+      file: "03-code-review-pr.html"
+      function: "diff with margin notes, SEVERITY TAGS, jump links"
+      cas_use: "Case#1 findings (sec 2, 3.2) -- top match for verdict+severity"
+      interactivity: "jump links"
+    - id: code-understanding
+      file: "04-code-understanding.html"
+      function: "package as boxes+arrows, hot path highlighted, entry points"
+      cas_use: "Case#1/#3 architecture (sec 3.1, 3.3)"
+      interactivity: static
+    - id: design-system
+      file: "05-design-system.html"
+      function: "color/type/spacing tokens rendered as copyable swatches"
+      cas_use: "documents the CAS design tokens themselves"
+      interactivity: "copy swatch"
+    - id: component-variants
+      file: "06-component-variants.html"
+      function: "every size/state/intent of one component on one sheet"
+      cas_use: "the SDK gallery format itself"
+      interactivity: static
+    - id: prototype-animation
+      file: "07-prototype-animation.html"
+      function: "isolated transition with duration/easing sliders"
+      cas_use: "low (decorative) -- reference only"
+      interactivity: "sliders"
+    - id: prototype-interaction
+      file: "08-prototype-interaction.html"
+      function: "N linked screens at interaction fidelity"
+      cas_use: "low -- reference only"
+      interactivity: "screen linking"
+    - id: slide-deck
+      file: "09-slide-deck.html"
+      function: "presentation as one HTML file, arrow-key nav, no build"
+      cas_use: "Case#2 engagement deck (sec 8.3 reader conclusions)"
+      interactivity: "keyboard nav"
+    - id: svg-illustrations
+      file: "10-svg-illustrations.html"
+      function: "inline SVG diagrams, individually tweakable/copyable"
+      cas_use: "diagram primitive for any case"
+      interactivity: static
+    - id: status-report
+      file: "11-status-report.html"
+      function: "shipped/slipped summary + small chart, skim-formatted"
+      cas_use: "summary judgment + metrics (sec 1)"
+      interactivity: static
+    - id: incident-report
+      file: "12-incident-report.html"
+      function: "post-mortem: minute-by-minute TIMELINE, log excerpts, checklist"
+      cas_use: "Case#3 reproducibility / audit chain (sec 6) -- top match"
+      interactivity: static
+    - id: flowchart-diagram
+      file: "13-flowchart-diagram.html"
+      function: "pipeline flowchart, click a step for timings/failure paths"
+      cas_use: "architecture narrative -- what fails closed (sec 3.3)"
+      interactivity: "click-to-expand steps"
+    - id: research-feature-explainer
+      file: "14-research-feature-explainer.html"
+      function: "TL;DR box, collapsible steps, tabbed snippets, FAQ"
+      cas_use: "reusable primitives: collapsible + tabs + TL;DR"
+      interactivity: "collapsible, tabs"
+    - id: research-concept-explainer
+      file: "15-research-concept-explainer.html"
+      function: "interactive ring viz + COMPARISON TABLE + glossary"
+      cas_use: "comparison table; concept explainer"
+      interactivity: "interactive viz (add/remove)"
+    - id: implementation-plan
+      file: "16-implementation-plan.html"
+      function: "timeline w/ milestones, data-flow, RISK ASSESSMENT TABLE"
+      cas_use: "Case#2 governance/risk (sec 8.8)"
+      interactivity: static
+    - id: pr-writeup
+      file: "17-pr-writeup.html"
+      function: "author's side: motivation, before/after, file-by-file with WHY"
+      cas_use: "Case#1 claim-to-code narrative (sec 2)"
+      interactivity: static
+    - id: editor-triage-board
+      file: "18-editor-triage-board.html"
+      function: "drag tickets across Now/Next/Later/Cut, export as markdown"
+      cas_use: "out-of-scope (editing tool, not read-only evidence)"
+      interactivity: "drag-drop"
+    - id: editor-feature-flags
+      file: "19-editor-feature-flags.html"
+      function: "grouped toggles, dependency warnings, copy-diff button"
+      cas_use: "out-of-scope (editing tool)"
+      interactivity: "toggles"
+    - id: editor-prompt-tuner
+      file: "20-editor-prompt-tuner.html"
+      function: "editable template w/ variable slots, live re-render"
+      cas_use: "out-of-scope (editing tool)"
+      interactivity: "live edit"
