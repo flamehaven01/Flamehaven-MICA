@@ -250,6 +250,67 @@ di_policy.critical_binding_required: true (only when all critical DIs have episo
 
 ---
 
+## DRIFT External Review Standard
+
+The DRIFT mode (Diagnosis - Risk - Integration - Friction - Traction) is the house
+external-review format, derived from real reviews (FlexVertex, Tesseract). It is
+rendered by the `drift-external` template in `cas_doc`. Use it whenever a review
+will be shown to the reviewed party or to third parties.
+
+### What CAS Reviews (intent)
+
+CAS reviews the **gap between a project's narrative/claims and what the supplied
+artifact actually supports**. It is claim-aware and evidence-bounded: every claim
+is tracked to a verdict plus evidence, and what cannot be verified is stated
+explicitly rather than omitted. The thesis is "show the real thing, do not
+persuade." The single most durable output is the **Claim Boundary** -- what the
+project can and cannot fairly be described as.
+
+### Editions (orthogonal to the CAS-P / E / X profile)
+
+- **Internal Audit Edition** -- scored (e.g., 34/100), may use FAIL / P0, blunt.
+- **External Review Edition** -- constructive and gap-oriented, **no FAIL / P0**,
+  scores removed, and **every finding carries a Recommended Path**. This is the
+  default for anything the reviewed party will see.
+
+### Verdict Ladder (external edition)
+
+`Verified` / `Partially Verified` / `Requires Verification` / `Not Yet Visible`.
+Replaces PASS / WARN / FAIL / NOTE for external editions. "Not Yet Visible" is a
+scope statement (e.g., no code provided), not an accusation.
+
+### Finding Layers (orthogonal to verdict)
+
+`Foundation Gap` / `Implementation Gap` / `Documentation Gap` / `Verified Principle`,
+each with a Typical Path (effort/timeline). Organizes findings by remediation depth.
+
+### Extended Failure Types (beyond F1-F7)
+
+- **FT-S** semantic underdefinition (mechanism without computable spec)
+- **FT-D** drift / debt exposure (guarantee not structurally enforced, or depends on unbuilt parts)
+- **FT-B** B2B / institutional readiness gap (no independent assessment, reference, or legal entity)
+- **FT-C** claim-architecture gap (claim broader than the architecture supports)
+
+### Standard Composition (a complete external review)
+
+- **0. Pre-Review Setup** -- Metadata, Verdict Legend, Gap Taxonomy, Finding Layers, **Evidence Boundary** (what was and was not in scope)
+- **1. Narrative vs Reality** -- frame | what it implies | evidence found | remaining gap, then a Summary
+- **2. Claim-to-Implementation Review** -- findings grouped by layer; each carries verdict, type, **Reference**, **Recommended Path**
+- **3. Architecture Review** -- component status, architecture confirmed, remaining gaps
+- **4. Implementation / Deployment Readiness**
+- **5. Commercial Reality** -- demand map + **Reframe** (Do not lead with / Lead with instead)
+- **6. Adoption / Monetization Milestones** -- M1-M5, each gating a defensible claim
+- **7. Final Assessment** -- **Two-Layer** (conceptual quality vs implementation/commercial readiness), Dimension Summary, **Claim Boundary**, **Reader-Specific Conclusions** (partners / regulatory / technical DD / buyers / investors), Priority Actions
+- **8. Changelog** -- of the review itself; supports re-review with an Evidence Delta
+
+### Non-negotiables
+
+- **Every finding needs a Reference and a Recommended Path.** A finding without a path is incomplete in an external edition.
+- **Two-Layer Assessment is mandatory.** Never conflate "is the idea good" (Layer 1) with "is it built / sellable" (Layer 2).
+- **Independently verify any integrity manifest.** Recomputing shipped hashes is a rare chance to earn execution-grade evidence in a documents-only review.
+
+---
+
 ## Evidence Level Reference
 
 | Level | Meaning | Acceptable for PASS? |
