@@ -308,6 +308,25 @@ each with a Typical Path (effort/timeline). Organizes findings by remediation de
 - **Every finding needs a Reference and a Recommended Path.** A finding without a path is incomplete in an external edition.
 - **Two-Layer Assessment is mandatory.** Never conflate "is the idea good" (Layer 1) with "is it built / sellable" (Layer 2).
 - **Independently verify any integrity manifest.** Recomputing shipped hashes is a rare chance to earn execution-grade evidence in a documents-only review.
+- **Verify, do not inherit, third-party claims.** When another review is provided, treat it as a cross-check, not a source. Re-verify each claim against the artifact — convergence validates your audit, and re-verification often yields a more precise finding than the one being cross-checked.
+
+### Standard Confidentiality Footer (official, mandatory on every external report)
+
+Registered once in the `drift-external` template (`notice` field) and applied
+automatically to every rendered report. Do not omit it from an external delivery.
+Update the year as needed.
+
+> © {YEAR} Flamehaven. This review is the proprietary work product of Flamehaven,
+> prepared under the Flamehaven Code Audit Standard. **Confidential** — prepared for
+> the named recipient; it may not be reproduced or redistributed, in whole or in
+> part, without Flamehaven's prior written consent. This review assesses the supplied
+> artifact as of the review date and is not a security audit, a certification, or
+> legal advice.
+
+Three components, all required: (1) ownership / work-product attribution,
+(2) confidentiality + no-redistribution-without-consent, (3) scope disclaimer
+(not an audit / certification / legal advice). The disclaimer matters most when
+strong verdicts are issued — it states this is a review, not an attestation.
 
 ---
 
