@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA runtime summary utility v0.2.6.
+MICA runtime summary utility v0.2.7.
 
 Usage:
     python tools/mica_runtime.py [project_root] --format text
@@ -9,8 +9,9 @@ Usage:
 
 v0.2.5: pct_status() delegates to mica_core.run_pct_checks() so both tools agree.
 v0.2.6: PCT-010 escalates from WARN to FAIL when mica.yaml sets
-        di_policy.critical_binding_required: true. No runtime.py changes required --
-        pct_status() already calls run_pct_checks(), which handles the escalation.
+        di_policy.critical_binding_required: true. No runtime.py changes required.
+v0.2.7: COMPACT_MODE formally defined; di_policy.namespace_mode added. No runtime
+        behavior changes required -- COMPACT_MODE uses existing LEGACY_MODE path.
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flamehaven/mica/mica.yaml.schema.json",
   "title": "MICA Composition Contract",
-  "description": "Schema for mica.yaml. Declares what files constitute a MICA package and how it is invoked. v0.2.4: hookOutputPolicy added. v0.2.6: di_policy added.",
+  "description": "Schema for mica.yaml. Declares what files constitute a MICA package and how it is invoked. v0.2.4: hookOutputPolicy added. v0.2.6: di_policy added. v0.2.7: di_policy.namespace_mode added.",
   "type": "object",
   "required": ["mica_spec", "mode", "layers"],
   "additionalProperties": false,
@@ -10,7 +10,7 @@
     "mica_spec": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "examples": ["0.2.4", "0.2.3", "0.2.2"]
+      "examples": ["0.2.7", "0.2.6", "0.2.5"]
     },
     "name": {
       "type": "string",
@@ -150,13 +150,19 @@
     },
     "diPolicy": {
       "type": "object",
-      "description": "Binding enforcement policy for design invariants (v0.2.6).",
+      "description": "Binding enforcement and namespace policy for design invariants. v0.2.6: critical_binding_required. v0.2.7: namespace_mode.",
       "additionalProperties": false,
       "properties": {
         "critical_binding_required": {
           "type": "boolean",
           "default": false,
           "description": "When true, PCT-010 escalates to FAIL if any critical DI lacks binding.origin_episode. Default false preserves v0.2.5 WARN behavior."
+        },
+        "namespace_mode": {
+          "type": "string",
+          "enum": ["sequential", "domain_namespaced", "legacy_inv"],
+          "default": "sequential",
+          "description": "DI ID namespace convention for this archive. sequential: canonical DI-NNN. domain_namespaced: DI-[DOMAIN]-NNN for multi-lane systems (e.g. DI-EQA-001). legacy_inv: INV-NNN grandfathered prefix. All modes validated by mica-v0.2.7-archive-di-binding.schema.json pattern ^(DI|INV)(-[A-Z][A-Z0-9]*)?-\\d+$."
         }
       }
     },
@@ -176,7 +182,7 @@
     },
     "diBinding": {
       "type": "object",
-      "description": "Evidence block for mica.yaml drift_profile.classes DIs. For archive design_invariants, use mica-v0.2.4-archive-di-binding.schema.json.",
+      "description": "Evidence block for mica.yaml drift_profile.classes DIs. For archive design_invariants, use mica-v0.2.7-archive-di-binding.schema.json.",
       "required": ["origin_episode"],
       "additionalProperties": false,
       "properties": {

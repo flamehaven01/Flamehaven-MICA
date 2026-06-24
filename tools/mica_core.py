@@ -12,6 +12,8 @@ layers[] entries with multiple keys. This parser tracks indentation to handle bo
 
 v0.2.6: PCT-010 escalates from WARN to FAIL when di_policy.critical_binding_required
 is set to true in mica.yaml. Opt-in per package; default behavior is unchanged.
+v0.2.7: di_policy.namespace_mode added (sequential/domain_namespaced/legacy_inv).
+        COMPACT_MODE formally defined as intentional no-mica.yaml deployment.
 """
 
 from __future__ import annotations

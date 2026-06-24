@@ -1,0 +1,24 @@
+mica_spec: "0.2.7"
+name: domain-namespaced-di-fixture
+mode: memory_injection
+description: "Fixture: domain-namespaced DI IDs (DI-EQA-001, DI-BIO-001). Validates v0.2.7 namespace_mode=domain_namespaced. PCT-010 PASS."
+
+layers:
+  - name: archive
+    path: memory/test.mica.v1.0.0.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/test-playbook.v1.0.0.md
+    format: markdown
+    loading_hint: always
+
+di_policy:
+  namespace_mode: domain_namespaced
+  critical_binding_required: true
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+
+update_triggers:
+  - on_explicit_save

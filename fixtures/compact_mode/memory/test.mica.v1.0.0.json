@@ -1,0 +1,24 @@
+{
+  "mica_spec": "0.2.7",
+  "mica_schema_version": "0.2.7",
+  "project": {
+    "name": "compact-mode-fixture",
+    "version": "1.0.0",
+    "status": "active",
+    "purpose": "Fixture: intentional COMPACT_MODE deployment. No mica.yaml present. Archive + playbook only. pct=LEGACY is expected and correct."
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "no-mica-yaml-required",
+      "statement": "A COMPACT deployment operates with archive + playbook only. Absence of mica.yaml is intentional, not a migration artifact.",
+      "severity": "high",
+      "binding": {
+        "origin_episode": "EXP-COMPACT-001: CAS deployment confirmed that archive+playbook is sufficient for minimal operational contexts without governance overhead."
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-06-24"
+  }
+}
