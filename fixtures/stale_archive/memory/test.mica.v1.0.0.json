@@ -1,0 +1,13 @@
+{
+  "mica_spec": "0.2.8",
+  "project": {
+    "name": "stale-archive-fixture",
+    "version": "1.0.0",
+    "status": "active",
+    "purpose": "Fixture: max_archive_age_days=90, last_updated far in the past. PCT-012 WARN always fires."
+  },
+  "design_invariants": [],
+  "operation_meta": {
+    "last_updated": "2020-01-01"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "mica_spec": "0.2.8",
+  "project": {
+    "name": "violation-count-incoherent-fixture",
+    "version": "1.0.0",
+    "status": "active",
+    "purpose": "Fixture: critical DI has violation_count=3 but last_triggered empty. PCT-010 WARN (coherence, v0.2.8)."
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "no-destructive-reset",
+      "statement": "Never run git reset --hard without explicit user acknowledgment.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-017: force-reset deleted uncommitted work on 2026-04-07",
+        "violation_count": 3,
+        "last_triggered": ""
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-06-24"
+  }
+}

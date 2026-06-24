@@ -1,11 +1,12 @@
 """
-MICA v0.2.7 PCT fixture tests.
+MICA v0.2.8 PCT fixture tests.
 
 Each test runs run_pct_checks() against a known fixture and asserts the
-expected PCT-010/011 status and overall contract verdict.
+expected PCT status and overall contract verdict.
 
 Fixtures are self-contained project roots under fixtures/.
-v0.2.7: added compact_mode and domain_namespaced_di fixture tests.
+v0.2.7: compact_mode, domain_namespaced_di.
+v0.2.8: doctrinal_binding, stale_archive, violation_count_incoherent.
 """
 
 from __future__ import annotations
@@ -24,10 +25,16 @@ from mica_core import is_closed_contract, run_pct_checks
 
 
 def _status(results: list, check_id: str) -> str | None:
+    """Return status of the FIRST result matching check_id."""
     for pid, status, _ in results:
         if pid == check_id:
             return status
     return None
+
+
+def _any_warn(results: list, check_id: str) -> bool:
+    """Return True if any result for check_id has status WARN."""
+    return any(pid == check_id and status == "WARN" for pid, status, _ in results)
 
 
 def test_valid_bound_di_is_closed():
@@ -73,3 +80,25 @@ def test_domain_namespaced_di_is_closed():
     results = run_pct_checks(FIXTURES_DIR / "domain_namespaced_di")
     assert is_closed_contract(results), "domain_namespaced_di should be CLOSED CONTRACT"
     assert _status(results, "PCT-010") == "PASS"
+
+
+def test_doctrinal_binding_warns_but_closed():
+    """v0.2.8: critical DIs with generic prose binding. PCT-010 PASS (all bound) + WARN (doctrinal). CLOSED CONTRACT."""
+    results = run_pct_checks(FIXTURES_DIR / "doctrinal_binding")
+    assert is_closed_contract(results), "doctrinal_binding should be CLOSED CONTRACT"
+    assert _status(results, "PCT-010") == "PASS"
+    assert _any_warn(results, "PCT-010"), "PCT-010 should have a doctrinal WARN"
+
+
+def test_stale_archive_pct012_warns_but_closed():
+    """v0.2.8: max_archive_age_days=90, last_updated=2020-01-01. PCT-012 WARN. CLOSED CONTRACT."""
+    results = run_pct_checks(FIXTURES_DIR / "stale_archive")
+    assert is_closed_contract(results), "stale_archive should be CLOSED CONTRACT"
+    assert _any_warn(results, "PCT-012"), "PCT-012 should WARN on stale archive"
+
+
+def test_violation_count_incoherent_warns_but_closed():
+    """v0.2.8: violation_count=3 but last_triggered empty. PCT-010 WARN (coherence). CLOSED CONTRACT."""
+    results = run_pct_checks(FIXTURES_DIR / "violation_count_incoherent")
+    assert is_closed_contract(results), "violation_count_incoherent should be CLOSED CONTRACT"
+    assert _any_warn(results, "PCT-010"), "PCT-010 should WARN on incoherent violation_count"

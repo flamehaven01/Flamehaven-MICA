@@ -1,0 +1,23 @@
+mica_spec: "0.2.8"
+name: stale-archive-fixture
+mode: memory_injection
+description: "Fixture: max_archive_age_days=90, last_updated=2020-01-01. PCT-012 WARN. CLOSED CONTRACT."
+
+layers:
+  - name: archive
+    path: memory/test.mica.v1.0.0.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/test-playbook.v1.0.0.md
+    format: markdown
+    loading_hint: always
+
+di_policy:
+  max_archive_age_days: 90
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+
+update_triggers:
+  - on_explicit_save

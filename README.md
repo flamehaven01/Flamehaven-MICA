@@ -1,4 +1,4 @@
-# MICA v0.2.7 — Frame Stabilization Edition
+# MICA v0.2.8 — Binding Depth Edition
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
@@ -18,7 +18,20 @@ Three assets form a MICA package:
 Tools validate and summarize the package at session start. MICA's job: locate the memory
 package, load archive and playbook, activate against invariants, declare loaded state truthfully.
 
-## What v0.2.7 adds over v0.2.6
+## What v0.2.8 adds over v0.2.7
+
+| Change | Impact |
+|---|---|
+| PCT-010 doctrinal WARN | Detects `origin_episode` with no episode code, version ref, or date — signals ungrounded binding |
+| PCT-010 coherence WARN | `violation_count > 0` with empty `last_triggered` → data defect signal |
+| PCT-012 new (opt-in) | `di_policy.max_archive_age_days` → WARN when archive is stale |
+| PCT-006 version lag | WARN when `mica_spec` is >= 2 versions behind canonical `0.2.8` |
+| `di_policy.max_archive_age_days` field | New optional `mica.yaml` field activating PCT-012 |
+| 3 new fixtures | `doctrinal_binding`, `stale_archive`, `violation_count_incoherent` |
+
+No existing package breaks. All new signals are WARN or INFO. CLOSED CONTRACT definition unchanged.
+
+## What v0.2.7 added over v0.2.6
 
 | Change | Impact |
 |---|---|
@@ -26,11 +39,6 @@ package, load archive and playbook, activate against invariants, declare loaded 
 | `di_policy.namespace_mode` field | Declares DI ID convention: `sequential`, `domain_namespaced`, or `legacy_inv` |
 | `mica-v0.2.7-archive-di-binding.schema.json` | Extended DI ID pattern: supports `DI-EQA-001`, `DI-BIO-003`, `INV-009` |
 | `docs/MICA_v0.2.7_RUNTIME_PROTOCOL.md` | Full formal deployment model: modes, PCT matrix, invocation hierarchy, core boundary |
-| `fixtures/compact_mode/` | New fixture: no-mica.yaml intentional deployment |
-| `fixtures/domain_namespaced_di/` | New fixture: DI-EQA-xxx / DI-BIO-xxx with `critical_binding_required: true` |
-| 19 drift docs deleted | Repo governance direction absorbed or removed (see CHANGELOG for list) |
-
-Packages without `namespace_mode` and without domain-namespaced IDs behave identically to v0.2.6.
 
 ## Package Structure
 

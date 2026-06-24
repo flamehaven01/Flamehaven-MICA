@@ -1,0 +1,32 @@
+{
+  "mica_spec": "0.2.8",
+  "project": {
+    "name": "doctrinal-binding-fixture",
+    "version": "1.0.0",
+    "status": "active",
+    "purpose": "Fixture: critical DIs have binding but origin_episode is doctrinal (no EXP-xxx / version ref / date). Validates PCT-010 WARN for doctrinal binding (v0.2.8)."
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "no-mock-data",
+      "statement": "Runtime code must not return stub, mock, or hardcoded data.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "Enforcement of absolute data integrity to prevent financial risks."
+      }
+    },
+    {
+      "id": "DI-002",
+      "label": "fail-closed-on-unavailable",
+      "statement": "If required provider data is unavailable, the system must return NO_DECISION.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "Enforcement of data unavailability safe halt to protect trading executions."
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-06-24"
+  }
+}

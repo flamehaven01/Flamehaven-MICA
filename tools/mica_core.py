@@ -12,19 +12,36 @@ layers[] entries with multiple keys. This parser tracks indentation to handle bo
 
 v0.2.6: PCT-010 escalates from WARN to FAIL when di_policy.critical_binding_required
 is set to true in mica.yaml. Opt-in per package; default behavior is unchanged.
-v0.2.7: di_policy.namespace_mode added (sequential/domain_namespaced/legacy_inv).
-        COMPACT_MODE formally defined as intentional no-mica.yaml deployment.
+v0.2.7: di_policy.namespace_mode added; COMPACT_MODE formally defined.
+v0.2.8: PCT-010 quality check (doctrinal vs incident-grounded binding),
+        PCT-010 violation_count/last_triggered coherence check,
+        PCT-012 archive freshness (opt-in via di_policy.max_archive_age_days),
+        PCT-006 canonical version lag warning (>= 2 minor versions behind).
 """
 
 from __future__ import annotations
 
 import json
+import re
+from datetime import date
 from pathlib import Path
 from typing import Any
 
 HARD_FAIL_CHECKS = frozenset(
     {"PCT-001", "PCT-002", "PCT-003", "PCT-004", "PCT-007", "PCT-008", "PCT-010"}
 )
+
+MICA_CANONICAL_VERSION = "0.2.8"
+
+# Patterns that mark a real incident-grounded origin_episode.
+# Any single match exempts the binding from the doctrinal WARN (v0.2.8).
+_EPISODE_PATTERNS = [
+    re.compile(r"EXP-[A-Z]"),          # episode code: EXP-OS-1, EXP-PN-2
+    re.compile(r"v\d+\.\d+"),           # version ref: v0.8.6, v1.2
+    re.compile(r"\d{4}-\d{2}-\d{2}"),   # ISO date: 2026-04-07
+    re.compile(r"\d{4}-\d{2}"),         # year-month: 2026-04
+    re.compile(r"#\d+"),                # issue number: #123
+]
 
 
 # ---------------------------------------------------------------------------
@@ -156,6 +173,13 @@ def find_legacy_archive(project_root: Path) -> Path | None:
     return matches[0] if matches else None
 
 
+def _parse_version(v: str) -> tuple[int, ...]:
+    try:
+        return tuple(int(x) for x in str(v).split("."))
+    except (ValueError, AttributeError):
+        return (0,)
+
+
 def load_json(path: Path | None) -> dict[str, Any]:
     if not path or not path.exists():
         return {}
@@ -264,6 +288,26 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
     else:
         results.append(("PCT-006", "INFO", "mica_spec absent in one or both files"))
 
+    # v0.2.8: warn when declared spec is >= 2 patch versions behind canonical
+    # MICA uses 0.MAJOR.PATCH increments; compare the full numeric value.
+    declared_spec = yaml_spec or arch_spec
+    if declared_spec:
+        can = _parse_version(MICA_CANONICAL_VERSION)
+        dec = _parse_version(declared_spec)
+        if len(can) >= 3 and len(dec) >= 3:
+            can_n = can[0] * 10000 + can[1] * 100 + can[2]
+            dec_n = dec[0] * 10000 + dec[1] * 100 + dec[2]
+            lag = can_n - dec_n
+            if lag >= 2:
+                results.append(
+                    (
+                        "PCT-006",
+                        "WARN",
+                        f"mica_spec {declared_spec} is {lag} version(s) behind "
+                        f"canonical {MICA_CANONICAL_VERSION} -- consider upgrading",
+                    )
+                )
+
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     pattern = inv.get("primary_pattern") if isinstance(inv.get("primary_pattern"), str) else None
     valid_patterns = {
@@ -339,6 +383,41 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                 ("PCT-010", "PASS", f"all {len(critical_dis)} critical DIs have binding")
             )
 
+        # v0.2.8: doctrinal binding quality check (applies to all bound critical DIs)
+        doctrinal_ids = [
+            d.get("id", "?")
+            for d in critical_dis
+            if isinstance(d.get("binding"), dict)
+            and d["binding"].get("origin_episode")
+            and not any(p.search(d["binding"]["origin_episode"]) for p in _EPISODE_PATTERNS)
+        ]
+        if doctrinal_ids:
+            results.append(
+                (
+                    "PCT-010",
+                    "WARN",
+                    f"doctrinal binding (no episode code, version ref, or date): "
+                    f"{doctrinal_ids} -- ground origin_episode in a real incident",
+                )
+            )
+
+        # v0.2.8: violation_count / last_triggered coherence
+        incoherent_ids = [
+            d.get("id", "?")
+            for d in critical_dis
+            if isinstance(d.get("binding"), dict)
+            and d["binding"].get("violation_count", 0)
+            and not d["binding"].get("last_triggered")
+        ]
+        if incoherent_ids:
+            results.append(
+                (
+                    "PCT-010",
+                    "WARN",
+                    f"violation_count > 0 but last_triggered empty: {incoherent_ids}",
+                )
+            )
+
         broken_refs = [
             (d.get("id", "?"), d["binding"]["lesson_ref"])
             for d in critical_dis
@@ -366,6 +445,59 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
     else:
         results.append(("PCT-010", "INFO", "archive not loaded; binding check skipped"))
         results.append(("PCT-011", "INFO", "archive not loaded; lesson_ref check skipped"))
+
+    # PCT-012: archive freshness (v0.2.8, opt-in via di_policy.max_archive_age_days)
+    max_age_days = di_policy.get("max_archive_age_days")
+    if isinstance(max_age_days, int) and max_age_days > 0 and archive:
+        op_meta = archive.get("operation_meta") or {}
+        last_updated = op_meta.get("last_updated", "")
+        if last_updated:
+            try:
+                lu = date.fromisoformat(str(last_updated))
+                age = (date.today() - lu).days
+                if age > max_age_days:
+                    results.append(
+                        (
+                            "PCT-012",
+                            "WARN",
+                            f"archive last_updated {last_updated} is {age} days old "
+                            f"(max_archive_age_days={max_age_days})",
+                        )
+                    )
+                else:
+                    results.append(
+                        (
+                            "PCT-012",
+                            "PASS",
+                            f"archive last_updated {last_updated} is {age} days old "
+                            f"(within {max_age_days}-day limit)",
+                        )
+                    )
+            except ValueError:
+                results.append(
+                    (
+                        "PCT-012",
+                        "WARN",
+                        f"operation_meta.last_updated '{last_updated}' is not a valid ISO date",
+                    )
+                )
+        else:
+            results.append(
+                (
+                    "PCT-012",
+                    "WARN",
+                    "max_archive_age_days set but operation_meta.last_updated absent in archive",
+                )
+            )
+    else:
+        results.append(
+            (
+                "PCT-012",
+                "INFO",
+                "archive freshness check not configured "
+                "(set di_policy.max_archive_age_days to enable)",
+            )
+        )
 
     fails = [r[0] for r in results if r[1] == "FAIL" and r[0] in HARD_FAIL_CHECKS]
     if fails:
