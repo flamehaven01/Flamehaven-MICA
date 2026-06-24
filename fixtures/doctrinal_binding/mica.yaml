@@ -1,0 +1,23 @@
+mica_spec: "0.2.8"
+name: doctrinal-binding-fixture
+mode: memory_injection
+description: "Fixture: critical DIs have binding but origin_episode is doctrinal prose (no EXP-xxx, no version, no date). PCT-010 PASS (all bound) + PCT-010 WARN (doctrinal). CLOSED CONTRACT."
+
+layers:
+  - name: archive
+    path: memory/test.mica.v1.0.0.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/test-playbook.v1.0.0.md
+    format: markdown
+    loading_hint: always
+
+di_policy:
+  critical_binding_required: true
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+
+update_triggers:
+  - on_explicit_save
