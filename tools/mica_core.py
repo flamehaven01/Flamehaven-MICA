@@ -36,11 +36,11 @@ MICA_CANONICAL_VERSION = "0.2.8"
 # Patterns that mark a real incident-grounded origin_episode.
 # Any single match exempts the binding from the doctrinal WARN (v0.2.8).
 _EPISODE_PATTERNS = [
-    re.compile(r"EXP-[A-Z]"),          # episode code: EXP-OS-1, EXP-PN-2
-    re.compile(r"v\d+\.\d+"),           # version ref: v0.8.6, v1.2
-    re.compile(r"\d{4}-\d{2}-\d{2}"),   # ISO date: 2026-04-07
-    re.compile(r"\d{4}-\d{2}"),         # year-month: 2026-04
-    re.compile(r"#\d+"),                # issue number: #123
+    re.compile(r"EXP-[A-Z]"),  # episode code: EXP-OS-1, EXP-PN-2
+    re.compile(r"v\d+\.\d+"),  # version ref: v0.8.6, v1.2
+    re.compile(r"\d{4}-\d{2}-\d{2}"),  # ISO date: 2026-04-07
+    re.compile(r"\d{4}-\d{2}"),  # year-month: 2026-04
+    re.compile(r"#\d+"),  # issue number: #123
 ]
 
 

@@ -132,13 +132,23 @@ Schemas:
 | [mica-v0.2.7-archive-di-binding.schema.json](mica-v0.2.7-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.7) |
 | [mica-v0.2.4-archive-di-binding.schema.json](mica-v0.2.4-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.4, superseded) |
 
-v0.2.7 docs:
+v0.2.8 docs:
+
+| Document | Role |
+|---|---|
+| [docs/MICA_v0.2.8_CHANGELOG.md](docs/MICA_v0.2.8_CHANGELOG.md) | Release delta from v0.2.7 |
+| [docs/MICA_v0.2.8_RELEASE_NOTES.md](docs/MICA_v0.2.8_RELEASE_NOTES.md) | Release rationale |
+| [docs/MICA_v0.2.8_MIGRATION_GUIDE.md](docs/MICA_v0.2.8_MIGRATION_GUIDE.md) | v0.2.7 to v0.2.8 migration |
+| [docs/MICA_v0.2.8_APPROVAL_NOTE.md](docs/MICA_v0.2.8_APPROVAL_NOTE.md) | v0.2.8 approval rationale |
+| [CHANGELOG.md](CHANGELOG.md) | All-versions changelog summary |
+
+Carried forward from v0.2.7:
 
 | Document | Role |
 |---|---|
 | [docs/MICA_v0.2.7_RUNTIME_PROTOCOL.md](docs/MICA_v0.2.7_RUNTIME_PROTOCOL.md) | Full deployment model and PCT matrix |
-| [docs/MICA_v0.2.7_CHANGELOG.md](docs/MICA_v0.2.7_CHANGELOG.md) | Release delta from v0.2.6 |
-| [docs/MICA_v0.2.7_RELEASE_NOTES.md](docs/MICA_v0.2.7_RELEASE_NOTES.md) | Release rationale |
+| [docs/MICA_v0.2.7_CHANGELOG.md](docs/MICA_v0.2.7_CHANGELOG.md) | v0.2.7 release delta |
+| [docs/MICA_v0.2.7_RELEASE_NOTES.md](docs/MICA_v0.2.7_RELEASE_NOTES.md) | v0.2.7 release rationale |
 | [docs/MICA_v0.2.7_MIGRATION_GUIDE.md](docs/MICA_v0.2.7_MIGRATION_GUIDE.md) | v0.2.6 to v0.2.7 migration |
 | [docs/MICA_v0.2.7_APPROVAL_NOTE.md](docs/MICA_v0.2.7_APPROVAL_NOTE.md) | v0.2.7 approval rationale |
 | [templates/mica-v0.2.7-archive-bootstrap.json](templates/mica-v0.2.7-archive-bootstrap.json) | Bootstrap template (v0.2.7) |
