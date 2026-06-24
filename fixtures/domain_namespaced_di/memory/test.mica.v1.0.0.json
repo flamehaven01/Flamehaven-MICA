@@ -1,0 +1,42 @@
+{
+  "mica_spec": "0.2.7",
+  "mica_schema_version": "0.2.7",
+  "project": {
+    "name": "domain-namespaced-di-fixture",
+    "version": "1.0.0",
+    "status": "active",
+    "purpose": "Fixture: domain-namespaced DI IDs (DI-EQA-xxx, DI-BIO-xxx). Validates v0.2.7 pattern ^(DI|INV)(-[A-Z][A-Z0-9]*)?-\\d+$."
+  },
+  "design_invariants": [
+    {
+      "id": "DI-EQA-001",
+      "label": "mpmath-precision-lock",
+      "statement": "Standard float64 is banned for high-stakes EQA evaluations. Must use arbitrary-precision libraries at >= 200-bit.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-052: Standard double-precision floats underflowed to absolute zero in multi-quadratic class field calculations."
+      }
+    },
+    {
+      "id": "DI-BIO-001",
+      "label": "clinical-boundary-mapping",
+      "statement": "Bioscience audits must map model capabilities against the MIT AI Risk Repository to isolate high-risk biological surfaces.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-034: Ambiguity in bioclaw classification permitted unchecked deployment of synthetic biological sequence generators."
+      }
+    },
+    {
+      "id": "DI-EQA-002",
+      "label": "unmodified-run-provenance",
+      "statement": "Verification run JSON data must remain completely unedited to preserve audit integrity.",
+      "severity": "high",
+      "binding": {
+        "origin_episode": "EXP-053: Editing local execution outputs invalidates public verification signatures."
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-06-24"
+  }
+}

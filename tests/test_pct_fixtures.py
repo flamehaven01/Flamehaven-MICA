@@ -1,10 +1,11 @@
 """
-MICA v0.2.6 PCT fixture tests.
+MICA v0.2.7 PCT fixture tests.
 
 Each test runs run_pct_checks() against a known fixture and asserts the
 expected PCT-010/011 status and overall contract verdict.
 
 Fixtures are self-contained project roots under fixtures/.
+v0.2.7: added compact_mode and domain_namespaced_di fixture tests.
 """
 
 from __future__ import annotations
@@ -57,3 +58,18 @@ def test_binding_required_fail_is_incomplete():
 def test_hook_output_violations_only_is_closed():
     results = run_pct_checks(FIXTURES_DIR / "hook_output_violations_only")
     assert is_closed_contract(results), "hook_output_violations_only should be CLOSED CONTRACT"
+
+
+def test_compact_mode_returns_pct001_fail_and_pct009():
+    """COMPACT_MODE: no mica.yaml. PCT-001 FAIL + PCT-009 FAIL. pct=LEGACY is correct."""
+    results = run_pct_checks(FIXTURES_DIR / "compact_mode")
+    assert not is_closed_contract(results), "compact_mode has no mica.yaml; cannot be CLOSED"
+    assert _status(results, "PCT-001") == "FAIL"
+    assert _status(results, "PCT-009") == "FAIL"
+
+
+def test_domain_namespaced_di_is_closed():
+    """DI-EQA-xxx / DI-BIO-xxx IDs with critical_binding_required=true. PCT-010 PASS."""
+    results = run_pct_checks(FIXTURES_DIR / "domain_namespaced_di")
+    assert is_closed_contract(results), "domain_namespaced_di should be CLOSED CONTRACT"
+    assert _status(results, "PCT-010") == "PASS"

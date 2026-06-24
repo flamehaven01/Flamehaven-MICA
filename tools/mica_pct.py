@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA PCT Validator v0.2.6 -- portable self-diagnostic runner.
+MICA PCT Validator v0.2.7 -- portable self-diagnostic runner.
 
 Delegates all PCT judgment to mica_core.run_pct_checks().
 In v0.2.4 and earlier, mica_pct.py contained its own PCT logic and
@@ -10,6 +10,7 @@ always agree on package state.
 
 v0.2.6: PCT-010 escalates from WARN to FAIL when mica.yaml sets
 di_policy.critical_binding_required: true.
+v0.2.7: di_policy.namespace_mode added; no PCT behavior change.
 
 Usage:
     python mica_pct.py [project_root]
