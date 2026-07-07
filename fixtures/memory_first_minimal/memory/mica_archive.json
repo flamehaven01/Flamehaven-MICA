@@ -1,0 +1,12 @@
+{
+  "mica_spec": "0.2.9",
+  "project": {
+    "name": "memory_first_minimal",
+    "version": "1.0.0"
+  },
+  "operation_meta": {
+    "last_updated": "2026-07-07"
+  },
+  "design_invariants": [],
+  "memory_exports": []
+}

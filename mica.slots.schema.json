@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica.slots.schema.json",
+  "title": "MICA v0.2.9 Slot Projection",
+  "description": "Schema for mica.slots.json, the current stable projection of important working state.",
+  "type": "object",
+  "required": ["schema_version", "slots"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mica.slots.v1"
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slot"
+      }
+    }
+  },
+  "$defs": {
+    "slot": {
+      "type": "object",
+      "required": ["slot_id", "value_ref", "updated_at_utc", "stability"],
+      "additionalProperties": false,
+      "properties": {
+        "slot_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_\\-]*$"
+        },
+        "slot_kind": {
+          "type": "string",
+          "enum": [
+            "active_goal",
+            "active_branch",
+            "current_invariant_set",
+            "blocked_reason",
+            "next_operator_decision",
+            "custom"
+          ]
+        },
+        "value_ref": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+        },
+        "updated_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stability": {
+          "type": "string",
+          "enum": ["volatile", "stable", "pinned"]
+        },
+        "source_memory_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

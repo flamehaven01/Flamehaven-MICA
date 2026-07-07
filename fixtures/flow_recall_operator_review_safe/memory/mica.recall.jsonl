@@ -1,0 +1,1 @@
+{"candidate_id":"cand_00042","reason":"Pending candidate surfaced only for operator inspection.","recall_id":"rec_20260707_000001","schema_version":"mica.recall.v1","session_id":"sess_flow_001","source_event_ids":["obs_20260707_000120","obs_20260707_000121"],"target":"operator_review","timestamp_utc":"2026-07-07T04:30:00Z"}

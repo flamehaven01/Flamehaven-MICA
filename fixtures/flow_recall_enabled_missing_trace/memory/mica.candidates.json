@@ -1,0 +1,26 @@
+{
+  "schema_version": "mica.candidates.v1",
+  "candidates": [
+    {
+      "candidate_id": "cand_00042",
+      "stage": "candidate_memory",
+      "source_event_ids": [
+        "obs_20260707_000120",
+        "obs_20260707_000121"
+      ],
+      "claim": "Metric labels that fail provClassOf must not silently render without operator review.",
+      "target": "playbook_lesson",
+      "status": "pending_operator_review",
+      "risk": "public_surface_misclassification",
+      "trust_basis": "native_observation_trace",
+      "observed_at_utc": "2026-07-07T04:12:31Z",
+      "project_scope": "verification-ledger",
+      "operator_review": {
+        "state": "pending",
+        "reviewed_by": null,
+        "reviewed_at_utc": null,
+        "decision_reason": null
+      }
+    }
+  ]
+}

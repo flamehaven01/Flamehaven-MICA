@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica.memories.schema.json",
+  "title": "MICA v0.2.9 Memory Record",
+  "description": "Schema for one durable memory object in mica.memories.jsonl. Each line in the stream must validate independently.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "memory_id",
+    "created_at_utc",
+    "updated_at_utc",
+    "kind",
+    "status",
+    "project_scope",
+    "summary",
+    "source_event_ids",
+    "source_session_ids",
+    "trust_basis",
+    "promotion_stage",
+    "slot_refs",
+    "graph_refs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mica.memories.v1"
+    },
+    "memory_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "fact",
+        "lesson",
+        "decision",
+        "task_state",
+        "constraint",
+        "binding_candidate"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "pending_review",
+        "approved",
+        "promoted",
+        "superseded",
+        "rejected"
+      ]
+    },
+    "project_scope": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "source_event_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+      },
+      "uniqueItems": true
+    },
+    "source_session_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+      },
+      "uniqueItems": true
+    },
+    "trust_basis": {
+      "type": "string",
+      "enum": [
+        "native_observation_trace",
+        "attested_observation_trace",
+        "mixed_observation_trace",
+        "opaque_observation_trace"
+      ]
+    },
+    "promotion_stage": {
+      "type": "string",
+      "enum": [
+        "observe_only",
+        "candidate_memory",
+        "approved_lesson",
+        "bound_invariant_evidence",
+        "exported_archive",
+        "exported_playbook"
+      ]
+    },
+    "slot_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_\\-]*$"
+      },
+      "uniqueItems": true
+    },
+    "graph_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+      },
+      "uniqueItems": true
+    },
+    "operator_review": {
+      "type": "object",
+      "required": ["state", "reviewed_by", "reviewed_at_utc", "decision_reason"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["approved", "rejected", "superseded"]
+        },
+        "reviewed_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewed_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decision_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "origin_episode": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 2000
+    },
+    "supporting_event_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "promotion_stage": {
+            "const": "approved_lesson"
+          }
+        },
+        "required": ["promotion_stage"]
+      },
+      "then": {
+        "required": ["operator_review"],
+        "properties": {
+          "kind": {
+            "const": "lesson"
+          },
+          "status": {
+            "enum": ["approved", "promoted"]
+          },
+          "operator_review": {
+            "properties": {
+              "state": {
+                "const": "approved"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "promotion_stage": {
+            "const": "bound_invariant_evidence"
+          }
+        },
+        "required": ["promotion_stage"]
+      },
+      "then": {
+        "required": ["operator_review", "origin_episode", "supporting_event_ids"],
+        "properties": {
+          "trust_basis": {
+            "enum": [
+              "native_observation_trace",
+              "attested_observation_trace",
+              "mixed_observation_trace"
+            ]
+          },
+          "status": {
+            "enum": ["approved", "promoted"]
+          },
+          "operator_review": {
+            "properties": {
+              "state": {
+                "const": "approved"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

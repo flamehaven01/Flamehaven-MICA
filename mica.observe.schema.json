@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica.observe.schema.json",
+  "title": "MICA v0.2.9 Observation Record",
+  "description": "Schema for one append-only observation record in mica.observe.jsonl. Each line in the stream must validate independently.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "timestamp_utc",
+    "session_id",
+    "hook",
+    "scope",
+    "summary",
+    "redaction",
+    "trust_tier",
+    "source_system",
+    "event_hash"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mica.observe.v1"
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+      "description": "Stable identifier for this observation event. Must remain unchanged under redaction."
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp for when the observation was recorded."
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "hook": {
+      "type": "string",
+      "enum": [
+        "session_start",
+        "post_tool_failure",
+        "file_edit",
+        "session_end",
+        "operator_decision"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "object",
+      "required": ["project"],
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "description": "Redaction-safe summary of the observed event."
+    },
+    "redaction": {
+      "type": "object",
+      "required": ["applied", "policy"],
+      "additionalProperties": false,
+      "properties": {
+        "applied": {
+          "type": "boolean"
+        },
+        "policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "trust_tier": {
+      "type": "string",
+      "enum": ["native", "attested", "opaque"]
+    },
+    "source_system": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_event_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "imported_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "integrity_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["native", "signed_envelope", "hash_chain", "allowlisted_adapter"]
+        },
+        "result": {
+          "type": "string",
+          "enum": ["pass", "fail"]
+        },
+        "checked_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "event_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "Content hash for the normalized event payload."
+    },
+    "prev_event_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "Hash pointer to the previous event in the validated stream segment. Optional only for the first event in a segment."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "trust_tier": {
+            "const": "attested"
+          }
+        },
+        "required": ["trust_tier"]
+      },
+      "then": {
+        "required": [
+          "source_event_ref",
+          "imported_at_utc",
+          "integrity_validation"
+        ],
+        "properties": {
+          "integrity_validation": {
+            "required": ["mode", "result", "checked_at_utc"],
+            "properties": {
+              "result": {
+                "const": "pass"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "trust_tier": {
+            "const": "opaque"
+          }
+        },
+        "required": ["trust_tier"]
+      },
+      "then": {
+        "not": {
+          "required": ["integrity_validation"]
+        }
+      }
+    }
+  ]
+}

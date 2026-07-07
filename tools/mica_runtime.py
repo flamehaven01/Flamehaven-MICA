@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA runtime summary utility v0.2.7.
+MICA runtime summary utility v0.2.8.
 
 Usage:
     python tools/mica_runtime.py [project_root] --format text
@@ -12,6 +12,9 @@ v0.2.6: PCT-010 escalates from WARN to FAIL when mica.yaml sets
         di_policy.critical_binding_required: true. No runtime.py changes required.
 v0.2.7: COMPACT_MODE formally defined; di_policy.namespace_mode added. No runtime
         behavior changes required -- COMPACT_MODE uses existing LEGACY_MODE path.
+
+Unreleased working-tree draft: text/json output can surface separate Core and Flow
+states for v0.2.9 flow-enabled packages without changing legacy hook output.
 """
 
 from __future__ import annotations
@@ -28,6 +31,8 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from mica_core import (
+    MICA_TOOL_VERSION,
+    find_flow_artifact,
     find_legacy_archive,
     find_mica_yaml,
     is_closed_contract,
@@ -35,6 +40,8 @@ from mica_core import (
     load_yaml,
     run_pct_checks,
 )
+
+__version__ = MICA_TOOL_VERSION
 
 
 def detect_state(project_root: Path) -> tuple[str, Path | None, Path | None]:
@@ -60,9 +67,10 @@ def resolve_paths(
         rel = lyr.get("path")
         if not isinstance(rel, str):
             continue
-        if lyr.get("name") == "archive":
+        role = lyr.get("kind") or lyr.get("name")
+        if role == "archive":
             archive_path = project_root / rel
-        elif lyr.get("name") == "playbook":
+        elif role == "playbook":
             playbook_path = project_root / rel
     return yd, archive_path, playbook_path
 
@@ -91,6 +99,113 @@ def _extract_critical_invariants(dis: list[dict[str, Any]]) -> list[dict[str, An
         result.append(entry)
     return result
 
+
+
+
+def _pct_entry(results: list[tuple[str, str, str]], pct_id: str) -> tuple[str | None, str | None]:
+    for pid, status, message in results:
+        if pid == pct_id:
+            return status, message
+    return None, None
+
+
+def _candidate_counts(project_root: Path) -> tuple[int, int, int]:
+    candidates_path = find_flow_artifact(project_root, "mica.candidates.json")
+    if not candidates_path:
+        return (0, 0, 0)
+    doc = load_json(candidates_path)
+    candidates = doc.get("candidates") if isinstance(doc.get("candidates"), list) else []
+    pending = 0
+    approved = 0
+    promoted = 0
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        status = candidate.get("status")
+        if status == "pending_operator_review":
+            pending += 1
+        elif status == "approved":
+            approved += 1
+        elif status == "promoted":
+            promoted += 1
+    return pending, approved, promoted
+
+
+def _build_flow_summary(
+    project_root: Path, yd: dict[str, Any], pct_results: list[tuple[str, str, str]]
+) -> dict[str, Any]:
+    flow_policy = yd.get("flow_policy", {}) if isinstance(yd.get("flow_policy"), dict) else {}
+    flow_declared = isinstance(yd.get("flow_policy"), dict)
+    enabled = bool(flow_policy.get("enabled", False))
+    required = bool(flow_policy.get("required", False))
+
+    if not flow_declared and not enabled:
+        return {
+            "flow_policy_declared": False,
+            "flow_enabled": False,
+            "flow_required": False,
+            "flow_state": None,
+            "flow_observation_status": None,
+            "flow_promotion_gate": None,
+            "flow_candidate_counts": {"pending": 0, "approved": 0, "promoted": 0},
+            "flow_reason": None,
+        }
+
+    if not enabled:
+        return {
+            "flow_policy_declared": True,
+            "flow_enabled": False,
+            "flow_required": required,
+            "flow_state": "FLOW_OFFLINE",
+            "flow_observation_status": "OFFLINE",
+            "flow_promotion_gate": "OFFLINE",
+            "flow_candidate_counts": {"pending": 0, "approved": 0, "promoted": 0},
+            "flow_reason": None,
+        }
+
+    pct013_status, pct013_message = _pct_entry(pct_results, "PCT-013")
+    pct014_status, pct014_message = _pct_entry(pct_results, "PCT-014")
+    pct015_status, pct015_message = _pct_entry(pct_results, "PCT-015")
+    pct017_status, pct017_message = _pct_entry(pct_results, "PCT-017")
+    pct018_status, pct018_message = _pct_entry(pct_results, "PCT-018")
+    pending, approved, promoted = _candidate_counts(project_root)
+    failures = [
+        (status, message)
+        for status, message in (
+            (pct013_status, pct013_message),
+            (pct015_status, pct015_message),
+            (pct017_status, pct017_message),
+        )
+        if status == "FAIL"
+    ]
+    warnings = [
+        (status, message)
+        for status, message in ((pct014_status, pct014_message), (pct018_status, pct018_message))
+        if status == "WARN"
+    ]
+    flow_state = "FLOW_DEGRADED" if failures or warnings else "FLOW_ENABLED"
+    promotion_gate = "FAIL" if pct015_status == "FAIL" or pct017_status == "FAIL" else "PASS"
+    if failures:
+        flow_reason = failures[0][1]
+    elif warnings:
+        flow_reason = warnings[0][1]
+    else:
+        flow_reason = None
+
+    return {
+        "flow_policy_declared": True,
+        "flow_enabled": True,
+        "flow_required": required,
+        "flow_state": flow_state,
+        "flow_observation_status": pct013_status or "UNKNOWN",
+        "flow_promotion_gate": promotion_gate,
+        "flow_candidate_counts": {
+            "pending": pending,
+            "approved": approved,
+            "promoted": promoted,
+        },
+        "flow_reason": flow_reason,
+    }
 
 def pct_status(project_root: Path) -> str:
     """
@@ -121,6 +236,8 @@ def build_summary(project_root: Path) -> dict[str, Any]:
                 "critical_invariants": [],
                 "last_updated": None,
                 "hook_output": {},
+                "core_state": "INACTIVE",
+                "flow_state": None,
             }
         )
         return base
@@ -141,6 +258,8 @@ def build_summary(project_root: Path) -> dict[str, Any]:
                 "critical_invariants": _extract_critical_invariants(dis),
                 "last_updated": (archive.get("operation_meta") or {}).get("last_updated"),
                 "hook_output": {},
+                "core_state": "LEGACY",
+                "flow_state": None,
             }
         )
         return base
@@ -152,20 +271,25 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     hook_output_raw = inv.get("hook_output") if isinstance(inv.get("hook_output"), dict) else {}
     proj = archive.get("project") if isinstance(archive.get("project"), dict) else {}
+    pct_results = run_pct_checks(project_root)
+    core_state = "CLOSED" if is_closed_contract(pct_results) else "INCOMPLETE"
+    flow_summary = _build_flow_summary(project_root, yd, pct_results)
     base.update(
         {
             "name": yd.get("name") or proj.get("name"),
             "version": proj.get("version"),
             "mode": yd.get("mode"),
             "pattern": inv.get("primary_pattern", "readme_protocol"),
-            "pct": pct_status(project_root),
+            "pct": core_state,
             "critical_count": crit,
             "high_count": high,
             "critical_invariants": _extract_critical_invariants(dis),
             "last_updated": (archive.get("operation_meta") or {}).get("last_updated"),
             "hook_output": hook_output_raw,
+            "core_state": core_state,
         }
     )
+    base.update(flow_summary)
     return base
 
 
@@ -185,9 +309,26 @@ def emit_text(summary: dict[str, Any]) -> str:
         f"Mode      : {summary.get('mode') or 'legacy'}",
         f"Pattern   : {summary.get('pattern') or 'legacy'}",
         f"Invariants: {summary.get('critical_count', 0)} critical, {summary.get('high_count', 0)} high",
-        f"PCT       : {summary.get('pct')}",
         f"Last upd  : {summary.get('last_updated') or 'unknown'}",
     ]
+    if summary.get("flow_state"):
+        counts = summary.get("flow_candidate_counts") if isinstance(summary.get("flow_candidate_counts"), dict) else {}
+        lines.extend(
+            [
+                f"Core      : {summary.get('core_state')}",
+                f"Flow      : {summary.get('flow_state')}",
+                f"Observation: {summary.get('flow_observation_status')}",
+                "Candidates: "
+                f"{counts.get('pending', 0)} pending, "
+                f"{counts.get('approved', 0)} approved, "
+                f"{counts.get('promoted', 0)} promoted",
+                f"Promotion gate: {summary.get('flow_promotion_gate')}",
+            ]
+        )
+        if summary.get("flow_reason"):
+            lines.append(f"Reason    : {summary.get('flow_reason')}")
+    else:
+        lines.append(f"PCT       : {summary.get('pct')}")
     crits = summary.get("critical_invariants", []) or []
     if crits:
         lines.append("")
@@ -257,3 +398,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

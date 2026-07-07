@@ -1,0 +1,67 @@
+mica_spec: "0.2.9"
+mode: memory_first
+
+memory_policy:
+  primary_store: memory/
+  session_capture: true
+  observation_append_only: true
+  memory_exports_required: true
+  slot_projection_enabled: true
+  graph_projection_enabled: true
+
+flow_policy:
+  enabled: true
+  required: false
+
+promotion_policy:
+  candidate_to_lesson_requires:
+    - source_event
+    - observed_at_utc
+    - project_scope
+    - operator_review
+  candidate_to_binding_requires:
+    - origin_episode
+    - supporting_event_ids
+    - operator_review
+    - trust_tier_not_opaque
+
+layers:
+  - id: sessions
+    kind: sessions
+    path: memory/mica.sessions.jsonl
+    loading_hint: on_demand
+
+  - id: observe
+    kind: observations
+    path: memory/mica.observe.jsonl
+    loading_hint: always
+
+  - id: memories
+    kind: memories
+    path: memory/mica.memories.jsonl
+    loading_hint: on_demand
+
+  - id: recall
+    kind: recall
+    path: memory/mica.recall.jsonl
+    loading_hint: on_demand
+
+  - id: slots
+    kind: slots
+    path: memory/mica.slots.json
+    loading_hint: always
+
+  - id: graph
+    kind: graph
+    path: memory/mica.graph.jsonl
+    loading_hint: on_demand
+
+  - id: archive_export
+    kind: archive
+    path: memory/mica_archive.json
+    loading_hint: always
+
+  - id: playbook_export
+    kind: playbook
+    path: memory/mica_playbook.md
+    loading_hint: always

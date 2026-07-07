@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica.candidates.schema.json",
+  "title": "MICA v0.2.9 Candidate Registry",
+  "description": "Schema for mica.candidates.json, the mutable registry holding candidate memory items and their review provenance.",
+  "type": "object",
+  "required": ["schema_version", "candidates"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mica.candidates.v1"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/candidate"
+      }
+    }
+  },
+  "$defs": {
+    "operatorReview": {
+      "type": "object",
+      "required": ["state", "reviewed_by", "reviewed_at_utc", "decision_reason"],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected", "superseded"]
+        },
+        "reviewed_by": {
+          "type": ["string", "null"]
+        },
+        "reviewed_at_utc": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "decision_reason": {
+          "type": ["string", "null"],
+          "maxLength": 2000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "pending"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "reviewed_by": {
+                "type": "null"
+              },
+              "reviewed_at_utc": {
+                "type": "null"
+              },
+              "decision_reason": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": ["approved", "rejected", "superseded"]
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "reviewed_by": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewed_at_utc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "decision_reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            }
+          }
+        }
+      ]
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "candidate_id",
+        "stage",
+        "source_event_ids",
+        "claim",
+        "target",
+        "status",
+        "risk",
+        "trust_basis",
+        "observed_at_utc",
+        "project_scope",
+        "operator_review"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "candidate_memory",
+            "approved_lesson",
+            "bound_invariant_evidence"
+          ]
+        },
+        "source_event_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "uniqueItems": true
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "target": {
+          "type": "string",
+          "enum": ["playbook_lesson", "binding_evidence", "recall_hint"]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending_operator_review",
+            "approved",
+            "rejected",
+            "promoted",
+            "superseded"
+          ]
+        },
+        "risk": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "trust_basis": {
+          "type": "string",
+          "enum": [
+            "native_observation_trace",
+            "attested_observation_trace",
+            "mixed_observation_trace",
+            "opaque_observation_trace"
+          ]
+        },
+        "observed_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "project_scope": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "origin_episode": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 2000
+        },
+        "supporting_event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+          },
+          "uniqueItems": true
+        },
+        "operator_review": {
+          "$ref": "#/$defs/operatorReview"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "approved_lesson"
+              }
+            },
+            "required": ["stage"]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": ["approved", "promoted"]
+              },
+              "operator_review": {
+                "properties": {
+                  "state": {
+                    "const": "approved"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "bound_invariant_evidence"
+              }
+            },
+            "required": ["stage"]
+          },
+          "then": {
+            "required": ["origin_episode", "supporting_event_ids"],
+            "properties": {
+              "status": {
+                "const": "promoted"
+              },
+              "target": {
+                "const": "binding_evidence"
+              },
+              "operator_review": {
+                "properties": {
+                  "state": {
+                    "const": "approved"
+                  }
+                }
+              },
+              "trust_basis": {
+                "enum": [
+                  "native_observation_trace",
+                  "attested_observation_trace",
+                  "mixed_observation_trace"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

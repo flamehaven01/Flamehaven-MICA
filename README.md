@@ -1,9 +1,19 @@
-# MICA v0.2.8 — Binding Depth Edition
+# MICA
+
+Current stable tag: `v0.2.8` (`Binding Depth Edition`)
+Current working direction: `v0.2.9` draft for flow-plane governance and memory-first packaging
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
 This repository tracks MICA from v0.2.6 onward. Legacy versions (v0.2.5 and earlier)
 are in the `Legacy/` directory and are not tracked by git.
+
+## Release Status
+
+| Track | Status | Notes |
+|---|---|---|
+| Stable | `v0.2.8` | Latest tagged release and current tool banner version |
+| Draft | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
 
 ## What MICA is
 
@@ -53,8 +63,9 @@ Tools:
 | File | Role |
 |---|---|
 | `tools/mica_core.py` | Shared PCT judgment and YAML loading |
-| `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-011) |
+| `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-012) |
 | `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
+| `tools/mica_memory.py` | Memory-first read/write utility for sessions, memories, graph edges, and slot projections |
 
 Fixtures:
 
@@ -77,6 +88,18 @@ python tools/mica_pct.py [project_root]
 # Runtime summary
 python tools/mica_runtime.py [project_root] --format text
 python tools/mica_runtime.py [project_root] --format hook
+
+# Memory-first utility
+python tools/mica_memory.py [project_root] paths
+python tools/mica_memory.py [project_root] dump slots
+python tools/mica_memory.py [project_root] synthesize-memories
+python tools/mica_memory.py [project_root] refresh-projections
+python tools/mica_memory.py [project_root] review-memory --memory-id mem.obs.obs_2001 --record-file review.json
+python tools/mica_memory.py [project_root] export
+python tools/mica_memory.py [project_root] materialize
+
+# Bound invariant evidence now contributes synthesized archive design_invariants during export
+# materialize = synthesize candidate memories + export archive/playbook + rebuild slots/graph
 
 # Run fixture tests
 python -m pytest tests/ -v
@@ -130,10 +153,75 @@ Schemas:
 |---|---|
 | [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema |
 | [mica-v0.2.7-archive-di-binding.schema.json](mica-v0.2.7-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.7) |
-| [mica-v0.2.4-archive-di-binding.schema.json](mica-v0.2.4-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.4, superseded) |
+| [mica.sessions.schema.json](mica.sessions.schema.json) | Session envelope schema draft for v0.2.9 memory-first packages |
+| [mica.observe.schema.json](mica.observe.schema.json) | Observation record schema draft for v0.2.9 flow plane |
+| [mica.memories.schema.json](mica.memories.schema.json) | Durable memory record schema draft for v0.2.9 memory-first packages |
+| [mica.candidates.schema.json](mica.candidates.schema.json) | Candidate registry schema draft for v0.2.9 flow plane |
+| [mica.recall.schema.json](mica.recall.schema.json) | Recall trace schema draft for v0.2.9 flow plane |
+| [mica.slots.schema.json](mica.slots.schema.json) | Stable slot projection schema draft for v0.2.9 memory-first packages |
+| [mica.graph.schema.json](mica.graph.schema.json) | Memory graph edge schema draft for v0.2.9 memory-first packages |
+
+v0.2.9 draft docs:
+
+| Document | Role |
+|---|---|
+| [docs/MICA_v0.2.9_EVOLUTION_BLUEPRINT.md](docs/MICA_v0.2.9_EVOLUTION_BLUEPRINT.md) | Blueprint for governed memory flow layer above external memory engines |
+| [docs/MICA_v0.2.9_EXECUTION_PLAN.md](docs/MICA_v0.2.9_EXECUTION_PLAN.md) | P0-P4 phased execution plan for the v0.2.9 blueprint |
+| [docs/PCT-013_v0.2.9_SPEC.md](docs/PCT-013_v0.2.9_SPEC.md) | Static flow check spec for observation coherence when flow is enabled |
+| [docs/PCT-014_v0.2.9_SPEC.md](docs/PCT-014_v0.2.9_SPEC.md) | Recall trace coverage spec for active flow recall surfaces |
+| [docs/PCT-015_v0.2.9_SPEC.md](docs/PCT-015_v0.2.9_SPEC.md) | Promotion provenance spec for approved lessons and bound evidence |
+| [docs/PCT-017_v0.2.9_SPEC.md](docs/PCT-017_v0.2.9_SPEC.md) | Runtime injection safety spec for unapproved candidates |
+| [docs/PCT-018_v0.2.9_SPEC.md](docs/PCT-018_v0.2.9_SPEC.md) | Runtime telemetry completeness spec for joinable flow traces |
+| [docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md](docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md) | Core/Flow reporting contract for truthful runtime output |
+| [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) | Packaging and handoff guide for making other repositories MICA-capable |
+| [docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md) | Draft structure for evolving MICA from governed exports into a memory-first substrate |
+
+
+
+v0.2.9 draft validator examples:
+
+```text
+python tools/mica_pct.py fixtures/flow_observation_valid
+PCT-013 [PASS] memory\mica.observe.jsonl parseable and hash-chain coherent (2 records)
+```
+
+```text
+python tools/mica_pct.py fixtures/flow_candidates_broken_provenance
+PCT-015 [FAIL] cand_00044: unknown source_event_ids ['obs_missing_999']
+Overall: INCOMPLETE
+```
+
+```text
+python tools/mica_pct.py fixtures/flow_recall_enabled_missing_trace
+PCT-014 [WARN] recall enabled but mica.recall.jsonl missing
+PCT-009 [PASS] package complete. closed contract verified.
+```
+
+```text
+python tools/mica_runtime.py fixtures/flow_recall_agent_context_violation --format text
+Core      : INCOMPLETE
+Flow      : FLOW_DEGRADED
+Promotion gate: FAIL
+Reason    : candidate cand_00042 entered agent_context while operator_review.state=pending
+```
+
+Memory-first starter contract:
+
+```text
+repo/
+  mica.yaml
+  memory/
+    mica.sessions.jsonl
+    mica.observe.jsonl
+    mica.memories.jsonl
+    mica.recall.jsonl
+    mica.slots.json
+    mica.graph.jsonl
+    mica_archive.json
+    mica_playbook.md
+```
 
 v0.2.8 docs:
-
 | Document | Role |
 |---|---|
 | [docs/MICA_v0.2.8_CHANGELOG.md](docs/MICA_v0.2.8_CHANGELOG.md) | Release delta from v0.2.7 |

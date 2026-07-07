@@ -1,0 +1,16 @@
+mica_spec: 0.2.9
+name: flow_recall_incomplete_telemetry
+mode: memory_injection
+layers:
+  - name: archive
+    path: memory/test.mica.v1.0.0.json
+    required: true
+  - name: playbook
+    path: memory/test-playbook.v1.0.0.md
+    required: true
+flow_policy:
+  enabled: true
+  required: false
+recall_policy:
+  enabled: true
+  inject_unapproved_candidates: false

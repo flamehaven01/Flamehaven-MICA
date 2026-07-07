@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA PCT Validator v0.2.7 -- portable self-diagnostic runner.
+MICA PCT Validator v0.2.8 -- portable self-diagnostic runner.
 
 Delegates all PCT judgment to mica_core.run_pct_checks().
 In v0.2.4 and earlier, mica_pct.py contained its own PCT logic and
@@ -27,7 +27,9 @@ _TOOLS_DIR = Path(__file__).resolve().parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from mica_core import is_closed_contract, run_pct_checks
+from mica_core import MICA_TOOL_VERSION, format_tool_banner, is_closed_contract, run_pct_checks
+
+__version__ = MICA_TOOL_VERSION
 
 
 def _report(results: list[tuple[str, str, str]]) -> bool:
@@ -46,7 +48,7 @@ def main() -> None:
     if not root.is_dir():
         print(f"[ERROR] Not a directory: {root}")
         sys.exit(1)
-    print("MICA PCT Validator v0.2.6")
+    print(format_tool_banner("MICA PCT Validator"))
     print(f"Project root: {root}")
     results = run_pct_checks(root)
     closed = _report(results)
@@ -55,3 +57,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

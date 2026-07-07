@@ -1,0 +1,11 @@
+{
+  "mica_spec": "0.2.9",
+  "project": {
+    "name": "flow_candidates_broken_provenance",
+    "version": "1.0.0"
+  },
+  "operation_meta": {
+    "last_updated": "2026-07-07"
+  },
+  "design_invariants": []
+}

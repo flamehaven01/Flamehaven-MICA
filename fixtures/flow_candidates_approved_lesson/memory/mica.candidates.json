@@ -1,0 +1,26 @@
+{
+  "schema_version": "mica.candidates.v1",
+  "candidates": [
+    {
+      "candidate_id": "cand_00043",
+      "stage": "approved_lesson",
+      "source_event_ids": [
+        "obs_20260707_000120",
+        "obs_20260707_000121"
+      ],
+      "claim": "Promotion provenance must preserve source-event identity even when payload content is redacted.",
+      "target": "playbook_lesson",
+      "status": "approved",
+      "risk": "audit_breakage",
+      "trust_basis": "native_observation_trace",
+      "observed_at_utc": "2026-07-07T04:12:31Z",
+      "project_scope": "verification-ledger",
+      "operator_review": {
+        "state": "approved",
+        "reviewed_by": "operator.flamehaven",
+        "reviewed_at_utc": "2026-07-07T04:20:00Z",
+        "decision_reason": "Claim is grounded in valid source events and safe for lesson promotion."
+      }
+    }
+  ]
+}

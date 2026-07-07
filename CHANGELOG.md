@@ -5,64 +5,119 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
-## v0.2.8 — Binding Depth Edition (2026-06-24)
+## Unreleased
+
+Post-`v0.2.8` working-tree changes not yet tagged.
+Latest git tag remains `v0.2.8`.
+
+- Tool version banner alignment: `mica_pct.py` and `mica_runtime.py` now report `v0.2.8` consistently
+- Legacy archive selection is now deterministic: highest version first, then `operation_meta.last_updated`
+- Regression tests expanded: 10 -> 13
+- README doc sanity updated: PCT range now includes PCT-012; superseded v0.2.4 root schema link removed
+- v0.2.9 design blueprint added: `docs/MICA_v0.2.9_EVOLUTION_BLUEPRINT.md`
+- v0.2.9 phased execution plan added: `docs/MICA_v0.2.9_EXECUTION_PLAN.md`
+- v0.2.9 schema drafts added: `mica.observe.schema.json`, `mica.candidates.schema.json`, `mica.recall.schema.json`, and flow fixtures
+- v0.2.9 flow validator now enforces `PCT-013`, `PCT-015`, and `PCT-017` with runtime `Core` / `Flow` separation
+- v0.2.9 PCT spec notes added: `docs/PCT-013_v0.2.9_SPEC.md`, `docs/PCT-014_v0.2.9_SPEC.md`, `docs/PCT-015_v0.2.9_SPEC.md`, `docs/PCT-017_v0.2.9_SPEC.md`, `docs/PCT-018_v0.2.9_SPEC.md`
+- v0.2.9 runtime status contract added: `docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md`
+- cross-repo packaging guidance added: `docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md`
+- memory-first architecture draft and starter template added: `docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md`, `templates/mica-v0.2.9-memory-first.yaml`
+- `mica.yaml.schema.json`, `mica_core.py`, and `mica_runtime.py` now accept `mode: memory_first` plus kind-based export layers
+- memory-first record schema drafts added: `mica.sessions.schema.json`, `mica.memories.schema.json`, `mica.slots.schema.json`, `mica.graph.schema.json`
+- `tools/mica_memory.py` added: minimal writer/parser utility for memory-first sessions, memories, graph edges, and slots
+- `tools/mica_memory.py synthesize-memories` added: deterministic observe -> candidate_memory promotion
+- `tools/mica_memory.py refresh-projections` added: deterministic memories -> slots / graph projection rebuild
+- `tools/mica_memory.py review-memory` added: deterministic candidate_memory -> approved_lesson / bound_invariant_evidence promotion
+- `tools/mica_memory.py export` now materializes archive/playbook surfaces from approved/promoted memories and synthesizes design_invariants from bound evidence
+- `tools/mica_memory.py materialize` added: single-command rebuild for observations -> memories -> archive/playbook -> slots/graph
+- Repository metadata sanity pending no further release tag until v0.2.9 scope is intentionally cut
+
+---
+
+## v0.2.8 - Binding Depth Edition (2026-06-24)
 
 **4 new PCT signals. No existing package breaks. All new signals are WARN or INFO.**
 
-- **PCT-010 doctrinal WARN**: Detects `origin_episode` with no episode code (`EXP-xxx`), version ref, or date — signals ungrounded binding
-- **PCT-010 coherence WARN**: `violation_count > 0` with empty `last_triggered` → data defect
-- **PCT-012 new (opt-in)**: `di_policy.max_archive_age_days` in mica.yaml → WARN when archive is stale
+- **PCT-010 doctrinal WARN**: Detects `origin_episode` with no episode code (`EXP-xxx`), version ref, or date - signals ungrounded binding
+- **PCT-010 coherence WARN**: `violation_count > 0` with empty `last_triggered` -> data defect
+- **PCT-012 new (opt-in)**: `di_policy.max_archive_age_days` in mica.yaml -> WARN when archive is stale
 - **PCT-006 version lag**: WARN when `mica_spec` is >= 2 versions behind canonical `0.2.8`
 - `_EPISODE_PATTERNS`, `MICA_CANONICAL_VERSION`, `_parse_version()` added to mica_core.py
 - `di_policy.max_archive_age_days` added to mica.yaml.schema.json
 - 3 new fixtures: `doctrinal_binding`, `stale_archive`, `violation_count_incoherent`
-- Tests: 7 → 10 (all GREEN)
+- Tests: 7 -> 10 (all GREEN)
 
-→ [MICA_v0.2.8_CHANGELOG.md](docs/MICA_v0.2.8_CHANGELOG.md) | [MICA_v0.2.8_APPROVAL_NOTE.md](docs/MICA_v0.2.8_APPROVAL_NOTE.md)
-
----
-
-## v0.2.7 — Frame Stabilization Edition (2026-06-24)
-
-**Deployment model + DI namespace formalized. 19 drift docs removed.**
-
-- **COMPACT_MODE** formally defined: intentional no-mica.yaml deployment vs pre-migration LEGACY_MODE
-- **`di_policy.namespace_mode`**: `sequential` / `domain_namespaced` / `legacy_inv`
-- **`mica-v0.2.7-archive-di-binding.schema.json`**: Extended DI ID pattern `^(DI|INV)(-[A-Z][A-Z0-9]*)?-\d+$`
-- **`docs/MICA_v0.2.7_RUNTIME_PROTOCOL.md`**: Full deployment model, PCT matrix, invocation hierarchy
-- 2 new fixtures: `compact_mode`, `domain_namespaced_di`
-- Tests: 5 → 7 (all GREEN)
-- 19 repo-governance drift docs deleted
-
-→ [MICA_v0.2.7_CHANGELOG.md](docs/MICA_v0.2.7_CHANGELOG.md) | [MICA_v0.2.7_APPROVAL_NOTE.md](docs/MICA_v0.2.7_APPROVAL_NOTE.md)
+-> [MICA_v0.2.8_CHANGELOG.md](docs/MICA_v0.2.8_CHANGELOG.md) | [MICA_v0.2.8_APPROVAL_NOTE.md](docs/MICA_v0.2.8_APPROVAL_NOTE.md)
 
 ---
 
-## v0.2.6 — Binding Enforcement Edition (2026-05-xx)
+## v0.2.7 - Frame Stabilization Edition (2026-06-24)
 
-**PCT-010 can now escalate from WARN to FAIL (opt-in).**
+**A small but important compatibility release that stabilizes hook output, LEGACY handling, and policy naming.**
 
-- `di_policy.critical_binding_required: true` in mica.yaml → PCT-010 FAIL for unbound critical DIs
-- PCT-010 added to `HARD_FAIL_CHECKS`
-- `tests/test_pct_fixtures.py`: 5 pytest tests covering all fixtures
-- `.github/workflows/ci.yml`: pytest + ruff matrix (Python 3.9, 3.11, 3.12)
-- `pyproject.toml` + `requirements-dev.txt` added
+- `COMPACT_MODE` formalized as a first-class deployment interpretation
+- `di_policy.namespace_mode` added to `mica.yaml.schema.json`
+- `mica_runtime.py` LEGACY and INACTIVE handling clarified; no behavior break
+- Hook-output summary format preserved while adding policy forward-compatibility
+- Legacy packages remain valid
+
+---
+
+## v0.2.6 - Critical Binding Escalation (2026-06-24)
+
+**First opt-in hard fail for unbound critical invariants.**
+
+- `di_policy.critical_binding_required: true` now escalates unbound critical DIs from WARN to FAIL
+- `mica_core.run_pct_checks()` owns that escalation logic so validator and runtime agree
 - New fixture: `binding_required_fail`
-
-→ [MICA_v0.2.6_CHANGELOG.md](docs/MICA_v0.2.6_CHANGELOG.md) | [MICA_v0.2.6_APPROVAL_NOTE.md](docs/MICA_v0.2.6_APPROVAL_NOTE.md)
-
----
-
-## v0.2.5
-
-PCT-010/011 checks added. Fixtures introduced. DI binding schema (v0.2.4) extended to support `lesson_ref`.
-
-→ [MICA_v0.2.5_CHANGELOG.md](docs/MICA_v0.2.5_CHANGELOG.md)
+- Existing packages unchanged unless they opt in
 
 ---
 
-## v0.2.4
+## v0.2.5 - Runtime/PCT Unification (2026-06-24)
 
-DI binding schema introduced. `binding.origin_episode` formalized. Hook output policy added.
+**Single source of truth for package judgment.**
 
-→ [MICA_v0.2.4_APPROVAL_NOTE.md](docs/MICA_v0.2.4_APPROVAL_NOTE.md)
+- `mica_pct.py` and `mica_runtime.py` now both delegate PCT judgment to `mica_core.run_pct_checks()`
+- `tools/mica_runtime.py` reports `CLOSED`, `INCOMPLETE`, `LEGACY`, or `INACTIVE` consistently
+- Hook-specific coherence warning added when `loading_hint=hook` is used without `hook_trigger`
+- Added fixture: `hook_output_violations_only`
+
+---
+
+## v0.2.4 - Archive Binding Contract (2026-06-24)
+
+**Introduced DI binding truth checks without breaking older archives.**
+
+- `PCT-010` added: critical DI binding presence / truth-depth checks
+- `PCT-011` added: `binding.lesson_ref` dead-link detection
+- Legacy archive structure remains valid when bindings are absent
+
+---
+
+## v0.2.3 - Hook Invocation Surface (2026-06-24)
+
+- `invocation_protocol.hook_output` added
+- Hook-trigger invocation pattern stabilized
+
+---
+
+## v0.2.2 - Invocation Protocol (2026-06-24)
+
+- `invocation_protocol.primary_pattern` introduced
+- Runtime summary now reports invocation pattern
+
+---
+
+## v0.2.1 - Portable Packaging Pass (2026-06-24)
+
+- Added portable path layering rules in `mica.yaml`
+- Strengthened package completeness checks
+
+---
+
+## v0.2.0 - Control Plane Baseline (2026-06-24)
+
+- Initial `mica.yaml` packaging contract
+- Archive / playbook dual-layer model
+- First PCT family for package closure checks
