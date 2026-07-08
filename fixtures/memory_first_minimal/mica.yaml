@@ -11,6 +11,12 @@ memory_policy:
 flow_policy:
   enabled: false
   required: false
+invocation_protocol:
+  primary_pattern: explicit
+  agent_context_surfaces:
+    - archive
+    - playbook
+    - slots
 layers:
   - id: sessions
     kind: sessions
@@ -44,3 +50,4 @@ layers:
     kind: playbook
     path: memory/mica_playbook.md
     loading_hint: always
+

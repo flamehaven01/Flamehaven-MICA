@@ -37,6 +37,10 @@ Three assets form the minimal MICA package surface:
 Tools validate and summarize the package at session start. MICA's job: locate the memory
 package, load the declared context surfaces, activate against invariants, and declare loaded state truthfully.
 
+For invocation-first packages, `invocation_protocol.agent_context_surfaces` can explicitly declare
+which invoked surfaces may enter `agent_context`. Those surfaces must also be session-start loaded,
+or `PCT-007` fails the package contract.
+
 The current v0.2.9 draft adds governance and memory-first machinery beneath that surface.
 Those additions remain subordinate to the invocation contract and should not replace it as MICA's core.
 

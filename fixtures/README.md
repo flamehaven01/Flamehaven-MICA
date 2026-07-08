@@ -50,7 +50,7 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 | `flow_recall_agent_context_violation/` | v0.2.9 draft | - | - | - | INCOMPLETE | Pending candidate injected into `agent_context`; `PCT-017` FAIL |
 | `flow_recall_enabled_missing_trace/` | v0.2.9 draft | - | - | - | CLOSED | Recall enabled but trace missing; `PCT-014` WARN and `Flow=FLOW_DEGRADED` |
 | `flow_recall_incomplete_telemetry/` | v0.2.9 draft | - | - | - | CLOSED | Recall trace exists but is not fully joinable; `PCT-018` WARN and `Flow=FLOW_DEGRADED` |
-| `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present |
+| `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present and explicit `agent_context` surfaces |
 
 ## Expected Outputs
 

@@ -242,11 +242,14 @@ def layer_role(layer: dict[str, Any]) -> str:
 
 
 _INVOKED_LOADING_HINTS = frozenset({"always", "session_start_only"})
-_AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "slots", "lessons")
+_AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "slots", "lessons", "memories")
+_AGENT_CONTEXT_ALLOWED_SURFACES = frozenset(_AGENT_CONTEXT_ROLE_ORDER)
 
 
 def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
+    inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
+    raw_agent_context = inv.get("agent_context_surfaces") if isinstance(inv.get("agent_context_surfaces"), list) else None
     mode = str(yd.get("mode") or "")
     declared_surfaces: list[str] = []
     invoked_surfaces: list[str] = []
@@ -270,9 +273,32 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
     deferred_surfaces = [role for role in declared_surfaces if role not in invoked_surfaces]
     required_session_start = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
     missing_invoked_surfaces = [role for role in required_session_start if role not in invoked_surfaces]
-    agent_context_surfaces = [role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces]
-    if not agent_context_surfaces:
-        agent_context_surfaces = list(invoked_surfaces)
+
+    configured_agent_context_surfaces: list[str] = []
+    invalid_agent_context_surfaces: list[str] = []
+    undeclared_agent_context_surfaces: list[str] = []
+    non_invoked_agent_context_surfaces: list[str] = []
+    if raw_agent_context is not None:
+        for surface in raw_agent_context:
+            if not _is_non_empty_string(surface):
+                continue
+            role = str(surface)
+            configured_agent_context_surfaces.append(role)
+            if role not in _AGENT_CONTEXT_ALLOWED_SURFACES:
+                invalid_agent_context_surfaces.append(role)
+            elif role not in declared_surfaces:
+                undeclared_agent_context_surfaces.append(role)
+            elif role not in invoked_surfaces:
+                non_invoked_agent_context_surfaces.append(role)
+        agent_context_surfaces = [
+            role
+            for role in configured_agent_context_surfaces
+            if role in _AGENT_CONTEXT_ALLOWED_SURFACES and role in invoked_surfaces
+        ]
+    else:
+        agent_context_surfaces = [role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces]
+        if not agent_context_surfaces:
+            agent_context_surfaces = list(invoked_surfaces)
 
     return {
         "invocation_contract": "memory_first" if mode == "memory_first" else "archive_first",
@@ -281,6 +307,10 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
         "agent_context_surfaces": agent_context_surfaces,
         "deferred_surfaces": deferred_surfaces,
         "missing_invoked_surfaces": missing_invoked_surfaces,
+        "configured_agent_context_surfaces": configured_agent_context_surfaces,
+        "invalid_agent_context_surfaces": invalid_agent_context_surfaces,
+        "undeclared_agent_context_surfaces": undeclared_agent_context_surfaces,
+        "non_invoked_agent_context_surfaces": non_invoked_agent_context_surfaces,
     }
 
 
@@ -817,6 +847,9 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
     invoked_surfaces = contract["loaded_surfaces"]
     context_surfaces = contract["agent_context_surfaces"]
     missing_invoked_surfaces = contract["missing_invoked_surfaces"]
+    invalid_context_surfaces = contract["invalid_agent_context_surfaces"]
+    undeclared_context_surfaces = contract["undeclared_agent_context_surfaces"]
+    non_invoked_context_surfaces = contract["non_invoked_agent_context_surfaces"]
     invoked_label = ", ".join(invoked_surfaces) if invoked_surfaces else "none"
     context_label = ", ".join(context_surfaces) if context_surfaces else "none"
     valid_patterns = {
@@ -827,6 +860,14 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
         "workspace_directive",
         "explicit",
     }
+    context_config_issues: list[str] = []
+    if invalid_context_surfaces:
+        context_config_issues.append(f"invalid agent_context surfaces {invalid_context_surfaces}")
+    if undeclared_context_surfaces:
+        context_config_issues.append(f"agent_context surfaces not declared as layers {undeclared_context_surfaces}")
+    if non_invoked_context_surfaces:
+        context_config_issues.append(f"agent_context surfaces not session-start invoked {non_invoked_context_surfaces}")
+
     if pattern is None:
         if missing_invoked_surfaces:
             results.append(
@@ -834,6 +875,15 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                     "PCT-007",
                     "FAIL",
                     f"invocation contract incomplete; missing required session-start surfaces {missing_invoked_surfaces} (invoked={invoked_label}; context={context_label})",
+                )
+            )
+        elif context_config_issues:
+            details = "; ".join(context_config_issues)
+            results.append(
+                (
+                    "PCT-007",
+                    "FAIL",
+                    f"invocation_protocol agent_context invalid: {details} (invoked={invoked_label}; context={context_label})",
                 )
             )
         else:
@@ -852,6 +902,15 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                 "PCT-007",
                 "FAIL",
                 f"primary_pattern valid: {pattern}, but invocation contract missing required session-start surfaces {missing_invoked_surfaces} (invoked={invoked_label}; context={context_label})",
+            )
+        )
+    elif context_config_issues:
+        details = "; ".join(context_config_issues)
+        results.append(
+            (
+                "PCT-007",
+                "FAIL",
+                f"primary_pattern valid: {pattern}, but invocation_protocol agent_context invalid: {details} (invoked={invoked_label}; context={context_label})",
             )
         )
     else:

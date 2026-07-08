@@ -67,6 +67,7 @@ def test_schema_supports_memory_first_mode():
     assert "recall_policy" in schema["properties"]
     assert "promotion_policy" in schema["properties"]
     assert "kind" in schema["$defs"]["layer"]["properties"]
+    assert "agent_context_surfaces" in schema["$defs"]["invocationProtocol"]["properties"]
 
 
 def test_memory_first_record_schemas_exist_and_expose_expected_versions():
@@ -176,6 +177,70 @@ def test_memory_first_summary_reports_invoked_and_deferred_surfaces():
     assert {"sessions", "memories", "recall", "graph"}.issubset(set(summary["deferred_surfaces"]))
 
 
+def test_memory_first_explicit_agent_context_surfaces_override_default(tmp_path: Path):
+    memory_dir = tmp_path / "memory"
+    memory_dir.mkdir()
+    (tmp_path / "mica.yaml").write_text(
+        dedent(
+            """
+            mica_spec: "0.2.9"
+            mode: memory_first
+            invocation_protocol:
+              primary_pattern: explicit
+              agent_context_surfaces:
+                - archive
+                - playbook
+            layers:
+              - id: sessions
+                kind: sessions
+                path: memory/mica.sessions.jsonl
+                loading_hint: on_demand
+              - id: observe
+                kind: observations
+                path: memory/mica.observe.jsonl
+                loading_hint: always
+              - id: slots
+                kind: slots
+                path: memory/mica.slots.json
+                loading_hint: always
+              - id: archive_export
+                kind: archive
+                path: memory/mica_archive.json
+                loading_hint: always
+              - id: playbook_export
+                kind: playbook
+                path: memory/mica_playbook.md
+                loading_hint: always
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
+    (memory_dir / "mica_archive.json").write_text(
+        json.dumps(
+            {
+                "mica_spec": "0.2.9",
+                "project": {"name": "fixture", "version": "0.2.9"},
+                "operation_meta": {"last_updated": "2026-07-08"},
+                "design_invariants": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    summary = mica_runtime.build_summary(tmp_path)
+    pct007 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007")
+
+    assert summary["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
+    assert summary["agent_context_surfaces"] == ["archive", "playbook"]
+    assert pct007[0] == "PASS"
+
+
 def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
     fixture_root = REPO_ROOT / "fixtures" / "memory_first_minimal"
     summary = mica_runtime.build_summary(fixture_root)
@@ -253,3 +318,65 @@ def test_memory_first_invocation_contract_fails_when_slots_not_marked_session_st
     assert pct007[0] == "FAIL"
     assert "missing required session-start surfaces" in pct007[1]
     assert "slots" in pct007[1]
+
+def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_session_start_invoked(tmp_path: Path):
+    memory_dir = tmp_path / "memory"
+    memory_dir.mkdir()
+    (tmp_path / "mica.yaml").write_text(
+        dedent(
+            """
+            mica_spec: "0.2.9"
+            mode: memory_first
+            invocation_protocol:
+              primary_pattern: explicit
+              agent_context_surfaces:
+                - archive
+                - memories
+            layers:
+              - id: observe
+                kind: observations
+                path: memory/mica.observe.jsonl
+                loading_hint: always
+              - id: memories
+                kind: memories
+                path: memory/mica.memories.jsonl
+                loading_hint: on_demand
+              - id: slots
+                kind: slots
+                path: memory/mica.slots.json
+                loading_hint: always
+              - id: archive_export
+                kind: archive
+                path: memory/mica_archive.json
+                loading_hint: always
+              - id: playbook_export
+                kind: playbook
+                path: memory/mica_playbook.md
+                loading_hint: always
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
+    (memory_dir / "mica_archive.json").write_text(
+        json.dumps(
+            {
+                "mica_spec": "0.2.9",
+                "project": {"name": "fixture", "version": "0.2.9"},
+                "operation_meta": {"last_updated": "2026-07-08"},
+                "design_invariants": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    pct007 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007")
+
+    assert pct007[0] == "FAIL"
+    assert "agent_context surfaces not session-start invoked" in pct007[1]
+    assert "memories" in pct007[1]

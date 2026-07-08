@@ -230,6 +230,14 @@
         },
         "hook_output": {
           "$ref": "#/$defs/hookOutputPolicy"
+        },
+        "agent_context_surfaces": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["archive", "playbook", "slots", "lessons", "memories"]
+          }
         }
       }
     },
@@ -477,3 +485,4 @@
     }
   ]
 }
+
