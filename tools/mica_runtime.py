@@ -23,6 +23,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +37,9 @@ from mica_core import (
     find_legacy_archive,
     find_mica_yaml,
     is_closed_contract,
+    layer_role,
     load_json,
+    load_jsonl,
     load_yaml,
     run_pct_checks,
 )
@@ -54,9 +57,7 @@ def detect_state(project_root: Path) -> tuple[str, Path | None, Path | None]:
     return ("INACTIVE", None, None)
 
 
-def resolve_paths(
-    project_root: Path, mica_yaml_path: Path
-) -> tuple[dict[str, Any], Path | None, Path | None]:
+def resolve_paths(project_root: Path, mica_yaml_path: Path) -> tuple[dict[str, Any], Path | None, Path | None]:
     yd = load_yaml(mica_yaml_path)
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
     archive_path: Path | None = None
@@ -75,9 +76,7 @@ def resolve_paths(
     return yd, archive_path, playbook_path
 
 
-def count_invariants(
-    archive: dict[str, Any],
-) -> tuple[int, int, list[dict[str, Any]]]:
+def count_invariants(archive: dict[str, Any]) -> tuple[int, int, list[dict[str, Any]]]:
     dis = archive.get("design_invariants", [])
     if not isinstance(dis, list):
         return (0, 0, [])
@@ -98,8 +97,6 @@ def _extract_critical_invariants(dis: list[dict[str, Any]]) -> list[dict[str, An
             entry["binding"] = binding
         result.append(entry)
     return result
-
-
 
 
 def _pct_entry(results: list[tuple[str, str, str]], pct_id: str) -> tuple[str | None, str | None]:
@@ -131,9 +128,88 @@ def _candidate_counts(project_root: Path) -> tuple[int, int, int]:
     return pending, approved, promoted
 
 
-def _build_flow_summary(
-    project_root: Path, yd: dict[str, Any], pct_results: list[tuple[str, str, str]]
+def _resolve_declared_layer_paths(project_root: Path, yd: dict[str, Any]) -> dict[str, Path]:
+    layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
+    result: dict[str, Path] = {}
+    for layer in layers:
+        if not isinstance(layer, dict):
+            continue
+        role = layer_role(layer)
+        rel = layer.get("path")
+        if not role or not isinstance(rel, str):
+            continue
+        result[role] = project_root / rel
+    return result
+
+
+def _default_loaded_surfaces(mode: str | None, declared_roles: list[str]) -> list[str]:
+    preferred = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+    return [role for role in preferred if role in declared_roles]
+
+
+def _default_invocation_trace_path(project_root: Path) -> Path:
+    memory_dir = project_root / "memory"
+    if memory_dir.exists() and memory_dir.is_dir():
+        return memory_dir / "mica.invocation.jsonl"
+    return project_root / "mica.invocation.jsonl"
+
+
+def _build_invocation_summary(
+    project_root: Path,
+    state: str,
+    mode: str | None,
+    yd: dict[str, Any] | None,
+    archive_path: Path | None,
+    playbook_path: Path | None,
 ) -> dict[str, Any]:
+    if state == "INACTIVE":
+        return {
+            "invocation_contract": None,
+            "declared_surfaces": [],
+            "loaded_surfaces": [],
+            "agent_context_surfaces": [],
+            "deferred_surfaces": [],
+            "missing_invoked_surfaces": [],
+            "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
+        }
+
+    if state == "LEGACY_MODE":
+        return {
+            "invocation_contract": "legacy_archive",
+            "declared_surfaces": ["archive"],
+            "loaded_surfaces": ["archive"],
+            "agent_context_surfaces": ["archive"],
+            "deferred_surfaces": [],
+            "missing_invoked_surfaces": [],
+            "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
+        }
+
+    assert yd is not None
+    layer_paths = _resolve_declared_layer_paths(project_root, yd)
+    if archive_path is not None:
+        layer_paths["archive"] = archive_path
+    if playbook_path is not None:
+        layer_paths["playbook"] = playbook_path
+
+    declared = list(layer_paths.keys())
+    default_loaded = _default_loaded_surfaces(mode, declared)
+    loaded = [role for role in default_loaded if layer_paths.get(role) and layer_paths[role].exists()]
+    deferred = [role for role in declared if role not in loaded]
+    missing = [role for role in default_loaded if role not in loaded]
+    contract = "memory_first" if mode == "memory_first" else "archive_first"
+
+    return {
+        "invocation_contract": contract,
+        "declared_surfaces": declared,
+        "loaded_surfaces": loaded,
+        "agent_context_surfaces": list(loaded),
+        "deferred_surfaces": deferred,
+        "missing_invoked_surfaces": missing,
+        "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
+    }
+
+
+def _build_flow_summary(project_root: Path, yd: dict[str, Any], pct_results: list[tuple[str, str, str]]) -> dict[str, Any]:
     flow_policy = yd.get("flow_policy", {}) if isinstance(yd.get("flow_policy"), dict) else {}
     flow_declared = isinstance(yd.get("flow_policy"), dict)
     enabled = bool(flow_policy.get("enabled", False))
@@ -207,6 +283,7 @@ def _build_flow_summary(
         "flow_reason": flow_reason,
     }
 
+
 def pct_status(project_root: Path) -> str:
     """
     Returns CLOSED, INCOMPLETE, LEGACY, or INACTIVE.
@@ -240,6 +317,7 @@ def build_summary(project_root: Path) -> dict[str, Any]:
                 "flow_state": None,
             }
         )
+        base.update(_build_invocation_summary(project_root, state, None, None, None, None))
         return base
 
     if state == "LEGACY_MODE":
@@ -262,10 +340,11 @@ def build_summary(project_root: Path) -> dict[str, Any]:
                 "flow_state": None,
             }
         )
+        base.update(_build_invocation_summary(project_root, state, None, None, legacy_archive, None))
         return base
 
     assert mica_yaml is not None
-    yd, archive_path, _playbook_path = resolve_paths(project_root, mica_yaml)
+    yd, archive_path, playbook_path = resolve_paths(project_root, mica_yaml)
     archive = load_json(archive_path)
     crit, high, dis = count_invariants(archive)
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
@@ -274,6 +353,7 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     pct_results = run_pct_checks(project_root)
     core_state = "CLOSED" if is_closed_contract(pct_results) else "INCOMPLETE"
     flow_summary = _build_flow_summary(project_root, yd, pct_results)
+    invocation_summary = _build_invocation_summary(project_root, state, yd.get("mode"), yd, archive_path, playbook_path)
     base.update(
         {
             "name": yd.get("name") or proj.get("name"),
@@ -290,7 +370,50 @@ def build_summary(project_root: Path) -> dict[str, Any]:
         }
     )
     base.update(flow_summary)
+    base.update(invocation_summary)
     return base
+
+
+def build_invocation_trace_record(summary: dict[str, Any]) -> dict[str, Any]:
+    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    critical_ids = [
+        str(item.get("id"))
+        for item in summary.get("critical_invariants", []) or []
+        if isinstance(item, dict) and item.get("id")
+    ]
+    return {
+        "schema_version": "mica.invocation.v1",
+        "invocation_id": f"inv_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        "timestamp_utc": now,
+        "project_root": summary.get("project_root"),
+        "project": {
+            "name": summary.get("name"),
+            "version": summary.get("version"),
+        },
+        "package_state": summary.get("state"),
+        "core_state": summary.get("core_state"),
+        "flow_state": summary.get("flow_state"),
+        "mode": summary.get("mode"),
+        "pattern": summary.get("pattern"),
+        "invocation_contract": summary.get("invocation_contract"),
+        "loaded_surfaces": list(summary.get("loaded_surfaces") or []),
+        "agent_context_surfaces": list(summary.get("agent_context_surfaces") or []),
+        "deferred_surfaces": list(summary.get("deferred_surfaces") or []),
+        "missing_invoked_surfaces": list(summary.get("missing_invoked_surfaces") or []),
+        "active_critical_invariants": critical_ids,
+        "last_updated": summary.get("last_updated"),
+    }
+
+
+def write_invocation_trace(project_root: Path, summary: dict[str, Any], output_path: Path | None = None) -> Path:
+    path = output_path or Path(str(summary.get("invocation_trace_default_path") or _default_invocation_trace_path(project_root)))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    record = build_invocation_trace_record(summary)
+    serialized = json.dumps(record, ensure_ascii=False, sort_keys=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(serialized)
+        fh.write("\n")
+    return path
 
 
 def slug(text: str | None) -> str:
@@ -304,13 +427,23 @@ def slug(text: str | None) -> str:
 def emit_text(summary: dict[str, Any]) -> str:
     if summary["state"] == "INACTIVE":
         return "[MICA] INACTIVE -- no mica.yaml or legacy archive found."
+    loaded_surfaces = ", ".join(summary.get("loaded_surfaces") or []) or "none"
+    agent_context_surfaces = ", ".join(summary.get("agent_context_surfaces") or []) or "none"
+    deferred_surfaces = ", ".join(summary.get("deferred_surfaces") or []) or "none"
     lines = [
         f"[MICA LOADED] {summary.get('name') or 'unknown'} v{summary.get('version') or 'unknown'}",
         f"Mode      : {summary.get('mode') or 'legacy'}",
         f"Pattern   : {summary.get('pattern') or 'legacy'}",
         f"Invariants: {summary.get('critical_count', 0)} critical, {summary.get('high_count', 0)} high",
         f"Last upd  : {summary.get('last_updated') or 'unknown'}",
+        f"Invoked   : {loaded_surfaces}",
+        f"Context   : {agent_context_surfaces}",
     ]
+    if summary.get("deferred_surfaces"):
+        lines.append(f"Deferred  : {deferred_surfaces}")
+    if summary.get("missing_invoked_surfaces"):
+        missing = ", ".join(summary.get("missing_invoked_surfaces") or [])
+        lines.append(f"Missing   : {missing}")
     if summary.get("flow_state"):
         counts = summary.get("flow_candidate_counts") if isinstance(summary.get("flow_candidate_counts"), dict) else {}
         lines.extend(
@@ -380,6 +513,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Emit portable MICA runtime summaries.")
     parser.add_argument("project_root", nargs="?", default=".")
     parser.add_argument("--format", choices=["text", "json", "hook"], default="text")
+    parser.add_argument("--write-invocation-trace", action="store_true")
+    parser.add_argument("--trace-file")
     args = parser.parse_args()
 
     project_root = Path(args.project_root).resolve()
@@ -388,14 +523,26 @@ def main() -> None:
         sys.exit(1)
 
     summary = build_summary(project_root)
+    trace_path: Path | None = None
+    if args.write_invocation_trace or args.trace_file:
+        trace_path = write_invocation_trace(
+            project_root,
+            summary,
+            Path(args.trace_file).resolve() if args.trace_file else None,
+        )
+        summary = dict(summary)
+        summary["invocation_trace_path"] = str(trace_path)
+
     if args.format == "json":
         print(json.dumps(summary, indent=2))
     elif args.format == "hook":
         print(emit_hook(summary))
     else:
-        print(emit_text(summary))
+        output = emit_text(summary)
+        if trace_path is not None:
+            output = f"{output}\nInvocation trace: {trace_path}"
+        print(output)
 
 
 if __name__ == "__main__":
     main()
-

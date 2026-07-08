@@ -164,3 +164,28 @@ def test_memory_first_minimal_fixture_is_closed():
     summary = mica_runtime.build_summary(fixture_root)
     assert summary["mode"] == "memory_first"
     assert summary["core_state"] == "CLOSED"
+
+def test_memory_first_summary_reports_invoked_and_deferred_surfaces():
+    fixture_root = REPO_ROOT / "fixtures" / "memory_first_minimal"
+
+    summary = mica_runtime.build_summary(fixture_root)
+
+    assert summary["invocation_contract"] == "memory_first"
+    assert summary["loaded_surfaces"] == ["archive", "playbook", "slots"]
+    assert summary["agent_context_surfaces"] == ["archive", "playbook", "slots"]
+    assert {"sessions", "observations", "memories"}.issubset(set(summary["deferred_surfaces"]))
+
+
+def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
+    fixture_root = REPO_ROOT / "fixtures" / "memory_first_minimal"
+    summary = mica_runtime.build_summary(fixture_root)
+    trace_path = tmp_path / "mica.invocation.jsonl"
+
+    written = mica_runtime.write_invocation_trace(fixture_root, summary, trace_path)
+
+    assert written == trace_path
+    records = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert len(records) == 1
+    assert records[0]["schema_version"] == "mica.invocation.v1"
+    assert records[0]["loaded_surfaces"] == ["archive", "playbook", "slots"]
+    assert records[0]["agent_context_surfaces"] == ["archive", "playbook", "slots"]
