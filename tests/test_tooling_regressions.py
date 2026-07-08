@@ -171,9 +171,9 @@ def test_memory_first_summary_reports_invoked_and_deferred_surfaces():
     summary = mica_runtime.build_summary(fixture_root)
 
     assert summary["invocation_contract"] == "memory_first"
-    assert summary["loaded_surfaces"] == ["archive", "playbook", "slots"]
+    assert summary["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
     assert summary["agent_context_surfaces"] == ["archive", "playbook", "slots"]
-    assert {"sessions", "observations", "memories"}.issubset(set(summary["deferred_surfaces"]))
+    assert {"sessions", "memories", "recall", "graph"}.issubset(set(summary["deferred_surfaces"]))
 
 
 def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
@@ -187,5 +187,69 @@ def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
     records = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert len(records) == 1
     assert records[0]["schema_version"] == "mica.invocation.v1"
-    assert records[0]["loaded_surfaces"] == ["archive", "playbook", "slots"]
+    assert records[0]["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
     assert records[0]["agent_context_surfaces"] == ["archive", "playbook", "slots"]
+
+
+def test_memory_first_invocation_contract_fails_when_slots_not_marked_session_start(tmp_path: Path):
+    memory_dir = tmp_path / "memory"
+    memory_dir.mkdir()
+    (tmp_path / "mica.yaml").write_text(
+        dedent(
+            """
+            mica_spec: "0.2.9"
+            mode: memory_first
+            layers:
+              - id: sessions
+                kind: sessions
+                path: memory/mica.sessions.jsonl
+                loading_hint: on_demand
+              - id: observe
+                kind: observations
+                path: memory/mica.observe.jsonl
+                loading_hint: always
+              - id: memories
+                kind: memories
+                path: memory/mica.memories.jsonl
+                loading_hint: on_demand
+              - id: slots
+                kind: slots
+                path: memory/mica.slots.json
+                loading_hint: on_demand
+              - id: archive_export
+                kind: archive
+                path: memory/mica_archive.json
+                loading_hint: always
+              - id: playbook_export
+                kind: playbook
+                path: memory/mica_playbook.md
+                loading_hint: always
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
+    (memory_dir / "mica_archive.json").write_text(
+        json.dumps(
+            {
+                "mica_spec": "0.2.9",
+                "project": {"name": "fixture", "version": "0.2.9"},
+                "operation_meta": {"last_updated": "2026-07-08"},
+                "design_invariants": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    results = mica_core.run_pct_checks(tmp_path)
+    pct007 = next((status, msg) for pid, status, msg in results if pid == "PCT-007")
+
+    assert pct007[0] == "FAIL"
+    assert "missing required session-start surfaces" in pct007[1]
+    assert "slots" in pct007[1]

@@ -41,6 +41,7 @@ from mica_core import (
     load_json,
     load_jsonl,
     load_yaml,
+    resolve_invocation_contract,
     run_pct_checks,
 )
 
@@ -191,18 +192,21 @@ def _build_invocation_summary(
     if playbook_path is not None:
         layer_paths["playbook"] = playbook_path
 
-    declared = list(layer_paths.keys())
-    default_loaded = _default_loaded_surfaces(mode, declared)
-    loaded = [role for role in default_loaded if layer_paths.get(role) and layer_paths[role].exists()]
-    deferred = [role for role in declared if role not in loaded]
-    missing = [role for role in default_loaded if role not in loaded]
-    contract = "memory_first" if mode == "memory_first" else "archive_first"
+    contract = resolve_invocation_contract(yd)
+    declared = list(contract["declared_surfaces"])
+    expected_loaded = list(contract["loaded_surfaces"])
+    loaded = [role for role in expected_loaded if layer_paths.get(role) and layer_paths[role].exists()]
+    deferred = list(contract["deferred_surfaces"])
+    missing = [role for role in expected_loaded if role not in loaded]
+    agent_context_surfaces = [role for role in contract["agent_context_surfaces"] if role in loaded]
+    if not agent_context_surfaces:
+        agent_context_surfaces = [role for role in loaded]
 
     return {
-        "invocation_contract": contract,
+        "invocation_contract": contract["invocation_contract"],
         "declared_surfaces": declared,
         "loaded_surfaces": loaded,
-        "agent_context_surfaces": list(loaded),
+        "agent_context_surfaces": agent_context_surfaces,
         "deferred_surfaces": deferred,
         "missing_invoked_surfaces": missing,
         "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),

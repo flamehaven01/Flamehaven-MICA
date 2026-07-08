@@ -241,6 +241,49 @@ def layer_role(layer: dict[str, Any]) -> str:
     return ""
 
 
+_INVOKED_LOADING_HINTS = frozenset({"always", "session_start_only"})
+_AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "slots", "lessons")
+
+
+def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
+    layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
+    mode = str(yd.get("mode") or "")
+    declared_surfaces: list[str] = []
+    invoked_surfaces: list[str] = []
+    explicit_invocation = False
+
+    for layer in layers:
+        if not isinstance(layer, dict):
+            continue
+        role = layer_role(layer)
+        if not role:
+            continue
+        declared_surfaces.append(role)
+        if layer.get("loading_hint") in _INVOKED_LOADING_HINTS:
+            explicit_invocation = True
+            invoked_surfaces.append(role)
+
+    if not explicit_invocation:
+        defaults = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+        invoked_surfaces = [role for role in defaults if role in declared_surfaces]
+
+    deferred_surfaces = [role for role in declared_surfaces if role not in invoked_surfaces]
+    required_session_start = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+    missing_invoked_surfaces = [role for role in required_session_start if role not in invoked_surfaces]
+    agent_context_surfaces = [role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces]
+    if not agent_context_surfaces:
+        agent_context_surfaces = list(invoked_surfaces)
+
+    return {
+        "invocation_contract": "memory_first" if mode == "memory_first" else "archive_first",
+        "declared_surfaces": declared_surfaces,
+        "loaded_surfaces": invoked_surfaces,
+        "agent_context_surfaces": agent_context_surfaces,
+        "deferred_surfaces": deferred_surfaces,
+        "missing_invoked_surfaces": missing_invoked_surfaces,
+    }
+
+
 
 
 def find_flow_artifact(project_root: Path, filename: str) -> Path | None:
@@ -770,6 +813,12 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
 
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     pattern = inv.get("primary_pattern") if isinstance(inv.get("primary_pattern"), str) else None
+    contract = resolve_invocation_contract(yd)
+    invoked_surfaces = contract["loaded_surfaces"]
+    context_surfaces = contract["agent_context_surfaces"]
+    missing_invoked_surfaces = contract["missing_invoked_surfaces"]
+    invoked_label = ", ".join(invoked_surfaces) if invoked_surfaces else "none"
+    context_label = ", ".join(context_surfaces) if context_surfaces else "none"
     valid_patterns = {
         "readme_protocol",
         "hook_trigger",
@@ -779,11 +828,34 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
         "explicit",
     }
     if pattern is None:
-        results.append(("PCT-007", "INFO", "invocation_protocol absent (default/manual handling)"))
+        if missing_invoked_surfaces:
+            results.append(
+                (
+                    "PCT-007",
+                    "FAIL",
+                    f"invocation contract incomplete; missing required session-start surfaces {missing_invoked_surfaces} (invoked={invoked_label}; context={context_label})",
+                )
+            )
+        else:
+            results.append(
+                (
+                    "PCT-007",
+                    "INFO",
+                    f"invocation_protocol absent (default/manual handling); invoked={invoked_label}; context={context_label}",
+                )
+            )
     elif pattern not in valid_patterns:
         results.append(("PCT-007", "FAIL", f"invalid primary_pattern: {pattern}"))
+    elif missing_invoked_surfaces:
+        results.append(
+            (
+                "PCT-007",
+                "FAIL",
+                f"primary_pattern valid: {pattern}, but invocation contract missing required session-start surfaces {missing_invoked_surfaces} (invoked={invoked_label}; context={context_label})",
+            )
+        )
     else:
-        results.append(("PCT-007", "PASS", f"primary_pattern valid: {pattern}"))
+        results.append(("PCT-007", "PASS", f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}"))
 
     hook_hint_layers = [
         layer_label(lyr)
