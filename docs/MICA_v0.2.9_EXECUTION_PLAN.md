@@ -3,6 +3,9 @@
 ## Status
 
 Execution plan for the v0.2.9 blueprint.
+
+This plan is retained as groundwork for `v3.0.0`, not as the final framing of MICA's identity.
+Its value is in flow discipline, provenance, and promotion safety; invocation-first context loading remains the higher-order target.
 This document translates the blueprint into phased implementation work.
 
 Companion design document:

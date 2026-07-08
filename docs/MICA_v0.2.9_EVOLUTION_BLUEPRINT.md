@@ -2,6 +2,10 @@
 
 ## Status
 
+This document is retained as `v0.2.9` groundwork.
+Its flow, governance, and promotion proposals remain useful, but they now sit beneath the intended `v3.0.0` invocation-first reset.
+It should not be read as a redefinition of MICA away from invocation and context loading.
+
 Design blueprint only. Not yet approved or released.
 
 Central judgment: v0.2.9 should not turn MICA into a generic memory engine.

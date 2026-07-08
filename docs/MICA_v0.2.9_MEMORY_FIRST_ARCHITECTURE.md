@@ -2,6 +2,9 @@
 
 ## Purpose
 
+This draft is retained as memory-first groundwork for `v3.0.0`.
+It explores deeper substrate layers, but those layers are subordinate to MICA's invocation-first contract and should not be mistaken for the project's primary identity.
+
 This draft defines the next concrete shape for teams that want MICA to be more than a
 portable archive plus playbook package.
 
