@@ -1,7 +1,7 @@
 # MICA
 
 Current stable tag: `v0.2.8` (`Binding Depth Edition`)
-Current working direction: `v0.2.9` draft for flow-plane governance and memory-first packaging
+Current next-direction target: `v3.0.0` invocation-first reset, with `v0.2.9` drafts retained as groundwork
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
@@ -13,11 +13,20 @@ are in the `Legacy/` directory and are not tracked by git.
 | Track | Status | Notes |
 |---|---|---|
 | Stable | `v0.2.8` | Latest tagged release and current tool banner version |
-| Draft | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
+| Draft groundwork | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
+| Intended reset | `v3.0.0` | Invocation-first MICA: truthful context loading, session activation, and auditable invoked-state declaration |
 
 ## What MICA is
 
-Three assets form a MICA package:
+MICA is primarily an invocation and context-loading contract.
+Its primary job is to ensure that the right memory surfaces are loaded at session start,
+that the session activates against the right invariants, and that runtime output states
+truthfully what was actually invoked.
+
+Archive, playbook, governance checks, and memory-first machinery exist to support that goal.
+They are important, but they are not the center of the system.
+
+Three assets form the minimal MICA package surface:
 
 | Asset | Format | Role |
 |---|---|---|
@@ -26,7 +35,10 @@ Three assets form a MICA package:
 | `*-playbook.*.md` | Markdown | Playbook — human + AI operating guide |
 
 Tools validate and summarize the package at session start. MICA's job: locate the memory
-package, load archive and playbook, activate against invariants, declare loaded state truthfully.
+package, load the declared context surfaces, activate against invariants, and declare loaded state truthfully.
+
+The current v0.2.9 draft adds governance and memory-first machinery beneath that surface.
+Those additions remain subordinate to the invocation contract and should not replace it as MICA's core.
 
 ## What v0.2.8 adds over v0.2.7
 
@@ -175,6 +187,7 @@ v0.2.9 draft docs:
 | [docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md](docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md) | Core/Flow reporting contract for truthful runtime output |
 | [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) | Packaging and handoff guide for making other repositories MICA-capable |
 | [docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md) | Draft structure for evolving MICA from governed exports into a memory-first substrate |
+| [docs/MICA_INVOCATION_RECOVERY_PLAN.md](docs/MICA_INVOCATION_RECOVERY_PLAN.md) | Recovery plan for restoring invocation and context loading as the primary MICA objective |
 
 
 
