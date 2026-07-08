@@ -155,6 +155,32 @@ def _default_invocation_trace_path(project_root: Path) -> Path:
     return project_root / "mica.invocation.jsonl"
 
 
+def _resolve_active_session_id(project_root: Path) -> str | None:
+    sessions_path = find_flow_artifact(project_root, "mica.sessions.jsonl")
+    if sessions_path:
+        try:
+            session_records = load_jsonl(sessions_path)
+        except Exception:
+            session_records = []
+        for record in reversed(session_records):
+            session_id = record.get("session_id") if isinstance(record, dict) else None
+            if isinstance(session_id, str) and session_id.strip():
+                return session_id
+
+    observe_path = find_flow_artifact(project_root, "mica.observe.jsonl")
+    if observe_path:
+        try:
+            observations = load_jsonl(observe_path)
+        except Exception:
+            observations = []
+        for record in reversed(observations):
+            session_id = record.get("session_id") if isinstance(record, dict) else None
+            if isinstance(session_id, str) and session_id.strip():
+                return session_id
+
+    return None
+
+
 def _build_invocation_summary(
     project_root: Path,
     state: str,
@@ -165,6 +191,7 @@ def _build_invocation_summary(
 ) -> dict[str, Any]:
     if state == "INACTIVE":
         return {
+            "session_id": None,
             "invocation_contract": None,
             "declared_surfaces": [],
             "loaded_surfaces": [],
@@ -176,6 +203,7 @@ def _build_invocation_summary(
 
     if state == "LEGACY_MODE":
         return {
+            "session_id": _resolve_active_session_id(project_root),
             "invocation_contract": "legacy_archive",
             "declared_surfaces": ["archive"],
             "loaded_surfaces": ["archive"],
@@ -203,6 +231,7 @@ def _build_invocation_summary(
         agent_context_surfaces = [role for role in loaded]
 
     return {
+        "session_id": _resolve_active_session_id(project_root),
         "invocation_contract": contract["invocation_contract"],
         "declared_surfaces": declared,
         "loaded_surfaces": loaded,
@@ -399,6 +428,7 @@ def build_invocation_trace_record(summary: dict[str, Any]) -> dict[str, Any]:
         "flow_state": summary.get("flow_state"),
         "mode": summary.get("mode"),
         "pattern": summary.get("pattern"),
+        "session_id": summary.get("session_id"),
         "invocation_contract": summary.get("invocation_contract"),
         "loaded_surfaces": list(summary.get("loaded_surfaces") or []),
         "agent_context_surfaces": list(summary.get("agent_context_surfaces") or []),

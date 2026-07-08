@@ -570,6 +570,7 @@ def _run_pct018(
 
     observe_path = find_flow_artifact(project_root, "mica.observe.jsonl")
     candidates_path = find_flow_artifact(project_root, "mica.candidates.json")
+    invocation_path = find_flow_artifact(project_root, "mica.invocation.jsonl")
     try:
         observations = load_jsonl(observe_path)
     except Exception as exc:
@@ -582,6 +583,13 @@ def _run_pct018(
         return ("PCT-018", "WARN", f"cannot load recall trace for telemetry completeness: {exc}")
     if not recall_records:
         return ("PCT-018", "INFO", "recall trace empty; completeness deferred to PCT-014 coverage warning")
+
+    invocation_records: list[dict[str, Any]] = []
+    if invocation_path:
+        try:
+            invocation_records = load_jsonl(invocation_path)
+        except Exception as exc:
+            return ("PCT-018", "WARN", f"cannot load invocation trace for telemetry completeness: {exc}")
 
     observation_ids = {
         record.get("event_id")
@@ -597,6 +605,11 @@ def _run_pct018(
         candidate.get("candidate_id"): candidate
         for candidate in candidates
         if isinstance(candidate, dict) and _is_non_empty_string(candidate.get("candidate_id"))
+    }
+    invocation_by_session = {
+        record.get("session_id"): record
+        for record in invocation_records
+        if isinstance(record, dict) and _is_non_empty_string(record.get("session_id"))
     }
 
     issues: list[str] = []
@@ -629,11 +642,32 @@ def _run_pct018(
             if extra_ids:
                 issues.append(f"record {index}: source_event_ids not declared on candidate {candidate_id}: {extra_ids}")
 
+        if record.get("target") == "agent_context":
+            if not invocation_path:
+                issues.append(f"record {index}: target=agent_context but mica.invocation.jsonl absent")
+                continue
+            invocation = invocation_by_session.get(session_id)
+            if not isinstance(invocation, dict):
+                issues.append(f"record {index}: session_id {session_id!r} not linked to invocation trace")
+                continue
+            loaded_surfaces = invocation.get("loaded_surfaces")
+            if not isinstance(loaded_surfaces, list) or not loaded_surfaces:
+                issues.append(f"record {index}: invocation trace missing loaded_surfaces for session {session_id}")
+            context_surfaces = invocation.get("agent_context_surfaces")
+            if not isinstance(context_surfaces, list) or not context_surfaces:
+                issues.append(f"record {index}: invocation trace missing agent_context_surfaces for session {session_id}")
+            elif isinstance(loaded_surfaces, list):
+                extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
+                if extra_context:
+                    issues.append(f"record {index}: invocation trace agent_context_surfaces not loaded for session {session_id}: {extra_context}")
+
     if issues:
         preview = "; ".join(issues[:4])
         if len(issues) > 4:
             preview += f"; ... (+{len(issues) - 4} more)"
         return ("PCT-018", "WARN", preview)
+    if invocation_path:
+        return ("PCT-018", "PASS", f"{recall_path.relative_to(project_root)} joins cleanly with candidates, observations, and invocation trace")
     return ("PCT-018", "PASS", f"{recall_path.relative_to(project_root)} joins cleanly with candidates and observations")
 
 def _run_pct017(

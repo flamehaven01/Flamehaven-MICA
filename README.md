@@ -223,6 +223,11 @@ Promotion gate: FAIL
 Reason    : candidate cand_00042 entered agent_context while operator_review.state=pending
 ```
 
+```text
+python tools/mica_pct.py fixtures/flow_recall_agent_context_violation
+PCT-018 [PASS] memory\mica.recall.jsonl joins cleanly with candidates, observations, and invocation trace
+```
+
 Memory-first starter contract:
 
 ```text
