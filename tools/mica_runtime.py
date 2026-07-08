@@ -255,6 +255,8 @@ def _build_flow_summary(project_root: Path, yd: dict[str, Any], pct_results: lis
             "flow_required": False,
             "flow_state": None,
             "flow_observation_status": None,
+            "flow_recall_status": None,
+            "flow_telemetry_status": None,
             "flow_promotion_gate": None,
             "flow_candidate_counts": {"pending": 0, "approved": 0, "promoted": 0},
             "flow_reason": None,
@@ -267,6 +269,8 @@ def _build_flow_summary(project_root: Path, yd: dict[str, Any], pct_results: lis
             "flow_required": required,
             "flow_state": "FLOW_OFFLINE",
             "flow_observation_status": "OFFLINE",
+            "flow_recall_status": "OFFLINE",
+            "flow_telemetry_status": "OFFLINE",
             "flow_promotion_gate": "OFFLINE",
             "flow_candidate_counts": {"pending": 0, "approved": 0, "promoted": 0},
             "flow_reason": None,
@@ -307,6 +311,8 @@ def _build_flow_summary(project_root: Path, yd: dict[str, Any], pct_results: lis
         "flow_required": required,
         "flow_state": flow_state,
         "flow_observation_status": pct013_status or "UNKNOWN",
+        "flow_recall_status": pct014_status or "UNKNOWN",
+        "flow_telemetry_status": pct018_status or "UNKNOWN",
         "flow_promotion_gate": promotion_gate,
         "flow_candidate_counts": {
             "pending": pending,
@@ -485,6 +491,8 @@ def emit_text(summary: dict[str, Any]) -> str:
                 f"Core      : {summary.get('core_state')}",
                 f"Flow      : {summary.get('flow_state')}",
                 f"Observation: {summary.get('flow_observation_status')}",
+                f"Recall    : {summary.get('flow_recall_status')}",
+                f"Telemetry : {summary.get('flow_telemetry_status')}",
                 "Candidates: "
                 f"{counts.get('pending', 0)} pending, "
                 f"{counts.get('approved', 0)} approved, "

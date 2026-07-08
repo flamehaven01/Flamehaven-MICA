@@ -181,6 +181,8 @@ Overall: CLOSED CONTRACT
 ```text
 Core      : INCOMPLETE
 Flow      : FLOW_DEGRADED
+Recall    : PASS
+Telemetry : PASS
 Promotion gate: FAIL
 Reason    : candidate cand_00042 entered agent_context while operator_review.state=pending
 ```
@@ -198,6 +200,8 @@ Overall: CLOSED CONTRACT
 ```text
 PCT-014 [PASS] memory\mica.recall.jsonl provides recall trace coverage (1 records)
 PCT-018 [WARN] record 1: session_id 'sess_unlinked_999' not linked to observation stream; record 1: missing source_event_ids for candidate cand_00042
+
+Runtime summary should surface this as `Telemetry : WARN` while leaving `Core` unchanged.
 Overall: CLOSED CONTRACT
 ```
 

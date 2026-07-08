@@ -12,6 +12,8 @@ Runtime output must report:
 - `Core`
 - `Flow`
 - flow subchecks that matter to governance
+- `Recall`
+- `Telemetry`
 
 ## Core states
 
@@ -56,6 +58,8 @@ Package implementations may add stricter triggers, but may not weaken these.
 Core: CLOSED
 Flow: FLOW_ENABLED
 Observation: PASS
+Recall: PASS
+Telemetry: PASS
 Candidates: 3 pending, 1 approved
 Promotion gate: PASS
 ```
@@ -66,6 +70,8 @@ Promotion gate: PASS
 Core: CLOSED
 Flow: FLOW_DEGRADED
 Observation: PASS
+Recall: PASS
+Telemetry: PASS
 Candidates: 2 pending, 1 approved
 Promotion gate: FAIL
 Reason: candidate cand_00042 entered agent_context while operator_review.state=pending

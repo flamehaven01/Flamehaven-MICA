@@ -219,6 +219,8 @@ PCT-009 [PASS] package complete. closed contract verified.
 python tools/mica_runtime.py fixtures/flow_recall_agent_context_violation --format text
 Core      : INCOMPLETE
 Flow      : FLOW_DEGRADED
+Recall    : PASS
+Telemetry : PASS
 Promotion gate: FAIL
 Reason    : candidate cand_00042 entered agent_context while operator_review.state=pending
 ```
