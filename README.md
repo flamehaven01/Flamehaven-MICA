@@ -188,6 +188,7 @@ v0.2.9 draft docs:
 | [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) | Packaging and handoff guide for making other repositories MICA-capable |
 | [docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md) | Draft structure for evolving MICA from governed exports into a memory-first substrate |
 | [docs/MICA_INVOCATION_RECOVERY_PLAN.md](docs/MICA_INVOCATION_RECOVERY_PLAN.md) | Recovery plan for restoring invocation and context loading as the primary MICA objective |
+| [docs/MICA_v3.0.0_DECLARATION.md](docs/MICA_v3.0.0_DECLARATION.md) | Declaration of the intended v3.0.0 invocation-first reset and release boundary |
 
 
 

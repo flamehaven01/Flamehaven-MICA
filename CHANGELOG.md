@@ -9,6 +9,9 @@ Full release notes and migration guides in `docs/`.
 
 Post-`v0.2.8` working-tree changes not yet tagged.
 Latest git tag remains `v0.2.8`.
+- v3.0.0 direction declared: MICA is being reset around invocation-first context loading, truthful loaded-state declaration, and auditable invocation traces
+- v3.0.0 declaration note added: `docs/MICA_v3.0.0_DECLARATION.md`
+- README and About wording now place governance and memory-first machinery beneath the primary invocation contract
 
 - Tool version banner alignment: `mica_pct.py` and `mica_runtime.py` now report `v0.2.8` consistently
 - Legacy archive selection is now deterministic: highest version first, then `operation_meta.last_updated`
@@ -30,7 +33,7 @@ Latest git tag remains `v0.2.8`.
 - `tools/mica_memory.py review-memory` added: deterministic candidate_memory -> approved_lesson / bound_invariant_evidence promotion
 - `tools/mica_memory.py export` now materializes archive/playbook surfaces from approved/promoted memories and synthesizes design_invariants from bound evidence
 - `tools/mica_memory.py materialize` added: single-command rebuild for observations -> memories -> archive/playbook -> slots/graph
-- Repository metadata sanity pending no further release tag until v0.2.9 scope is intentionally cut
+- Repository metadata and docs now reflect the intended v3.0.0 invocation-first reset while `v0.2.9` remains draft groundwork
 
 ---
 
