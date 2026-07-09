@@ -1,7 +1,8 @@
 # MICA
 
 Current stable tag: `v0.2.8` (`Binding Depth Edition`)
-Current next-direction target: `v3.0.0` invocation-first reset, with `v0.2.9` drafts retained as groundwork
+Current milestone tag: `v3.0.0-declaration` (invocation-first floor freeze; non-release milestone)
+Current floor: invocation-first runtime truth, with `v0.2.9` drafts retained as groundwork and external adoption work expected to continue in consuming repositories
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
@@ -12,9 +13,13 @@ are in the `Legacy/` directory and are not tracked by git.
 
 | Track | Status | Notes |
 |---|---|---|
-| Stable | `v0.2.8` | Latest tagged release and current tool banner version |
+| Stable | `v0.2.8` | Latest release tag and current tool banner version |
+| Milestone | `v3.0.0-declaration` | Invocation-first floor freeze for cross-repo adoption work; not a stable release |
 | Draft groundwork | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
 | Intended reset | `v3.0.0` | Invocation-first MICA: truthful context loading, session activation, and auditable invoked-state declaration |
+
+From this point, the preferred next step is not more MICA-internal expansion.
+The preferred next step is helping other repositories consume the invocation contract cleanly.
 
 ## What MICA is
 
@@ -34,7 +39,7 @@ Three assets form the minimal MICA package surface:
 | `*.mica.*.json` | JSON | Archive — institutional memory, design invariants, provenance |
 | `*-playbook.*.md` | Markdown | Playbook — human + AI operating guide |
 
-Tools validate and summarize the package at session start. MICA's job: locate the memory
+Tools validate and summarize the package at session start. `mica_pct.py` now also prints an `IVC-*` appendix when an invocation trace artifact is present. MICA's job: locate the memory
 package, load the declared context surfaces, activate against invariants, and declare loaded state truthfully.
 
 For invocation-first packages, runtime and hook output must foreground `Invoked` and `Context` before
@@ -47,6 +52,7 @@ as memory content.
 
 The current v0.2.9 draft adds governance and memory-first machinery beneath that surface.
 Those additions remain subordinate to the invocation contract and should not replace it as MICA's core.
+This repository is being held at that invocation-first floor rather than continuing to add deeper internal validator layers.
 
 ## What v0.2.8 adds over v0.2.7
 
@@ -112,6 +118,7 @@ python tools/mica_runtime.py [project_root] --format hook
 
 # Standalone invocation trace validator
 python tools/mica_invocation.py [trace_file_or_project_root]
+# reports the standalone invocation schema path and validates the trace artifact
 
 # Memory-first utility
 python tools/mica_memory.py [project_root] paths

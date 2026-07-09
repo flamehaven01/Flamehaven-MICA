@@ -91,12 +91,86 @@ def test_memory_first_record_schemas_exist_and_expose_expected_versions():
             assert schema["properties"]["schema_version"]["const"] == version_const
 
 
+def test_invocation_trace_validator_reports_schema_presence():
+    results = mica_core.run_invocation_trace_checks(REPO_ROOT / "fixtures" / "flow_recall_operator_review_safe" / "memory" / "mica.invocation.jsonl")
+
+    assert results[0][0] == "IVC-000"
+    assert results[0][1] == "PASS"
+    assert "mica.invocation.schema.json" in results[0][2]
+
+
 def test_invocation_trace_validator_passes_on_fixture_trace():
     trace_path = REPO_ROOT / "fixtures" / "flow_recall_operator_review_safe" / "memory" / "mica.invocation.jsonl"
 
     results = mica_core.run_invocation_trace_checks(trace_path)
 
     assert all(status == "PASS" for _, status, _ in results)
+
+
+def test_pct_validator_can_emit_invocation_trace_summary(tmp_path: Path):
+    memory_dir = tmp_path / "memory"
+    memory_dir.mkdir()
+    (tmp_path / "mica.yaml").write_text(
+        dedent(
+            """
+            mica_spec: "0.2.9"
+            mode: memory_first
+            flow_policy:
+              enabled: false
+            layers:
+              - id: sessions
+                kind: sessions
+                path: memory/mica.sessions.jsonl
+                loading_hint: on_demand
+              - id: observe
+                kind: observations
+                path: memory/mica.observe.jsonl
+                loading_hint: always
+              - id: memories
+                kind: memories
+                path: memory/mica.memories.jsonl
+                loading_hint: on_demand
+              - id: slots
+                kind: slots
+                path: memory/mica.slots.json
+                loading_hint: always
+              - id: archive_export
+                kind: archive
+                path: memory/mica_archive.json
+                loading_hint: always
+              - id: playbook_export
+                kind: playbook
+                path: memory/mica_playbook.md
+                loading_hint: always
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
+    (memory_dir / "mica_archive.json").write_text(
+        json.dumps(
+            {
+                "mica_spec": "0.2.9",
+                "project": {"name": "fixture", "version": "0.2.9"},
+                "operation_meta": {"last_updated": "2026-07-09"},
+                "design_invariants": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    summary = mica_runtime.build_summary(tmp_path)
+    mica_runtime.write_invocation_trace(tmp_path, summary, memory_dir / "mica.invocation.jsonl")
+
+    ivc_results = mica_core.run_invocation_trace_checks(tmp_path)
+
+    assert any(cid == "IVC-001" and status == "PASS" for cid, status, _ in ivc_results)
+    assert any(cid == "IVC-004" and status == "PASS" for cid, status, _ in ivc_results)
 
 
 def test_invocation_trace_validator_fails_when_context_surface_is_not_loaded(tmp_path: Path):

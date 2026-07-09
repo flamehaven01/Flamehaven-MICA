@@ -5,13 +5,17 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
-## Unreleased
+## v3.0.0-declaration - Invocation-first Floor (2026-07-09)
 
-Post-`v0.2.8` working-tree changes not yet tagged.
-Latest git tag remains `v0.2.8`.
+Milestone tag for freezing the repository at the invocation-first floor.
+This is not a stable release; tool banners remain `v0.2.8` until a later versioned release.
+
+Latest stable release tag remains `v0.2.8`.
+The current working direction is a frozen invocation-first floor, with subsequent effort expected to move toward cross-repo consumption rather than deeper MICA-internal expansion.
 - v3.0.0 direction declared: MICA is being reset around invocation-first context loading, truthful loaded-state declaration, and auditable invocation traces
 - v3.0.0 declaration note added: `docs/MICA_v3.0.0_DECLARATION.md`
 - README and About wording now place governance and memory-first machinery beneath the primary invocation contract
+- obsolete `docs/CAS_AUDIT_PLAYBOOK.md` removed during doc sanity cleanup
 
 - Tool version banner alignment: `mica_pct.py` and `mica_runtime.py` now report `v0.2.8` consistently
 - Legacy archive selection is now deterministic: highest version first, then `operation_meta.last_updated`
@@ -29,6 +33,7 @@ Latest git tag remains `v0.2.8`.
 - memory-first record schema drafts added: `mica.sessions.schema.json`, `mica.memories.schema.json`, `mica.slots.schema.json`, `mica.graph.schema.json`
 - standalone invocation provenance schema added: `mica.invocation.schema.json` for independently validating `mica.invocation.jsonl` artifacts
 - standalone invocation trace validator added: `tools/mica_invocation.py`
+- `mica_invocation.py` now reports standalone schema presence and `mica_pct.py` prints `IVC-*` summary when an invocation trace artifact exists
 - `tools/mica_memory.py` added: minimal writer/parser utility for memory-first sessions, memories, graph edges, and slots
 - `tools/mica_memory.py synthesize-memories` added: deterministic observe -> candidate_memory promotion
 - `tools/mica_memory.py refresh-projections` added: deterministic memories -> slots / graph projection rebuild

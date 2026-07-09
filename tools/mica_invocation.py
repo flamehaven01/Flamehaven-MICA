@@ -17,7 +17,7 @@ _TOOLS_DIR = Path(__file__).resolve().parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from mica_core import MICA_TOOL_VERSION, format_tool_banner, run_invocation_trace_checks
+from mica_core import MICA_TOOL_VERSION, find_invocation_schema, format_tool_banner, run_invocation_trace_checks
 
 __version__ = MICA_TOOL_VERSION
 
@@ -39,6 +39,7 @@ def main() -> None:
     target = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path.cwd()
     print(format_tool_banner("MICA Invocation Trace Validator"))
     print(f"Target: {target}")
+    print(f"Schema: {find_invocation_schema()}")
     results = run_invocation_trace_checks(target)
     valid = _report(results)
     sys.exit(0 if valid else 1)

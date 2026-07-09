@@ -428,17 +428,27 @@ def _is_unique_string_list(value: Any) -> bool:
     return len(normalized) == len(value) == len(set(normalized))
 
 
+def find_invocation_schema() -> Path:
+    return Path(__file__).resolve().parent.parent / "mica.invocation.schema.json"
+
+
 def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     trace_path = target
+    schema_path = find_invocation_schema()
+    schema_result = (
+        "IVC-000",
+        "PASS" if schema_path.exists() else "FAIL",
+        f"invocation schema {'present' if schema_path.exists() else 'missing'} ({schema_path})",
+    )
     if target.is_dir():
         resolved = find_flow_artifact(target, "mica.invocation.jsonl")
         if not resolved:
-            return [("IVC-001", "FAIL", "mica.invocation.jsonl missing")]
+            return [schema_result, ("IVC-001", "FAIL", "mica.invocation.jsonl missing")]
         trace_path = resolved
     if not trace_path.exists():
-        return [("IVC-001", "FAIL", f"invocation trace missing: {trace_path}")]
+        return [schema_result, ("IVC-001", "FAIL", f"invocation trace missing: {trace_path}")]
 
-    results: list[tuple[str, str, str]] = [("IVC-001", "PASS", f"invocation trace present ({trace_path})")]
+    results: list[tuple[str, str, str]] = [schema_result, ("IVC-001", "PASS", f"invocation trace present ({trace_path})")]
     try:
         records = load_jsonl(trace_path)
     except Exception as exc:
