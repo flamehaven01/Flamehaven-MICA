@@ -12,6 +12,7 @@ if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
 import mica_core
+import mica_invocation
 import mica_pct
 import mica_runtime
 
@@ -29,6 +30,7 @@ def test_tool_versions_are_aligned():
     assert mica_core.MICA_TOOL_VERSION == "0.2.8"
     assert mica_pct.__version__ == mica_core.MICA_TOOL_VERSION
     assert mica_runtime.__version__ == mica_core.MICA_TOOL_VERSION
+    assert mica_invocation.__version__ == mica_core.MICA_TOOL_VERSION
     assert mica_core.format_tool_banner("MICA PCT Validator") == "MICA PCT Validator v0.2.8"
 
 
@@ -87,6 +89,27 @@ def test_memory_first_record_schemas_exist_and_expose_expected_versions():
             assert schema["properties"]["schema_version"]["const"] == version_const
         else:
             assert schema["properties"]["schema_version"]["const"] == version_const
+
+
+def test_invocation_trace_validator_passes_on_fixture_trace():
+    trace_path = REPO_ROOT / "fixtures" / "flow_recall_operator_review_safe" / "memory" / "mica.invocation.jsonl"
+
+    results = mica_core.run_invocation_trace_checks(trace_path)
+
+    assert all(status == "PASS" for _, status, _ in results)
+
+
+def test_invocation_trace_validator_fails_when_context_surface_is_not_loaded(tmp_path: Path):
+    trace_path = tmp_path / "mica.invocation.jsonl"
+    trace_path.write_text(
+        '{"schema_version":"mica.invocation.v1","invocation_id":"inv_001","timestamp_utc":"2026-07-09T00:00:00Z","project_root":"fixture","project":{"name":"fixture","version":"0.2.9"},"package_state":"INVOCATION_MODE","core_state":"CLOSED","flow_state":"FLOW_ENABLED","mode":"memory_first","pattern":"explicit","session_id":"sess_001","invocation_contract":"memory_first","loaded_surfaces":["archive"],"agent_context_surfaces":["archive","playbook"],"operator_only_surfaces":[],"deferred_surfaces":["playbook"],"missing_invoked_surfaces":[],"active_critical_invariants":[],"last_updated":"2026-07-09"}\n',
+        encoding="utf-8",
+    )
+
+    results = mica_core.run_invocation_trace_checks(trace_path)
+
+    assert any(cid == "IVC-004" and status == "FAIL" for cid, status, _ in results)
+    assert any("agent_context_surfaces not loaded" in message for _, _, message in results)
 
 
 def test_memory_first_contract_is_closed_and_resolves_export_paths(tmp_path: Path):

@@ -64,6 +64,26 @@ _OBSERVE_REQUIRED_FIELDS = (
 )
 
 _CANDIDATE_REVIEW_FIELDS = ("reviewed_by", "reviewed_at_utc", "decision_reason")
+_INVOCATION_REQUIRED_FIELDS = (
+    "schema_version",
+    "invocation_id",
+    "timestamp_utc",
+    "project_root",
+    "project",
+    "package_state",
+    "core_state",
+    "flow_state",
+    "mode",
+    "pattern",
+    "session_id",
+    "invocation_contract",
+    "loaded_surfaces",
+    "agent_context_surfaces",
+    "deferred_surfaces",
+    "missing_invoked_surfaces",
+    "active_critical_invariants",
+    "last_updated",
+)
 
 
 def format_tool_banner(tool_name: str) -> str:
@@ -399,6 +419,115 @@ def _review_is_approved(review: Any) -> bool:
     if not isinstance(review, dict) or review.get("state") != "approved":
         return False
     return all(_is_non_empty_string(review.get(field)) for field in _CANDIDATE_REVIEW_FIELDS)
+
+
+def _is_unique_string_list(value: Any) -> bool:
+    if not isinstance(value, list):
+        return False
+    normalized = [item for item in value if _is_non_empty_string(item)]
+    return len(normalized) == len(value) == len(set(normalized))
+
+
+def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
+    trace_path = target
+    if target.is_dir():
+        resolved = find_flow_artifact(target, "mica.invocation.jsonl")
+        if not resolved:
+            return [("IVC-001", "FAIL", "mica.invocation.jsonl missing")]
+        trace_path = resolved
+    if not trace_path.exists():
+        return [("IVC-001", "FAIL", f"invocation trace missing: {trace_path}")]
+
+    results: list[tuple[str, str, str]] = [("IVC-001", "PASS", f"invocation trace present ({trace_path})")]
+    try:
+        records = load_jsonl(trace_path)
+    except Exception as exc:
+        return results + [("IVC-002", "FAIL", f"cannot parse invocation trace: {exc}")]
+    if not records:
+        return results + [("IVC-002", "FAIL", "invocation trace empty")]
+    results.append(("IVC-002", "PASS", f"parseable invocation trace ({len(records)} records)"))
+
+    schema_issues: list[str] = []
+    coherence_issues: list[str] = []
+    allowed_package_states = {"INVOCATION_MODE", "LEGACY_MODE", "INACTIVE"}
+    allowed_core_states = {"CLOSED", "INCOMPLETE", "LEGACY", "INACTIVE"}
+    allowed_flow_states = {None, "FLOW_OFFLINE", "FLOW_ENABLED", "FLOW_DEGRADED"}
+    allowed_modes = {None, "memory_injection", "protocol_evolution", "memory_first"}
+    allowed_patterns = {None, "readme_protocol", "hook_trigger", "agent_yaml_bootstrap", "global_skill", "workspace_directive", "explicit", "legacy"}
+    allowed_contracts = {None, "memory_first", "archive_first", "legacy_archive"}
+
+    for index, record in enumerate(records, start=1):
+        missing = [field for field in _INVOCATION_REQUIRED_FIELDS if field not in record]
+        if missing:
+            schema_issues.append(f"record {index}: missing required fields {missing}")
+            continue
+        if record.get("schema_version") != "mica.invocation.v1":
+            schema_issues.append(f"record {index}: unsupported schema_version {record.get('schema_version')}")
+        if not _is_non_empty_string(record.get("invocation_id")):
+            schema_issues.append(f"record {index}: invalid invocation_id")
+        if not _is_non_empty_string(record.get("timestamp_utc")):
+            schema_issues.append(f"record {index}: invalid timestamp_utc")
+        if not _is_non_empty_string(record.get("project_root")):
+            schema_issues.append(f"record {index}: invalid project_root")
+        project = record.get("project")
+        if not isinstance(project, dict) or "name" not in project or "version" not in project:
+            schema_issues.append(f"record {index}: project must expose name and version")
+        if record.get("package_state") not in allowed_package_states:
+            schema_issues.append(f"record {index}: invalid package_state {record.get('package_state')!r}")
+        if record.get("core_state") not in allowed_core_states:
+            schema_issues.append(f"record {index}: invalid core_state {record.get('core_state')!r}")
+        if record.get("flow_state") not in allowed_flow_states:
+            schema_issues.append(f"record {index}: invalid flow_state {record.get('flow_state')!r}")
+        if record.get("mode") not in allowed_modes:
+            schema_issues.append(f"record {index}: invalid mode {record.get('mode')!r}")
+        if record.get("pattern") not in allowed_patterns:
+            schema_issues.append(f"record {index}: invalid pattern {record.get('pattern')!r}")
+        if record.get("invocation_contract") not in allowed_contracts:
+            schema_issues.append(f"record {index}: invalid invocation_contract {record.get('invocation_contract')!r}")
+        if record.get("session_id") is not None and not _is_non_empty_string(record.get("session_id")):
+            schema_issues.append(f"record {index}: invalid session_id")
+
+        for field in ("loaded_surfaces", "agent_context_surfaces", "operator_only_surfaces", "deferred_surfaces", "missing_invoked_surfaces", "active_critical_invariants"):
+            value = record.get(field, []) if field == "operator_only_surfaces" else record.get(field)
+            if not _is_unique_string_list(value):
+                schema_issues.append(f"record {index}: {field} must be a unique string list")
+
+        loaded_surfaces = record.get("loaded_surfaces") if isinstance(record.get("loaded_surfaces"), list) else []
+        context_surfaces = record.get("agent_context_surfaces") if isinstance(record.get("agent_context_surfaces"), list) else []
+        operator_surfaces = record.get("operator_only_surfaces") if isinstance(record.get("operator_only_surfaces"), list) else []
+        deferred_surfaces = record.get("deferred_surfaces") if isinstance(record.get("deferred_surfaces"), list) else []
+        missing_invoked_surfaces = record.get("missing_invoked_surfaces") if isinstance(record.get("missing_invoked_surfaces"), list) else []
+
+        extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
+        if extra_context:
+            coherence_issues.append(f"record {index}: agent_context_surfaces not loaded {extra_context}")
+        overlapping_operator = [surface for surface in operator_surfaces if surface in context_surfaces]
+        if overlapping_operator:
+            coherence_issues.append(f"record {index}: operator_only_surfaces overlap agent_context_surfaces {overlapping_operator}")
+        overlapping_deferred = [surface for surface in deferred_surfaces if surface in loaded_surfaces]
+        if overlapping_deferred:
+            coherence_issues.append(f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}")
+        overlapping_missing = [surface for surface in missing_invoked_surfaces if surface in loaded_surfaces]
+        if overlapping_missing:
+            coherence_issues.append(f"record {index}: missing_invoked_surfaces overlap loaded_surfaces {overlapping_missing}")
+
+    if schema_issues:
+        preview = "; ".join(schema_issues[:4])
+        if len(schema_issues) > 4:
+            preview += f"; ... (+{len(schema_issues) - 4} more)"
+        results.append(("IVC-003", "FAIL", preview))
+    else:
+        results.append(("IVC-003", "PASS", "invocation trace shape matches mica.invocation.v1 expectations"))
+
+    if coherence_issues:
+        preview = "; ".join(coherence_issues[:4])
+        if len(coherence_issues) > 4:
+            preview += f"; ... (+{len(coherence_issues) - 4} more)"
+        results.append(("IVC-004", "FAIL", preview))
+    else:
+        results.append(("IVC-004", "PASS", "invocation surfaces are internally coherent"))
+
+    return results
 
 
 def _flow_enabled(flow_policy: dict[str, Any]) -> bool:

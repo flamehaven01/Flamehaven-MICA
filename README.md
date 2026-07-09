@@ -85,6 +85,7 @@ Tools:
 | `tools/mica_core.py` | Shared PCT judgment and YAML loading |
 | `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-012) |
 | `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
+| `tools/mica_invocation.py` | Standalone validator for `mica.invocation.jsonl` provenance artifacts |
 | `tools/mica_memory.py` | Memory-first read/write utility for sessions, memories, graph edges, and slot projections |
 
 Fixtures:
@@ -108,6 +109,9 @@ python tools/mica_pct.py [project_root]
 # Runtime summary
 python tools/mica_runtime.py [project_root] --format text
 python tools/mica_runtime.py [project_root] --format hook
+
+# Standalone invocation trace validator
+python tools/mica_invocation.py [trace_file_or_project_root]
 
 # Memory-first utility
 python tools/mica_memory.py [project_root] paths

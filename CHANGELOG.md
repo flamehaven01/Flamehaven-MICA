@@ -28,6 +28,7 @@ Latest git tag remains `v0.2.8`.
 - `mica.yaml.schema.json`, `mica_core.py`, and `mica_runtime.py` now accept `mode: memory_first` plus kind-based export layers
 - memory-first record schema drafts added: `mica.sessions.schema.json`, `mica.memories.schema.json`, `mica.slots.schema.json`, `mica.graph.schema.json`
 - standalone invocation provenance schema added: `mica.invocation.schema.json` for independently validating `mica.invocation.jsonl` artifacts
+- standalone invocation trace validator added: `tools/mica_invocation.py`
 - `tools/mica_memory.py` added: minimal writer/parser utility for memory-first sessions, memories, graph edges, and slots
 - `tools/mica_memory.py synthesize-memories` added: deterministic observe -> candidate_memory promotion
 - `tools/mica_memory.py refresh-projections` added: deterministic memories -> slots / graph projection rebuild
