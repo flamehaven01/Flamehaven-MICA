@@ -241,6 +241,19 @@ def test_memory_first_explicit_agent_context_surfaces_override_default(tmp_path:
     assert pct007[0] == "PASS"
 
 
+def test_emit_hook_is_invocation_first_for_memory_first_fixture():
+    fixture_root = REPO_ROOT / "fixtures" / "memory_first_minimal"
+
+    summary = mica_runtime.build_summary(fixture_root)
+    hook = mica_runtime.emit_hook(summary)
+
+    assert "| invoked=observations+slots+archive+playbook" in hook
+    assert "| context=archive+playbook+slots" in hook
+    assert "| core=CLOSED" in hook
+    assert "| support=0crit/0high" in hook
+    assert "| DI=" not in hook
+
+
 def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
     fixture_root = REPO_ROOT / "fixtures" / "memory_first_minimal"
     summary = mica_runtime.build_summary(fixture_root)
@@ -381,6 +394,20 @@ def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_s
     assert pct007[0] == "FAIL"
     assert "agent_context surfaces not session-start invoked" in pct007[1]
     assert "memories" in pct007[1]
+
+def test_emit_hook_surfaces_flow_state_after_invocation_context():
+    fixture_root = REPO_ROOT / "fixtures" / "flow_recall_agent_context_violation"
+
+    summary = mica_runtime.build_summary(fixture_root)
+    hook = mica_runtime.emit_hook(summary)
+
+    assert "| invoked=" in hook
+    assert "| context=" in hook
+    assert "| core=INCOMPLETE" in hook
+    assert "| flow=FLOW_DEGRADED" in hook
+    assert "| recall=PASS" in hook
+    assert "| telemetry=PASS" in hook
+
 
 def test_runtime_summary_surfaces_flow_recall_and_telemetry_statuses():
     fixture_root = REPO_ROOT / "fixtures" / "flow_recall_agent_context_violation"

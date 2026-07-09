@@ -9,11 +9,13 @@ This document fixes the reporting contract.
 
 Runtime output must report:
 
+- `Invoked`
+- `Context`
 - `Core`
 - `Flow`
-- flow subchecks that matter to governance
 - `Recall`
 - `Telemetry`
+- supporting invariants only after invoked/context truth is clear
 
 ## Core states
 

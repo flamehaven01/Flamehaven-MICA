@@ -464,6 +464,11 @@ def slug(text: str | None) -> str:
     return re.sub(r"-+", "-", value).strip("-")
 
 
+def _compact_surfaces(values: list[str] | None) -> str:
+    items = [str(value) for value in values or [] if str(value).strip()]
+    return "+".join(items) if items else "none"
+
+
 def emit_text(summary: dict[str, Any]) -> str:
     if summary["state"] == "INACTIVE":
         return "[MICA] INACTIVE -- no mica.yaml or legacy archive found."
@@ -474,10 +479,9 @@ def emit_text(summary: dict[str, Any]) -> str:
         f"[MICA LOADED] {summary.get('name') or 'unknown'} v{summary.get('version') or 'unknown'}",
         f"Mode      : {summary.get('mode') or 'legacy'}",
         f"Pattern   : {summary.get('pattern') or 'legacy'}",
-        f"Invariants: {summary.get('critical_count', 0)} critical, {summary.get('high_count', 0)} high",
-        f"Last upd  : {summary.get('last_updated') or 'unknown'}",
         f"Invoked   : {loaded_surfaces}",
         f"Context   : {agent_context_surfaces}",
+        f"Last upd  : {summary.get('last_updated') or 'unknown'}",
     ]
     if summary.get("deferred_surfaces"):
         lines.append(f"Deferred  : {deferred_surfaces}")
@@ -504,6 +508,7 @@ def emit_text(summary: dict[str, Any]) -> str:
             lines.append(f"Reason    : {summary.get('flow_reason')}")
     else:
         lines.append(f"PCT       : {summary.get('pct')}")
+    lines.append(f"Invariants: {summary.get('critical_count', 0)} critical, {summary.get('high_count', 0)} high")
     crits = summary.get("critical_invariants", []) or []
     if crits:
         lines.append("")
@@ -525,8 +530,18 @@ def emit_hook(summary: dict[str, Any]) -> str:
         f"[MICA] {slug(summary.get('name')) or 'unknown'} v{summary.get('version') or 'unknown'}"
         f" | mode={summary.get('mode') or 'legacy'}"
         f" | pattern={summary.get('pattern') or 'legacy'}"
-        f" | DI={summary.get('critical_count', 0)}crit/{summary.get('high_count', 0)}high"
-        f" | pct={summary.get('pct')}"
+        f" | invoked={_compact_surfaces(summary.get('loaded_surfaces'))}"
+        f" | context={_compact_surfaces(summary.get('agent_context_surfaces'))}"
+        f" | core={summary.get('core_state') or summary.get('pct')}"
+    )
+    if summary.get("flow_state"):
+        first += (
+            f" | flow={summary.get('flow_state')}"
+            f" | recall={summary.get('flow_recall_status') or 'UNKNOWN'}"
+            f" | telemetry={summary.get('flow_telemetry_status') or 'UNKNOWN'}"
+        )
+    first += (
+        f" | support={summary.get('critical_count', 0)}crit/{summary.get('high_count', 0)}high"
         f" | last={summary.get('last_updated') or 'unknown'}"
     )
     hook_output = summary.get("hook_output") if isinstance(summary.get("hook_output"), dict) else {}
