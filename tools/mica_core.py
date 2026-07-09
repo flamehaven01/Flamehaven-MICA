@@ -684,7 +684,8 @@ def _run_pct018(
             if extra_ids:
                 issues.append(f"record {index}: source_event_ids not declared on candidate {candidate_id}: {extra_ids}")
 
-        if record.get("target") == "agent_context":
+        target = record.get("target")
+        if target == "agent_context":
             if not invocation_path:
                 issues.append(f"record {index}: target=agent_context but mica.invocation.jsonl absent")
                 continue
@@ -702,6 +703,14 @@ def _run_pct018(
                 extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
                 if extra_context:
                     issues.append(f"record {index}: invocation trace agent_context_surfaces not loaded for session {session_id}: {extra_context}")
+        elif target == "operator_review" and invocation_path:
+            invocation = invocation_by_session.get(session_id)
+            if not isinstance(invocation, dict):
+                issues.append(f"record {index}: operator_review session_id {session_id!r} not linked to invocation trace")
+                continue
+            operator_surfaces = invocation.get("operator_only_surfaces")
+            if not isinstance(operator_surfaces, list) or not operator_surfaces:
+                issues.append(f"record {index}: invocation trace missing operator_only_surfaces for operator_review session {session_id}")
 
     if issues:
         preview = "; ".join(issues[:4])

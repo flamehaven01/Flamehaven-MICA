@@ -687,6 +687,104 @@ def test_pct018_passes_when_agent_context_recall_joins_invocation_trace(tmp_path
     assert pct018[0] == "PASS"
     assert "joins cleanly with candidates, observations, and invocation trace" in pct018[1]
 
+def test_pct018_warns_when_operator_review_invocation_trace_omits_operator_only_surfaces(tmp_path: Path):
+    memory_dir = tmp_path / "memory"
+    memory_dir.mkdir()
+    (tmp_path / "mica.yaml").write_text(
+        dedent(
+            """
+            mica_spec: "0.2.9"
+            mode: memory_first
+            flow_policy:
+              enabled: true
+            recall_policy:
+              enabled: true
+              inject_unapproved_candidates: false
+            layers:
+              - id: observe
+                kind: observations
+                path: memory/mica.observe.jsonl
+                loading_hint: always
+              - id: recall
+                kind: recall
+                path: memory/mica.recall.jsonl
+                loading_hint: on_demand
+              - id: candidates
+                kind: candidates
+                path: memory/mica.candidates.json
+                loading_hint: on_demand
+              - id: slots
+                kind: slots
+                path: memory/mica.slots.json
+                loading_hint: always
+              - id: archive_export
+                kind: archive
+                path: memory/mica_archive.json
+                loading_hint: always
+              - id: playbook_export
+                kind: playbook
+                path: memory/mica_playbook.md
+                loading_hint: always
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.observe.jsonl").write_text(
+        '{"schema_version":"mica.observe.v1","event_id":"obs_001","timestamp_utc":"2026-07-08T00:00:00Z","session_id":"sess_001","hook":"post_tool_use","scope":{"project":"fixture"},"summary":"obs","redaction":{"applied":false},"trust_tier":"native","source_system":"codex","event_hash":"sha256:111"}\n',
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.recall.jsonl").write_text(
+        '{"schema_version":"mica.recall.v1","recall_id":"rec_001","timestamp_utc":"2026-07-08T00:01:00Z","session_id":"sess_001","candidate_id":"cand_001","source_event_ids":["obs_001"],"target":"operator_review","reason":"human review"}\n',
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.candidates.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "mica.candidates.v1",
+                "candidates": [
+                    {
+                        "candidate_id": "cand_001",
+                        "source_event_ids": ["obs_001"],
+                        "status": "pending_operator_review",
+                        "operator_review": {
+                            "state": "pending",
+                            "reviewed_by": None,
+                            "reviewed_at_utc": None,
+                            "decision_reason": None,
+                        },
+                    }
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.invocation.jsonl").write_text(
+        '{"schema_version":"mica.invocation.v1","invocation_id":"inv_001","timestamp_utc":"2026-07-08T00:01:05Z","session_id":"sess_001","loaded_surfaces":["observations","archive","playbook","slots"],"agent_context_surfaces":["archive","playbook","slots"]}\n',
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
+    (memory_dir / "mica_archive.json").write_text(
+        json.dumps(
+            {
+                "mica_spec": "0.2.9",
+                "project": {"name": "fixture", "version": "0.2.9"},
+                "operation_meta": {"last_updated": "2026-07-08"},
+                "design_invariants": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    pct018 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018")
+
+    assert pct018[0] == "WARN"
+    assert "missing operator_only_surfaces for operator_review session" in pct018[1]
+
+
 def test_runtime_summary_reports_telemetry_warn_for_unjoinable_agent_context_trace(tmp_path: Path):
     memory_dir = tmp_path / "memory"
     memory_dir.mkdir()

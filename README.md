@@ -41,7 +41,9 @@ For invocation-first packages, runtime and hook output must foreground `Invoked`
 governance/supporting details. `invocation_protocol.agent_context_surfaces` can explicitly declare
 which invoked surfaces may enter `agent_context`, while `invocation_protocol.operator_only_surfaces`
 separates human-review surfaces that must not overlap agent context. Agent-context surfaces must be
-session-start loaded, or `PCT-007` fails the package contract.
+session-start loaded, or `PCT-007` fails the package contract. When `operator_review` recall is joined
+with session invocation trace, that trace should expose `operator_only_surfaces` as provenance rather than
+as memory content.
 
 The current v0.2.9 draft adds governance and memory-first machinery beneath that surface.
 Those additions remain subordinate to the invocation contract and should not replace it as MICA's core.
