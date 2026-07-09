@@ -68,6 +68,7 @@ def test_schema_supports_memory_first_mode():
     assert "promotion_policy" in schema["properties"]
     assert "kind" in schema["$defs"]["layer"]["properties"]
     assert "agent_context_surfaces" in schema["$defs"]["invocationProtocol"]["properties"]
+    assert "operator_only_surfaces" in schema["$defs"]["invocationProtocol"]["properties"]
 
 
 def test_memory_first_record_schemas_exist_and_expose_expected_versions():
@@ -174,6 +175,7 @@ def test_memory_first_summary_reports_invoked_and_deferred_surfaces():
     assert summary["invocation_contract"] == "memory_first"
     assert summary["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
     assert summary["agent_context_surfaces"] == ["archive", "playbook", "slots"]
+    assert summary["operator_only_surfaces"] == ["memories", "recall"]
     assert {"sessions", "memories", "recall", "graph"}.issubset(set(summary["deferred_surfaces"]))
 
 
@@ -249,6 +251,8 @@ def test_emit_hook_is_invocation_first_for_memory_first_fixture():
 
     assert "| invoked=observations+slots+archive+playbook" in hook
     assert "| context=archive+playbook+slots" in hook
+    assert "| operator=memories+recall" in hook
+    assert "| deferred=sessions+memories+recall+graph" in hook
     assert "| core=CLOSED" in hook
     assert "| support=0crit/0high" in hook
     assert "| DI=" not in hook
@@ -268,6 +272,7 @@ def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
     assert records[0]["session_id"] == "sess_20260707_0001"
     assert records[0]["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
     assert records[0]["agent_context_surfaces"] == ["archive", "playbook", "slots"]
+    assert records[0]["operator_only_surfaces"] == ["memories", "recall"]
 
 
 def test_memory_first_invocation_contract_fails_when_slots_not_marked_session_start(tmp_path: Path):
@@ -332,6 +337,73 @@ def test_memory_first_invocation_contract_fails_when_slots_not_marked_session_st
     assert pct007[0] == "FAIL"
     assert "missing required session-start surfaces" in pct007[1]
     assert "slots" in pct007[1]
+
+def test_memory_first_operator_only_surface_must_not_overlap_agent_context(tmp_path: Path):
+    memory_dir = tmp_path / "memory"
+    memory_dir.mkdir()
+    (tmp_path / "mica.yaml").write_text(
+        dedent(
+            """
+            mica_spec: "0.2.9"
+            mode: memory_first
+            invocation_protocol:
+              primary_pattern: explicit
+              agent_context_surfaces:
+                - archive
+              operator_only_surfaces:
+                - archive
+                - memories
+            layers:
+              - id: observe
+                kind: observations
+                path: memory/mica.observe.jsonl
+                loading_hint: always
+              - id: memories
+                kind: memories
+                path: memory/mica.memories.jsonl
+                loading_hint: on_demand
+              - id: slots
+                kind: slots
+                path: memory/mica.slots.json
+                loading_hint: always
+              - id: archive_export
+                kind: archive
+                path: memory/mica_archive.json
+                loading_hint: always
+              - id: playbook_export
+                kind: playbook
+                path: memory/mica_playbook.md
+                loading_hint: always
+            """
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
+    (memory_dir / "mica_archive.json").write_text(
+        json.dumps(
+            {
+                "mica_spec": "0.2.9",
+                "project": {"name": "fixture", "version": "0.2.9"},
+                "operation_meta": {"last_updated": "2026-07-09"},
+                "design_invariants": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    summary = mica_runtime.build_summary(tmp_path)
+    pct007 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007")
+
+    assert summary["operator_only_surfaces"] == ["memories"]
+    assert pct007[0] == "FAIL"
+    assert "operator_only surfaces overlap agent_context" in pct007[1]
+    assert "archive" in pct007[1]
+
 
 def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_session_start_invoked(tmp_path: Path):
     memory_dir = tmp_path / "memory"
@@ -403,6 +475,8 @@ def test_emit_hook_surfaces_flow_state_after_invocation_context():
 
     assert "| invoked=" in hook
     assert "| context=" in hook
+    assert "| operator=" in hook
+    assert "| deferred=" in hook
     assert "| core=INCOMPLETE" in hook
     assert "| flow=FLOW_DEGRADED" in hook
     assert "| recall=PASS" in hook

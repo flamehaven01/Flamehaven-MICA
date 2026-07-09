@@ -17,6 +17,9 @@ invocation_protocol:
     - archive
     - playbook
     - slots
+  operator_only_surfaces:
+    - memories
+    - recall
 layers:
   - id: sessions
     kind: sessions

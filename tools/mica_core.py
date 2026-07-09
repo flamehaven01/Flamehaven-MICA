@@ -244,12 +244,25 @@ def layer_role(layer: dict[str, Any]) -> str:
 _INVOKED_LOADING_HINTS = frozenset({"always", "session_start_only"})
 _AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "slots", "lessons", "memories")
 _AGENT_CONTEXT_ALLOWED_SURFACES = frozenset(_AGENT_CONTEXT_ROLE_ORDER)
+_OPERATOR_ONLY_ALLOWED_SURFACES = frozenset((
+    "archive",
+    "playbook",
+    "lessons",
+    "sessions",
+    "observations",
+    "memories",
+    "recall",
+    "candidates",
+    "slots",
+    "graph",
+))
 
 
 def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     raw_agent_context = inv.get("agent_context_surfaces") if isinstance(inv.get("agent_context_surfaces"), list) else None
+    raw_operator_only = inv.get("operator_only_surfaces") if isinstance(inv.get("operator_only_surfaces"), list) else None
     mode = str(yd.get("mode") or "")
     declared_surfaces: list[str] = []
     invoked_surfaces: list[str] = []
@@ -278,6 +291,10 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
     invalid_agent_context_surfaces: list[str] = []
     undeclared_agent_context_surfaces: list[str] = []
     non_invoked_agent_context_surfaces: list[str] = []
+    configured_operator_only_surfaces: list[str] = []
+    invalid_operator_only_surfaces: list[str] = []
+    undeclared_operator_only_surfaces: list[str] = []
+    overlapping_operator_only_surfaces: list[str] = []
     if raw_agent_context is not None:
         for surface in raw_agent_context:
             if not _is_non_empty_string(surface):
@@ -300,17 +317,42 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
         if not agent_context_surfaces:
             agent_context_surfaces = list(invoked_surfaces)
 
+    if raw_operator_only is not None:
+        for surface in raw_operator_only:
+            if not _is_non_empty_string(surface):
+                continue
+            role = str(surface)
+            configured_operator_only_surfaces.append(role)
+            if role not in _OPERATOR_ONLY_ALLOWED_SURFACES:
+                invalid_operator_only_surfaces.append(role)
+            elif role not in declared_surfaces:
+                undeclared_operator_only_surfaces.append(role)
+            elif role in agent_context_surfaces:
+                overlapping_operator_only_surfaces.append(role)
+        operator_only_surfaces = [
+            role
+            for role in configured_operator_only_surfaces
+            if role in _OPERATOR_ONLY_ALLOWED_SURFACES and role in declared_surfaces and role not in agent_context_surfaces
+        ]
+    else:
+        operator_only_surfaces = []
+
     return {
         "invocation_contract": "memory_first" if mode == "memory_first" else "archive_first",
         "declared_surfaces": declared_surfaces,
         "loaded_surfaces": invoked_surfaces,
         "agent_context_surfaces": agent_context_surfaces,
+        "operator_only_surfaces": operator_only_surfaces,
         "deferred_surfaces": deferred_surfaces,
         "missing_invoked_surfaces": missing_invoked_surfaces,
         "configured_agent_context_surfaces": configured_agent_context_surfaces,
         "invalid_agent_context_surfaces": invalid_agent_context_surfaces,
         "undeclared_agent_context_surfaces": undeclared_agent_context_surfaces,
         "non_invoked_agent_context_surfaces": non_invoked_agent_context_surfaces,
+        "configured_operator_only_surfaces": configured_operator_only_surfaces,
+        "invalid_operator_only_surfaces": invalid_operator_only_surfaces,
+        "undeclared_operator_only_surfaces": undeclared_operator_only_surfaces,
+        "overlapping_operator_only_surfaces": overlapping_operator_only_surfaces,
     }
 
 
@@ -884,8 +926,13 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
     invalid_context_surfaces = contract["invalid_agent_context_surfaces"]
     undeclared_context_surfaces = contract["undeclared_agent_context_surfaces"]
     non_invoked_context_surfaces = contract["non_invoked_agent_context_surfaces"]
+    operator_only_surfaces = contract["operator_only_surfaces"]
+    invalid_operator_only_surfaces = contract["invalid_operator_only_surfaces"]
+    undeclared_operator_only_surfaces = contract["undeclared_operator_only_surfaces"]
+    overlapping_operator_only_surfaces = contract["overlapping_operator_only_surfaces"]
     invoked_label = ", ".join(invoked_surfaces) if invoked_surfaces else "none"
     context_label = ", ".join(context_surfaces) if context_surfaces else "none"
+    operator_label = ", ".join(operator_only_surfaces) if operator_only_surfaces else "none"
     valid_patterns = {
         "readme_protocol",
         "hook_trigger",
@@ -901,6 +948,14 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
         context_config_issues.append(f"agent_context surfaces not declared as layers {undeclared_context_surfaces}")
     if non_invoked_context_surfaces:
         context_config_issues.append(f"agent_context surfaces not session-start invoked {non_invoked_context_surfaces}")
+    operator_config_issues: list[str] = []
+    if invalid_operator_only_surfaces:
+        operator_config_issues.append(f"invalid operator_only surfaces {invalid_operator_only_surfaces}")
+    if undeclared_operator_only_surfaces:
+        operator_config_issues.append(f"operator_only surfaces not declared as layers {undeclared_operator_only_surfaces}")
+    if overlapping_operator_only_surfaces:
+        operator_config_issues.append(f"operator_only surfaces overlap agent_context {overlapping_operator_only_surfaces}")
+    invocation_config_issues = context_config_issues + operator_config_issues
 
     if pattern is None:
         if missing_invoked_surfaces:
@@ -911,13 +966,13 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                     f"invocation contract incomplete; missing required session-start surfaces {missing_invoked_surfaces} (invoked={invoked_label}; context={context_label})",
                 )
             )
-        elif context_config_issues:
-            details = "; ".join(context_config_issues)
+        elif invocation_config_issues:
+            details = "; ".join(invocation_config_issues)
             results.append(
                 (
                     "PCT-007",
                     "FAIL",
-                    f"invocation_protocol agent_context invalid: {details} (invoked={invoked_label}; context={context_label})",
+                    f"invocation_protocol surface contract invalid: {details} (invoked={invoked_label}; context={context_label}; operator={operator_label})",
                 )
             )
         else:
@@ -925,7 +980,7 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                 (
                     "PCT-007",
                     "INFO",
-                    f"invocation_protocol absent (default/manual handling); invoked={invoked_label}; context={context_label}",
+                    f"invocation_protocol absent (default/manual handling); invoked={invoked_label}; context={context_label}; operator={operator_label}",
                 )
             )
     elif pattern not in valid_patterns:
@@ -938,17 +993,17 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                 f"primary_pattern valid: {pattern}, but invocation contract missing required session-start surfaces {missing_invoked_surfaces} (invoked={invoked_label}; context={context_label})",
             )
         )
-    elif context_config_issues:
-        details = "; ".join(context_config_issues)
+    elif invocation_config_issues:
+        details = "; ".join(invocation_config_issues)
         results.append(
             (
                 "PCT-007",
                 "FAIL",
-                f"primary_pattern valid: {pattern}, but invocation_protocol agent_context invalid: {details} (invoked={invoked_label}; context={context_label})",
+                f"primary_pattern valid: {pattern}, but invocation_protocol surface contract invalid: {details} (invoked={invoked_label}; context={context_label}; operator={operator_label})",
             )
         )
     else:
-        results.append(("PCT-007", "PASS", f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}"))
+        results.append(("PCT-007", "PASS", f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}; operator={operator_label}"))
 
     hook_hint_layers = [
         layer_label(lyr)

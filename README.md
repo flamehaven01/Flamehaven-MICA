@@ -39,8 +39,9 @@ package, load the declared context surfaces, activate against invariants, and de
 
 For invocation-first packages, runtime and hook output must foreground `Invoked` and `Context` before
 governance/supporting details. `invocation_protocol.agent_context_surfaces` can explicitly declare
-which invoked surfaces may enter `agent_context`. Those surfaces must also be session-start loaded,
-or `PCT-007` fails the package contract.
+which invoked surfaces may enter `agent_context`, while `invocation_protocol.operator_only_surfaces`
+separates human-review surfaces that must not overlap agent context. Agent-context surfaces must be
+session-start loaded, or `PCT-007` fails the package contract.
 
 The current v0.2.9 draft adds governance and memory-first machinery beneath that surface.
 Those additions remain subordinate to the invocation contract and should not replace it as MICA's core.

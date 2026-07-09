@@ -196,6 +196,7 @@ def _build_invocation_summary(
             "declared_surfaces": [],
             "loaded_surfaces": [],
             "agent_context_surfaces": [],
+            "operator_only_surfaces": [],
             "deferred_surfaces": [],
             "missing_invoked_surfaces": [],
             "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
@@ -208,6 +209,7 @@ def _build_invocation_summary(
             "declared_surfaces": ["archive"],
             "loaded_surfaces": ["archive"],
             "agent_context_surfaces": ["archive"],
+            "operator_only_surfaces": [],
             "deferred_surfaces": [],
             "missing_invoked_surfaces": [],
             "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
@@ -229,6 +231,7 @@ def _build_invocation_summary(
     agent_context_surfaces = [role for role in contract["agent_context_surfaces"] if role in loaded]
     if not agent_context_surfaces:
         agent_context_surfaces = [role for role in loaded]
+    operator_only_surfaces = list(contract.get("operator_only_surfaces") or [])
 
     return {
         "session_id": _resolve_active_session_id(project_root),
@@ -236,6 +239,7 @@ def _build_invocation_summary(
         "declared_surfaces": declared,
         "loaded_surfaces": loaded,
         "agent_context_surfaces": agent_context_surfaces,
+        "operator_only_surfaces": operator_only_surfaces,
         "deferred_surfaces": deferred,
         "missing_invoked_surfaces": missing,
         "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
@@ -438,6 +442,7 @@ def build_invocation_trace_record(summary: dict[str, Any]) -> dict[str, Any]:
         "invocation_contract": summary.get("invocation_contract"),
         "loaded_surfaces": list(summary.get("loaded_surfaces") or []),
         "agent_context_surfaces": list(summary.get("agent_context_surfaces") or []),
+        "operator_only_surfaces": list(summary.get("operator_only_surfaces") or []),
         "deferred_surfaces": list(summary.get("deferred_surfaces") or []),
         "missing_invoked_surfaces": list(summary.get("missing_invoked_surfaces") or []),
         "active_critical_invariants": critical_ids,
@@ -474,6 +479,7 @@ def emit_text(summary: dict[str, Any]) -> str:
         return "[MICA] INACTIVE -- no mica.yaml or legacy archive found."
     loaded_surfaces = ", ".join(summary.get("loaded_surfaces") or []) or "none"
     agent_context_surfaces = ", ".join(summary.get("agent_context_surfaces") or []) or "none"
+    operator_only_surfaces = ", ".join(summary.get("operator_only_surfaces") or []) or "none"
     deferred_surfaces = ", ".join(summary.get("deferred_surfaces") or []) or "none"
     lines = [
         f"[MICA LOADED] {summary.get('name') or 'unknown'} v{summary.get('version') or 'unknown'}",
@@ -481,6 +487,7 @@ def emit_text(summary: dict[str, Any]) -> str:
         f"Pattern   : {summary.get('pattern') or 'legacy'}",
         f"Invoked   : {loaded_surfaces}",
         f"Context   : {agent_context_surfaces}",
+        f"Operator  : {operator_only_surfaces}",
         f"Last upd  : {summary.get('last_updated') or 'unknown'}",
     ]
     if summary.get("deferred_surfaces"):
@@ -532,6 +539,8 @@ def emit_hook(summary: dict[str, Any]) -> str:
         f" | pattern={summary.get('pattern') or 'legacy'}"
         f" | invoked={_compact_surfaces(summary.get('loaded_surfaces'))}"
         f" | context={_compact_surfaces(summary.get('agent_context_surfaces'))}"
+        f" | operator={_compact_surfaces(summary.get('operator_only_surfaces'))}"
+        f" | deferred={_compact_surfaces(summary.get('deferred_surfaces'))}"
         f" | core={summary.get('core_state') or summary.get('pct')}"
     )
     if summary.get("flow_state"):
