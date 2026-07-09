@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica.invocation.schema.json",
+  "title": "MICA v0.2.9 Invocation Trace Record",
+  "description": "Schema for one invocation provenance record in mica.invocation.jsonl. Each line in the stream must validate independently.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "invocation_id",
+    "timestamp_utc",
+    "project_root",
+    "project",
+    "package_state",
+    "core_state",
+    "flow_state",
+    "mode",
+    "pattern",
+    "session_id",
+    "invocation_contract",
+    "loaded_surfaces",
+    "agent_context_surfaces",
+    "deferred_surfaces",
+    "missing_invoked_surfaces",
+    "active_critical_invariants",
+    "last_updated"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mica.invocation.v1"
+    },
+    "invocation_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "project_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "package_state": {
+      "type": "string",
+      "enum": [
+        "INVOCATION_MODE",
+        "LEGACY_MODE",
+        "INACTIVE"
+      ]
+    },
+    "core_state": {
+      "type": "string",
+      "enum": [
+        "CLOSED",
+        "INCOMPLETE",
+        "LEGACY",
+        "INACTIVE"
+      ]
+    },
+    "flow_state": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "FLOW_OFFLINE",
+        "FLOW_ENABLED",
+        "FLOW_DEGRADED",
+        null
+      ]
+    },
+    "mode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "memory_injection",
+        "protocol_evolution",
+        "memory_first",
+        null
+      ]
+    },
+    "pattern": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "readme_protocol",
+        "hook_trigger",
+        "agent_yaml_bootstrap",
+        "global_skill",
+        "workspace_directive",
+        "explicit",
+        "legacy",
+        null
+      ]
+    },
+    "session_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "invocation_contract": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "memory_first",
+        "archive_first",
+        "legacy_archive",
+        null
+      ]
+    },
+    "loaded_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "agent_context_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "operator_only_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "deferred_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "missing_invoked_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "active_critical_invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "last_updated": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    }
+  }
+}

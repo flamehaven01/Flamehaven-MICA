@@ -75,6 +75,7 @@ def test_memory_first_record_schemas_exist_and_expose_expected_versions():
     expected = {
         "mica.sessions.schema.json": ("Session", "mica.sessions.v1"),
         "mica.memories.schema.json": ("Memory", "mica.memories.v1"),
+        "mica.invocation.schema.json": ("Invocation", "mica.invocation.v1"),
         "mica.slots.schema.json": ("Slot", "mica.slots.v1"),
         "mica.graph.schema.json": ("Graph", "mica.graph.v1"),
     }

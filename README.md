@@ -174,6 +174,7 @@ Schemas:
 | [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema |
 | [mica-v0.2.7-archive-di-binding.schema.json](mica-v0.2.7-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.7) |
 | [mica.sessions.schema.json](mica.sessions.schema.json) | Session envelope schema draft for v0.2.9 memory-first packages |
+| [mica.invocation.schema.json](mica.invocation.schema.json) | Invocation provenance schema draft for independently validating `mica.invocation.jsonl` artifacts |
 | [mica.observe.schema.json](mica.observe.schema.json) | Observation record schema draft for v0.2.9 flow plane |
 | [mica.memories.schema.json](mica.memories.schema.json) | Durable memory record schema draft for v0.2.9 memory-first packages |
 | [mica.candidates.schema.json](mica.candidates.schema.json) | Candidate registry schema draft for v0.2.9 flow plane |
