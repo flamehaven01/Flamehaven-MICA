@@ -1,0 +1,22 @@
+mica_spec: "0.2.8"
+name: implicit-primary-pattern
+mode: memory_injection
+description: "Fixture: context is declared but primary_pattern relies on the runtime default."
+
+layers:
+  - name: archive
+    path: memory/mica_archive.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/mica_playbook.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  agent_context_surfaces:
+    - archive
+    - playbook
+
+update_triggers:
+  - on_explicit_save

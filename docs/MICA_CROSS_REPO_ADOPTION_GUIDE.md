@@ -8,6 +8,11 @@ The target repository must receive a loadable MICA package contract.
 The entry point is `mica.yaml`.
 The rest of the memory surface is discovered through `layers`.
 
+For the actual authoring and AI session behavior, use the
+[MICA Consumer Authoring Guide](MICA_CONSUMER_AUTHORING_GUIDE.md) and its
+[minimal template](../templates/mica-consumer-minimal.yaml). This guide selects a package
+shape; the authoring guide defines how the consumer writes and invokes it.
+
 ## Minimal rule
 
 A target repository can be considered MICA-capable only when all of the following are true:

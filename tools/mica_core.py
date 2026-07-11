@@ -1123,6 +1123,14 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
                     f"invocation_protocol surface contract invalid: {details} (invoked={invoked_label}; context={context_label}; operator={operator_label})",
                 )
             )
+        elif isinstance(yd.get("invocation_protocol"), dict):
+            results.append(
+                (
+                    "PCT-007",
+                    "WARN",
+                    f"primary_pattern omitted; runtime default readme_protocol applies (invoked={invoked_label}; context={context_label}; operator={operator_label})",
+                )
+            )
         else:
             results.append(
                 (

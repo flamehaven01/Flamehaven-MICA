@@ -1,8 +1,9 @@
 # MICA
 
 Current stable tag: `v0.2.8` (`Binding Depth Edition`)
-Current milestone tag: `v3.0.0-declaration` (invocation-first floor freeze; non-release milestone)
-Current floor: invocation-first runtime truth, with `v0.2.9` drafts retained as groundwork and external adoption work expected to continue in consuming repositories
+Current declaration tag: `v3.0.0-declaration` (invocation-first floor freeze; non-release milestone)
+Current implementation milestone: `v3.0.0-invocation-truth` (resolved-versus-recorded runtime truth and consumer kit; non-release milestone)
+Current floor: invocation-first runtime truth, with `v0.2.9` drafts retained as groundwork and cross-repository adoption continuing in consuming repositories
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
@@ -14,7 +15,8 @@ are in the `Legacy/` directory and are not tracked by git.
 | Track | Status | Notes |
 |---|---|---|
 | Stable | `v0.2.8` | Latest release tag and current tool banner version |
-| Milestone | `v3.0.0-declaration` | Invocation-first floor freeze for cross-repo adoption work; not a stable release |
+| Declaration | `v3.0.0-declaration` | Invocation-first floor freeze; not a stable release |
+| Implementation milestone | `v3.0.0-invocation-truth` | PCT/runtime truthfulness and consumer authoring kit; not a stable release |
 | Draft groundwork | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
 | Intended reset | `v3.0.0` | Invocation-first MICA: truthful context loading, session activation, and auditable invoked-state declaration |
 
@@ -42,9 +44,11 @@ Three assets form the minimal MICA package surface:
 Tools validate and summarize the package at session start. `mica_pct.py` now also prints an `IVC-*` appendix when an invocation trace artifact is present. MICA's job: locate the memory
 package, load the declared context surfaces, activate against invariants, and declare loaded state truthfully.
 
-For invocation-first packages, runtime and hook output must foreground `Invoked` and `Context` before
-governance/supporting details. `invocation_protocol.agent_context_surfaces` can explicitly declare
-which invoked surfaces may enter `agent_context`, while `invocation_protocol.operator_only_surfaces`
+For invocation-first packages, runtime and hook output must foreground resolved surfaces and `Context`
+before governance/supporting details. `MICA CONTRACT RESOLVED` means the declared surface files were
+found; `Trace: recorded` is separate timestamped invocation provenance. A package that declares
+`agent_context_surfaces` should declare `primary_pattern` explicitly; an omitted pattern remains a
+compatibility WARN and defaults to `readme_protocol`. `invocation_protocol.operator_only_surfaces`
 separates human-review surfaces that must not overlap agent context. Agent-context surfaces must be
 session-start loaded, or `PCT-007` fails the package contract. When `operator_review` recall is joined
 with session invocation trace, that trace should expose `operator_only_surfaces` as provenance rather than
@@ -207,6 +211,7 @@ v0.2.9 draft docs:
 | [docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md](docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md) | Core/Flow reporting contract for truthful runtime output |
 | [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) | Packaging and handoff guide for making other repositories MICA-capable |
 | [docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md) | Draft structure for evolving MICA from governed exports into a memory-first substrate |
+| [docs/MICA_CONSUMER_AUTHORING_GUIDE.md](docs/MICA_CONSUMER_AUTHORING_GUIDE.md) | How maintainers and AI agents author and operate an invocation-first consumer package |
 | [docs/MICA_INVOCATION_RECOVERY_PLAN.md](docs/MICA_INVOCATION_RECOVERY_PLAN.md) | Recovery plan for restoring invocation and context loading as the primary MICA objective |
 | [docs/MICA_v3.0.0_DECLARATION.md](docs/MICA_v3.0.0_DECLARATION.md) | Declaration of the intended v3.0.0 invocation-first reset and release boundary |
 

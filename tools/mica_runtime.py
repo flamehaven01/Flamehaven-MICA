@@ -42,6 +42,7 @@ from mica_core import (
     load_jsonl,
     load_yaml,
     resolve_invocation_contract,
+    run_invocation_trace_checks,
     run_pct_checks,
 )
 
@@ -153,6 +154,13 @@ def _default_invocation_trace_path(project_root: Path) -> Path:
     if memory_dir.exists() and memory_dir.is_dir():
         return memory_dir / "mica.invocation.jsonl"
     return project_root / "mica.invocation.jsonl"
+
+
+def _invocation_evidence_status(trace_path: Path) -> str:
+    if not trace_path.is_file():
+        return "absent"
+    checks = run_invocation_trace_checks(trace_path)
+    return "recorded" if all(status != "FAIL" for _, status, _ in checks) else "invalid"
 
 
 def _resolve_active_session_id(project_root: Path) -> str | None:
@@ -397,12 +405,14 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     core_state = "CLOSED" if is_closed_contract(pct_results) else "INCOMPLETE"
     flow_summary = _build_flow_summary(project_root, yd, pct_results)
     invocation_summary = _build_invocation_summary(project_root, state, yd.get("mode"), yd, archive_path, playbook_path)
+    trace_path = Path(invocation_summary["invocation_trace_default_path"])
     base.update(
         {
             "name": yd.get("name") or proj.get("name"),
             "version": proj.get("version"),
             "mode": yd.get("mode"),
             "pattern": inv.get("primary_pattern", "readme_protocol"),
+            "pattern_source": "declared" if isinstance(inv.get("primary_pattern"), str) else "defaulted",
             "pct": core_state,
             "critical_count": crit,
             "high_count": high,
@@ -414,6 +424,7 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     )
     base.update(flow_summary)
     base.update(invocation_summary)
+    base["invocation_evidence"] = _invocation_evidence_status(trace_path)
     return base
 
 
@@ -482,12 +493,13 @@ def emit_text(summary: dict[str, Any]) -> str:
     operator_only_surfaces = ", ".join(summary.get("operator_only_surfaces") or []) or "none"
     deferred_surfaces = ", ".join(summary.get("deferred_surfaces") or []) or "none"
     lines = [
-        f"[MICA LOADED] {summary.get('name') or 'unknown'} v{summary.get('version') or 'unknown'}",
+        f"[MICA CONTRACT RESOLVED] {summary.get('name') or 'unknown'} v{summary.get('version') or 'unknown'}",
         f"Mode      : {summary.get('mode') or 'legacy'}",
-        f"Pattern   : {summary.get('pattern') or 'legacy'}",
-        f"Invoked   : {loaded_surfaces}",
+        f"Pattern   : {summary.get('pattern') or 'legacy'} ({summary.get('pattern_source') or 'legacy'})",
+        f"Resolved  : {loaded_surfaces}",
         f"Context   : {agent_context_surfaces}",
         f"Operator  : {operator_only_surfaces}",
+        f"Trace     : {summary.get('invocation_evidence') or 'absent'}",
         f"Last upd  : {summary.get('last_updated') or 'unknown'}",
     ]
     if summary.get("deferred_surfaces"):
@@ -598,6 +610,7 @@ def main() -> None:
         )
         summary = dict(summary)
         summary["invocation_trace_path"] = str(trace_path)
+        summary["invocation_evidence"] = _invocation_evidence_status(trace_path)
 
     if args.format == "json":
         print(json.dumps(summary, indent=2))

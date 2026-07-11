@@ -5,6 +5,16 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0-invocation-truth - Consumer Truthfulness Milestone (2026-07-11)
+
+Non-release implementation milestone. Latest stable release tag and tool banner remain `v0.2.8`.
+
+- PCT-007 distinguishes an absent invocation protocol from an explicit protocol with an omitted `primary_pattern`; the latter is a compatibility WARN that names the `readme_protocol` default
+- runtime output reports `MICA CONTRACT RESOLVED`, declared/defaulted pattern source, and absent/recorded/invalid trace evidence instead of claiming that an AI loaded context
+- canonical consumer kit added: `MICA_CONSUMER_AUTHORING_GUIDE.md`, `MICA_AGENT_GUIDE.md`, and `mica-consumer-minimal.yaml`
+- consumer guidance now covers YAML-driven archive resolution for runtime-backed consumers and the boundary of null-session invocation traces
+- `implicit_primary_pattern` fixture and regression coverage added for partial invocation contracts
+
 ## v3.0.0-declaration - Invocation-first Floor (2026-07-09)
 
 Milestone tag for freezing the repository at the invocation-first floor.

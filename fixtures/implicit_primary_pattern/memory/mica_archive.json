@@ -1,0 +1,11 @@
+{
+  "mica_spec": "0.2.8",
+  "project": {
+    "name": "implicit-primary-pattern",
+    "version": "0.2.8"
+  },
+  "operation_meta": {
+    "last_updated": "2026-07-11"
+  },
+  "design_invariants": []
+}

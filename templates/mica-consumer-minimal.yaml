@@ -1,0 +1,28 @@
+# Copy this file to <target-repo>/mica.yaml, then replace the placeholder values.
+# Keep paths stable. The loader must never infer archive or playbook filenames.
+mica_spec: "0.2.8"
+name: example-project
+mode: memory_injection
+description: "Invocation-first context package for example-project."
+
+layers:
+  - name: archive
+    path: memory/mica_archive.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/mica_playbook.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  agent_context_surfaces:
+    - archive
+    - playbook
+
+update_triggers:
+  - on_explicit_save
+
+di_policy:
+  critical_binding_required: false

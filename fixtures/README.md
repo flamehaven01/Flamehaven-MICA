@@ -15,6 +15,8 @@ python tools/mica_pct.py fixtures/domain_namespaced_di
 python tools/mica_pct.py fixtures/doctrinal_binding
 python tools/mica_pct.py fixtures/stale_archive
 python tools/mica_pct.py fixtures/violation_count_incoherent
+python tools/mica_pct.py fixtures/implicit_primary_pattern
+python tools/mica_runtime.py fixtures/implicit_primary_pattern --format text
 python tools/mica_runtime.py fixtures/hook_output_violations_only --format hook
 
 # v0.2.9 flow fixtures
@@ -51,9 +53,19 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 | `flow_recall_enabled_missing_trace/` | v0.2.9 draft | - | - | - | CLOSED | Recall enabled but trace missing; `PCT-014` WARN and `Flow=FLOW_DEGRADED` |
 | `flow_recall_incomplete_telemetry/` | v0.2.9 draft | - | - | - | CLOSED | Recall trace exists but is not fully joinable; `PCT-018` WARN and `Flow=FLOW_DEGRADED` |
 | `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present and explicit `agent_context` surfaces |
+| implicit_primary_pattern/ | v0.2.8 | - | - | - | CLOSED | Declared context with implicit eadme_protocol; PCT-007 WARN and trace absent |
+
 
 ## Expected Outputs
 
+### implicit_primary_pattern
+
+```text
+PCT-007 [WARN] primary_pattern omitted; runtime default readme_protocol applies
+[MICA CONTRACT RESOLVED] implicit-primary-pattern v0.2.8
+Pattern   : readme_protocol (defaulted)
+Trace     : absent
+```
 ### valid_bound_di
 
 ```text
