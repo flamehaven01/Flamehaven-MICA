@@ -1,9 +1,8 @@
 # MICA
 
-Current stable tag: `v0.2.8` (`Binding Depth Edition`)
-Current declaration tag: `v3.0.0-declaration` (invocation-first floor freeze; non-release milestone)
-Current implementation milestone: `v3.0.0-origin` (invocation contract reclaimed from governance; selection, addressable playbook, measurement; non-release milestone)
-Current floor: invocation-first runtime truth, with `v0.2.9` drafts retained as groundwork and cross-repository adoption continuing in consuming repositories
+Current stable tag: `v0.2.9` (`Selection Edition`)
+Milestone tags on the path here: `v3.0.0-declaration`, `v3.0.0-invocation-truth`, `v3.0.0-origin` (non-release checkpoints)
+Current floor: invocation-first runtime truth with per-session surface selection; cross-repository adoption continuing in consuming repositories
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
 
@@ -14,11 +13,11 @@ are in the `Legacy/` directory and are not tracked by git.
 
 | Track | Status | Notes |
 |---|---|---|
-| Stable | `v0.2.8` | Latest release tag and current tool banner version |
-| Declaration | `v3.0.0-declaration` | Invocation-first floor freeze; not a stable release |
-| Implementation milestone | `v3.0.0-invocation-truth` | PCT/runtime truthfulness and consumer authoring kit; not a stable release |
-| Implementation milestone | `v3.0.0-origin` | Invocation contract reclaimed from governance; memory profiles, addressable playbook, layered modules, measurement. Not a stable release |
-| Draft groundwork | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
+| Stable | `v0.2.9` | Latest release tag and current tool banner version |
+| Previous stable | `v0.2.8` | `Binding Depth Edition` |
+| Milestone | `v3.0.0-declaration` | Invocation-first floor freeze; not a release |
+| Milestone | `v3.0.0-invocation-truth` | PCT/runtime truthfulness and consumer authoring kit; not a release |
+| Milestone | `v3.0.0-origin` | Invocation contract reclaimed from governance; selection, addressable playbook, measurement. Not a release |
 | Intended reset | `v3.0.0` | Invocation-first MICA: truthful context loading, session activation, and auditable invoked-state declaration |
 
 From this point, the preferred next step is not more MICA-internal expansion.
@@ -110,9 +109,9 @@ session-start loaded, or `PCT-007` fails the package contract. When `operator_re
 with session invocation trace, that trace should expose `operator_only_surfaces` as provenance rather than
 as memory content.
 
-The current v0.2.9 draft adds governance and memory-first machinery beneath that surface.
-Those additions remain subordinate to the invocation contract and should not replace it as MICA's core.
-This repository is being held at that invocation-first floor rather than continuing to add deeper internal validator layers.
+Governance and memory-first machinery sit beneath that surface. They remain subordinate to the
+invocation contract and should not replace it as MICA's core. This repository is held at that
+invocation-first floor rather than continuing to add deeper internal validator layers.
 
 ## What v0.2.8 adds over v0.2.7
 
@@ -274,7 +273,14 @@ Schemas:
 | [mica.slots.schema.json](mica.slots.schema.json) | Stable slot projection schema draft for v0.2.9 memory-first packages |
 | [mica.graph.schema.json](mica.graph.schema.json) | Memory graph edge schema draft for v0.2.9 memory-first packages |
 
-v3.0.0 Origin docs:
+v0.2.9 docs:
+
+| Document | Role |
+|---|---|
+| [docs/MICA_v0.2.9_RELEASE_NOTES.md](docs/MICA_v0.2.9_RELEASE_NOTES.md) | What v0.2.9 is, and its known limits |
+| [docs/MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md) | v0.2.8 to v0.2.9, including the one breaking change |
+
+v3.0.0 milestone docs:
 
 | Document | Role |
 |---|---|
@@ -282,7 +288,7 @@ v3.0.0 Origin docs:
 | [docs/MICA_v3.0.0_DECLARATION.md](docs/MICA_v3.0.0_DECLARATION.md) | Invocation-first direction declaration |
 | [docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md](docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md) | Invocation capsule and handoff surface architecture proposal |
 
-v0.2.9 draft docs:
+v0.2.9 design and spec notes:
 
 | Document | Role |
 |---|---|

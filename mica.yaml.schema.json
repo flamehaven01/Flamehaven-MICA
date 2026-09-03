@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flamehaven/mica/mica.yaml.schema.json",
   "title": "MICA Composition Contract",
-  "description": "Schema for mica.yaml. Declares what files constitute a MICA package and how it is invoked. v0.2.4: hookOutputPolicy added. v0.2.6: di_policy added. v0.2.7: di_policy.namespace_mode added. v0.2.8: di_policy.max_archive_age_days added. v0.2.9 draft: memory_first mode, memory_policy, flow/recall/promotion policy, and kind-based layers added.",
+  "description": "Schema for mica.yaml. Declares what files constitute a MICA package and how it is invoked. v0.2.4: hookOutputPolicy added. v0.2.6: di_policy added. v0.2.7: di_policy.namespace_mode added. v0.2.8: di_policy.max_archive_age_days added. v0.2.9: memory_first mode, memory_policy, flow/recall/promotion policy, kind-based layers, and invocation_protocol.profiles for per-session surface selection.",
   "type": "object",
   "required": [
     "mica_spec",

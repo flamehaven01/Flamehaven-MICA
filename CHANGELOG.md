@@ -5,6 +5,59 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v0.2.9 - Selection Edition (2026-09-03)
+
+**Stable release.** Supersedes `v0.2.8` as the canonical spec and tool banner.
+
+Promotes the v0.2.9 draft groundwork and the invocation work carried under the
+`v3.0.0-*` milestone tags into a release. Those milestone tags stay what they
+were -- non-release checkpoints marking direction and implementation, not
+superseded by this.
+
+### What ships
+
+- **Three verdict axes.** `Contract` / `Archive` / `Flow`, and only `Contract`
+  decides `CLOSED CONTRACT`. Archive quality and pipeline integrity report
+  without overriding the invocation contract
+- **Memory profiles.** `invocation_protocol.profiles` gives different session
+  types different surfaces. Selection was two hardcoded lists keyed on `mode`
+- **Addressable playbook.** A profile may deliver named `##` sections; the
+  capsule digest covers the delivered slice, not the source file
+- **Byte-bound invocation evidence.** `mica.invocation.v2` records path, SHA-256,
+  byte count, audience, delivery state, and section slice per surface, under a
+  `capsule_hash` that includes the selecting profile
+- **Flow plane.** PCT-013/014/015/017/018. PCT-016 reserved for adapter maturity
+- **Measurement.** `mica_measure.py` reports context budget, surface resolution,
+  and capsule coverage
+- **Layered tooling.** `mica_primitives` <- `mica_evidence` / `mica_flow` <-
+  `mica_core`, acyclic
+
+### Breaking
+
+`mica_pct.py` exits 1 on a contract failure only. A CI relying on exit 1 for
+archive or flow failures -- most commonly `di_policy.critical_binding_required`
+escalating PCT-010 -- must add `--strict`. An invalid recorded invocation trace
+fails regardless.
+
+### Canonical version
+
+`MICA_CANONICAL_VERSION` is now `0.2.9`, so PCT-006 lag is measured against it.
+Packages on `0.2.8` are one patch behind, below the warning threshold. The
+version-alignment and lag tests now derive their expectations from the constant
+rather than pinning a literal, which is what made them break on this bump.
+
+### Not in this release
+
+Consumer pilot with a control (not run), memory profile adoption (0 / 6 live
+consumers), handoff surface (architecture proposal only), fleet `mica_spec`
+alignment (0.1.9 - 0.2.10, unresolved).
+
+204 tests on Python 3.9 / 3.11 / 3.12 / 3.13.
+
+-> [MICA_v0.2.9_RELEASE_NOTES.md](docs/MICA_v0.2.9_RELEASE_NOTES.md) | [MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md)
+
+---
+
 ## v3.0.0 Origin -- adversarial audit fixes (2026-09-03)
 
 Non-release implementation step. An adversarial pass against the Origin

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA Invocation Trace Validator v0.2.8 -- standalone provenance artifact checker.
+MICA Invocation Trace Validator v0.2.9 -- standalone provenance artifact checker.
 
 Usage:
     python mica_invocation.py [trace_file_or_project_root]

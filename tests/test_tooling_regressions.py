@@ -27,11 +27,18 @@ def _write_archive(path: Path, version: str, last_updated: str) -> None:
 
 
 def test_tool_versions_are_aligned():
-    assert mica_core.MICA_TOOL_VERSION == "0.2.8"
-    assert mica_pct.__version__ == mica_core.MICA_TOOL_VERSION
-    assert mica_runtime.__version__ == mica_core.MICA_TOOL_VERSION
-    assert mica_invocation.__version__ == mica_core.MICA_TOOL_VERSION
-    assert mica_core.format_tool_banner("MICA PCT Validator") == "MICA PCT Validator v0.2.8"
+    """Every tool reports one version, and it tracks the canonical constant.
+
+    Pinning a literal here meant editing this test on every release, which is
+    the drift the check exists to prevent.
+    """
+    version = mica_core.MICA_TOOL_VERSION
+
+    assert version == mica_core.MICA_CANONICAL_VERSION
+    assert mica_pct.__version__ == version
+    assert mica_runtime.__version__ == version
+    assert mica_invocation.__version__ == version
+    assert mica_core.format_tool_banner("MICA PCT Validator") == f"MICA PCT Validator v{version}"
 
 
 def test_find_legacy_archive_prefers_highest_version(tmp_path: Path):

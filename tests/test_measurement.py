@@ -28,19 +28,30 @@ import mica_measure  # noqa: E402
 # --- PCT-006 must not invent a count -----------------------------------------
 
 
+# Derived from the canonical constant rather than hardcoded, so a release bump
+# does not require editing every expectation in this file.
+_CANON = mica_core._parse_version(mica_core.MICA_CANONICAL_VERSION)
+
+
+def _spec_behind_by(patches: int) -> str:
+    """A spec in the canonical minor, `patches` releases behind."""
+    return f"{_CANON[0]}.{_CANON[1]}.{_CANON[2] - patches}"
+
+
 def _lag_message(spec: str) -> str | None:
     results = mica_core._spec_lag_result(spec)
     return results[0][2] if results else None
 
 
-@pytest.mark.parametrize("spec", ["0.2.8", "0.2.7"])
-def test_current_and_adjacent_specs_are_quiet(spec: str):
-    assert _lag_message(spec) is None
+@pytest.mark.parametrize("patches", [0, 1])
+def test_current_and_adjacent_specs_are_quiet(patches: int):
+    """Being one patch behind is not worth interrupting anyone about."""
+    assert _lag_message(_spec_behind_by(patches)) is None
 
 
-@pytest.mark.parametrize("spec, patches", [("0.2.6", 2), ("0.2.4", 4)])
-def test_same_minor_reports_a_true_patch_count(spec: str, patches: int):
-    message = _lag_message(spec)
+@pytest.mark.parametrize("patches", [2, 4])
+def test_same_minor_reports_a_true_patch_count(patches: int):
+    message = _lag_message(_spec_behind_by(patches))
 
     assert message is not None
     assert f"{patches} patch version(s) behind" in message
@@ -48,7 +59,7 @@ def test_same_minor_reports_a_true_patch_count(spec: str, patches: int):
 
 @pytest.mark.parametrize("spec", ["0.1.9", "0.1.8", "0.0.1"])
 def test_crossing_a_minor_boundary_states_no_count(spec: str):
-    """0.1.9 was previously reported as 99 versions behind 0.2.8."""
+    """0.1.9 was previously reported as 99 versions behind canonical."""
     message = _lag_message(spec)
 
     assert message is not None
@@ -57,13 +68,16 @@ def test_crossing_a_minor_boundary_states_no_count(spec: str):
         assert fabricated not in message
 
 
-@pytest.mark.parametrize("spec", ["0.2.10", "1.0.0"])
-def test_a_spec_ahead_of_canonical_is_flagged(spec: str):
-    """Flamehaven-CAS declares 0.2.10, for which no canonical schema exists."""
-    message = _lag_message(spec)
+def test_a_spec_ahead_of_canonical_is_flagged():
+    """A consumer declaring a spec beyond canonical has no schema to match."""
+    for spec in (
+        f"{_CANON[0]}.{_CANON[1]}.{_CANON[2] + 1}",
+        f"{_CANON[0] + 1}.0.0",
+    ):
+        message = _lag_message(spec)
 
-    assert message is not None
-    assert "ahead of canonical" in message
+        assert message is not None, spec
+        assert "ahead of canonical" in message
 
 
 def test_no_lag_message_claims_a_number_it_cannot_support():

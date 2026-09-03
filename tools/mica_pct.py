@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA PCT Validator v0.2.8 -- portable self-diagnostic runner.
+MICA PCT Validator v0.2.9 -- portable self-diagnostic runner.
 
 Delegates all PCT judgment to mica_core.run_pct_checks().
 In v0.2.4 and earlier, mica_pct.py contained its own PCT logic and

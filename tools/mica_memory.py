@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA memory-first utility v0.2.8.
+MICA memory-first utility v0.2.9.
 
 Provides minimal read/write helpers for memory-first packages:
 

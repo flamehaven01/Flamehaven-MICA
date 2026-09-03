@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MICA runtime summary utility v0.2.8.
+MICA runtime summary utility v0.2.9.
 
 Usage:
     python tools/mica_runtime.py [project_root] --format text
