@@ -216,14 +216,19 @@ See `MICA_v0.2.9_MIGRATION_GUIDE.md`.
 
 | Item | State |
 |---|---|
-| Consumer pilot with a control | not run |
-| Memory profile adoption across live consumers | 0 / 6 |
+| Consumer pilot with a control | run once, on `flamehaven-audit-reports` |
+| Memory profile adoption across live consumers | 1 / 6 |
 | Handoff surface | implemented and optional; no consumer declares one yet |
 | `mica_spec` alignment across the fleet (0.1.9 – 0.2.10) | unresolved |
 | `PCT-016` adapter maturity | reserved, not implemented |
 
-The selection machinery exists; nothing uses it yet. Building a capability is
-not adoption, and adoption would not be proof it helps.
+The first adoption measured 46,682 agent-context bytes for a task session
+against a 61,525-byte load-everything control, 24.1% less, and made 33,326
+bytes of declared-but-unreachable memory reachable. It also found two defects
+that would have stopped any consumer with domain-specialised surfaces; see the
+CHANGELOG entry for 2026-09-03. Those are bytes and contract verdicts. Whether
+a session with its own domain playbook does better work is not measured, and
+one package is not a trend.
 
 ---
 

@@ -144,7 +144,7 @@ rather than pinning a literal, which is what made them break on this bump.
 
 ### Not in this release
 
-Consumer pilot with a control (not run), memory profile adoption (0 / 6 live
+Consumer pilot with a control (run once), memory profile adoption (1 / 6 live
 consumers), handoff surface (architecture proposal only), fleet `mica_spec`
 alignment (0.1.9 - 0.2.10, unresolved).
 
