@@ -120,7 +120,7 @@ This repository is being held at that invocation-first floor rather than continu
 | PCT-010 doctrinal WARN | Detects `origin_episode` with no episode code, version ref, or date — signals ungrounded binding |
 | PCT-010 coherence WARN | `violation_count > 0` with empty `last_triggered` → data defect signal |
 | PCT-012 new (opt-in) | `di_policy.max_archive_age_days` → WARN when archive is stale |
-| PCT-006 version lag | WARN when `mica_spec` is >= 2 versions behind canonical `0.2.8` |
+| PCT-006 version lag | WARN when `mica_spec` trails canonical `0.2.8` (see Origin P4 for the corrected comparison) |
 | `di_policy.max_archive_age_days` field | New optional `mica.yaml` field activating PCT-012 |
 | 3 new fixtures | `doctrinal_binding`, `stale_archive`, `violation_count_incoherent` |
 

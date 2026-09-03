@@ -5,6 +5,114 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0 Origin P4 - Measurement, and what it found (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+
+MICA has had no metrics. Every claim about it has been structural ("the check
+fires") rather than quantitative ("the session receives N bytes"). `mica_measure.py`
+reports what is deterministically observable at session start: context budget in
+bytes, surface resolution, capsule coverage, and verdict axes.
+
+It is a measurement instrument, not a result. It says nothing about whether MICA
+improves task outcomes; that needs sessions with a control, which a static scan
+cannot supply. The tool prints that caveat itself.
+
+### PCT-006 was stating a number it could not support
+
+Versions were packed as `major*10000 + minor*100 + patch` and the difference
+reported as "N version(s) behind". Within one minor that is a true patch count.
+Across a minor boundary it counts nothing: a package declaring `0.1.9` was told
+it was **99 version(s) behind** canonical `0.2.8`. One of the six live consumer
+packages declares `0.1.9`, so the false number was shipping.
+
+- same minor: reports a real patch count
+- different minor: names the gap without a number
+- ahead of canonical: now a WARN. `Flamehaven-CAS` declares `0.2.10` and the old
+  formula produced a negative lag, which fell below the threshold and stayed
+  silent. A spec with no canonical schema is worth saying out loud
+- `mica_measure.py` reads PCT-006's own message instead of recomputing the
+  comparison. Two implementations of one comparison is the drift MICA exists to
+  catch, and the first draft of the tool had exactly that
+
+Verified against the golden baseline captured for P3: across 105 (fixture,
+profile) combinations, PCT-006 is the only check whose output changed. Every
+other result is byte-identical.
+
+### Fleet baseline, six live consumer packages
+
+| Package | mica_spec | Contract | Agent context bytes |
+|---|---|---|---|
+| alecta-stock | 0.2.6 | CLOSED | 15,893 |
+| flamehaven-verification | 0.2.8 | CLOSED | 28,199 |
+| flamehaven-cas | 0.2.10 | CLOSED | 3,998 |
+| stem-ai-bio | 0.2.4 | CLOSED | 51,056 |
+| cocomini-ultimatepos | 0.2.8 | CLOSED | 16,406 |
+| flamehaven-space-maintainer | 0.1.9 | CLOSED | 97,560 |
+
+All six close the contract. All six can identify their invoked bytes.
+**None declares a memory profile**: P1 and P2 have zero adoption, and the 213,112
+bytes above are what every session in the fleet receives regardless of task.
+
+Tests 168 -> 184.
+
+---
+
+## v3.0.0 Origin P3 - Layered modules and decomposed checks (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+
+AI-SLOP-DETECTOR v3.8.9 measured `mica_core.py` at 1,893 lines, deficit score
+68.2, status `inflated_signal`, with 4 critical and 15 high findings. The worst
+single item was `run_pct_checks`: 457 logic lines, cyclomatic complexity 88,
+nesting depth 5.
+
+Extracted by concern:
+
+| Module | Contents |
+|---|---|
+| `mica_primitives.py` | Loading, hashing, path canonicalization, markdown sections. No internal imports |
+| `mica_evidence.py` | Capsule schema and coherence, invocation trace checks, live-byte comparison |
+| `mica_flow.py` | PCT-013/014/015/017/018 and their helpers |
+
+Extracting flow and evidence first produced two import cycles back into
+`mica_core`, which the detector caught (cross-file risk 0.13 -> 0.33). The
+primitives layer resolves them; the graph is acyclic.
+
+`run_pct_checks` decomposed: `_PackageContext` resolves package state once, and
+PCT-002..012 became `_run_pct002`..`_run_pct012`. PCT-010 and PCT-011 were
+separated from one 91-line body. PCT-004's six-branch elif chain became a mode
+-> required-roles table. `resolve_invocation_contract` split into surface
+selection plus two audience validators.
+
+Extraction alone was not enough, and the detector showed it: lifting the
+audience loops into their own functions carried their depth-5 nesting with
+them, so both new helpers came out critical. They are now flattened around
+`_classify_surface`, which returns a reason instead of appending into one of
+several lists.
+
+Behavior verified rather than assumed: a golden baseline of `run_pct_checks`
+output was captured before the refactor across 20 fixtures x 5 profile
+selections -- 105 combinations, 1,840 results -- and compared after every step.
+Identical throughout.
+
+| Measure | Before | After |
+|---|---|---|
+| cross-file risk | 0.13 | 0.00 |
+| total critical | 5 | 3 |
+| `mica_core.py` critical | 4 | 0 |
+| `mica_core.py` high | 15 | 4 |
+| `mica_core.py` deficit | 68.2 | 29.0 |
+| `mica_core.py` status | `inflated_signal` | `clean` |
+| `mica_core.py` lines | 1,893 | 1,004 |
+
+Total high is unchanged at 23: splitting a large function produces more
+functions, several of which still exceed the 50-line threshold on their own.
+The three remaining criticals are `_run_pct018`, `_check_capsule_schema`, and
+`mica_memory.main` -- none in core.
+
+---
+
 ## v3.0.0 Origin P2 - The playbook becomes addressable (2026-09-03)
 
 Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
@@ -72,59 +180,6 @@ Every session received the same surfaces regardless of what it was for.
 
 Backward compatible. A package that declares no profiles resolves exactly as it
 did before, `active_profile` is null, and no existing fixture changed behavior.
-
----
-
-## v3.0.0 Origin P4 - Measurement, and what it found (2026-09-03)
-
-Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
-
-MICA has had no metrics. Every claim about it has been structural ("the check
-fires") rather than quantitative ("the session receives N bytes"). `mica_measure.py`
-reports what is deterministically observable at session start: context budget in
-bytes, surface resolution, capsule coverage, and verdict axes.
-
-It is a measurement instrument, not a result. It says nothing about whether MICA
-improves task outcomes; that needs sessions with a control, which a static scan
-cannot supply. The tool prints that caveat itself.
-
-### PCT-006 was stating a number it could not support
-
-Versions were packed as `major*10000 + minor*100 + patch` and the difference
-reported as "N version(s) behind". Within one minor that is a true patch count.
-Across a minor boundary it counts nothing: a package declaring `0.1.9` was told
-it was **99 version(s) behind** canonical `0.2.8`. One of the six live consumer
-packages declares `0.1.9`, so the false number was shipping.
-
-- same minor: reports a real patch count
-- different minor: names the gap without a number
-- ahead of canonical: now a WARN. `Flamehaven-CAS` declares `0.2.10` and the old
-  formula produced a negative lag, which fell below the threshold and stayed
-  silent. A spec with no canonical schema is worth saying out loud
-- `mica_measure.py` reads PCT-006's own message instead of recomputing the
-  comparison. Two implementations of one comparison is the drift MICA exists to
-  catch, and the first draft of the tool had exactly that
-
-Verified against the golden baseline captured for P3: across 105 (fixture,
-profile) combinations, PCT-006 is the only check whose output changed. Every
-other result is byte-identical.
-
-### Fleet baseline, six live consumer packages
-
-| Package | mica_spec | Contract | Agent context bytes |
-|---|---|---|---|
-| alecta-stock | 0.2.6 | CLOSED | 15,893 |
-| flamehaven-verification | 0.2.8 | CLOSED | 28,199 |
-| flamehaven-cas | 0.2.10 | CLOSED | 3,998 |
-| stem-ai-bio | 0.2.4 | CLOSED | 51,056 |
-| cocomini-ultimatepos | 0.2.8 | CLOSED | 16,406 |
-| flamehaven-space-maintainer | 0.1.9 | CLOSED | 97,560 |
-
-All six close the contract. All six can identify their invoked bytes.
-**None declares a memory profile**: P1 and P2 have zero adoption, and the 213,112
-bytes above are what every session in the fleet receives regardless of task.
-
-Tests 168 -> 184.
 
 ---
 
