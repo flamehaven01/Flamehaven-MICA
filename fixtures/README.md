@@ -39,7 +39,7 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 | `dead_lesson_ref/` | v0.2.5 | PASS | WARN | INFO | CLOSED | `lesson_ref` declared but file missing |
 | `hook_output_violations_only/` | v0.2.5 | WARN | INFO | INFO | CLOSED | Hook output filter demo |
 | `binding_required_fail/` | v0.2.6 | FAIL | INFO | INFO | INCOMPLETE | `critical_binding_required=true` + unbound DI |
-| `compact_mode/` | v0.2.7 | - | - | - | LEGACY | No mica.yaml; PCT-001 FAIL expected |
+| `compact_mode/` | v0.2.7 | - | - | - | INCOMPLETE | No mica.yaml; PCT-001 FAIL. Runtime reports `LEGACY`; COMPACT is intent, not detection |
 | `domain_namespaced_di/` | v0.2.7 | PASS | INFO | INFO | CLOSED | DI-EQA-xxx/DI-BIO-xxx + `critical_binding_required` |
 | `doctrinal_binding/` | v0.2.8 | PASS+WARN | INFO | INFO | CLOSED | Bound but doctrinal `origin_episode` |
 | `stale_archive/` | v0.2.8 | INFO | INFO | WARN | CLOSED | `max_archive_age_days=90`, last_updated=`2020-01-01` |
@@ -101,11 +101,35 @@ Overall: INCOMPLETE CONTRACT
 
 ### compact_mode
 
+This fixture sits on three distinct axes. Keep them separate when reading its output.
+
+| Axis | Value | Determined by |
+|---|---|---|
+| PCT result | `INCOMPLETE` | `mica_pct.py` -- `mica.yaml` absent, so PCT-001/009 FAIL |
+| Runtime detection | `LEGACY_MODE` | `mica_runtime.py` -- no composition contract to resolve |
+| Deployment intent | `COMPACT_MODE` | Operator declaration only; **not machine-detectable** |
+
 ```text
 PCT-001 [FAIL] mica.yaml missing (checked root + memory/)
 PCT-009 [FAIL] package incomplete. failing checks: ['PCT-001']
-Overall: (LEGACY - no mica.yaml, intentional COMPACT deployment)
+Overall: INCOMPLETE
 ```
+
+```bash
+python tools/mica_runtime.py fixtures/compact_mode --format text
+```
+
+```text
+Mode      : legacy
+Pattern   : legacy (legacy)
+PCT       : LEGACY
+```
+
+Both tool outputs are correct. The third axis is the one to be careful about:
+an absent `mica.yaml` cannot distinguish an intentional archive/playbook-only
+deployment (COMPACT_MODE) from an unmigrated package (LEGACY_MODE). The runtime
+therefore reports `LEGACY`, and does not claim `COMPACT`. Treating absence as
+evidence of intent would misclassify every unmigrated package as deliberate.
 
 ### domain_namespaced_di
 

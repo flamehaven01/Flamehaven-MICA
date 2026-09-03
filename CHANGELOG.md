@@ -5,6 +5,14 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## Consumer adoption note - 2026-07-19
+
+- Added a concrete Cocomini UltimatePOS/StoreAiAssist adoption note.
+- Documented the boundary between session-start MICA context, retail-assistant memory/RAG, and live POS truth.
+- Recorded status-truth and versioned knowledge-sync practices without changing the stable MICA release or tool banner.
+
+---
+
 ## v3.0.0-invocation-truth - Consumer Truthfulness Milestone (2026-07-11)
 
 Non-release implementation milestone. Latest stable release tag and tool banner remain `v0.2.8`.
@@ -22,10 +30,18 @@ This is not a stable release; tool banners remain `v0.2.8` until a later version
 
 Latest stable release tag remains `v0.2.8`.
 The current working direction is a frozen invocation-first floor, with subsequent effort expected to move toward cross-repo consumption rather than deeper MICA-internal expansion.
+
+### Declaration
+
 - v3.0.0 direction declared: MICA is being reset around invocation-first context loading, truthful loaded-state declaration, and auditable invocation traces
 - v3.0.0 declaration note added: `docs/MICA_v3.0.0_DECLARATION.md`
 - README and About wording now place governance and memory-first machinery beneath the primary invocation contract
 - obsolete `docs/CAS_AUDIT_PLAYBOOK.md` removed during doc sanity cleanup
+
+### Landed between v0.2.8 and this tag
+
+Stable-release maintenance plus `v0.2.9` draft groundwork. Per the README release table,
+`v0.2.9` remains unreleased groundwork and does not change the stable tag or tool banner.
 
 - Tool version banner alignment: `mica_pct.py` and `mica_runtime.py` now report `v0.2.8` consistently
 - Legacy archive selection is now deterministic: highest version first, then `operation_meta.last_updated`

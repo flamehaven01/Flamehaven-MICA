@@ -93,7 +93,7 @@ Tools:
 | File | Role |
 |---|---|
 | `tools/mica_core.py` | Shared PCT judgment and YAML loading |
-| `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-012) |
+| `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-015, PCT-017, PCT-018; PCT-016 reserved) |
 | `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
 | `tools/mica_invocation.py` | Standalone validator for `mica.invocation.jsonl` provenance artifacts |
 | `tools/mica_memory.py` | Memory-first read/write utility for sessions, memories, graph edges, and slot projections |
@@ -210,6 +210,7 @@ v0.2.9 draft docs:
 | [docs/PCT-018_v0.2.9_SPEC.md](docs/PCT-018_v0.2.9_SPEC.md) | Runtime telemetry completeness spec for joinable flow traces |
 | [docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md](docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md) | Core/Flow reporting contract for truthful runtime output |
 | [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) | Packaging and handoff guide for making other repositories MICA-capable |
+| [docs/CONSUMER_ADOPTION_COCOMINI_STORE_AI.md](docs/CONSUMER_ADOPTION_COCOMINI_STORE_AI.md) | Concrete consumer pattern connecting session-start MICA context to a separate business-scoped RAG harness |
 | [docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md) | Draft structure for evolving MICA from governed exports into a memory-first substrate |
 | [docs/MICA_CONSUMER_AUTHORING_GUIDE.md](docs/MICA_CONSUMER_AUTHORING_GUIDE.md) | How maintainers and AI agents author and operate an invocation-first consumer package |
 | [docs/MICA_INVOCATION_RECOVERY_PLAN.md](docs/MICA_INVOCATION_RECOVERY_PLAN.md) | Recovery plan for restoring invocation and context loading as the primary MICA objective |
