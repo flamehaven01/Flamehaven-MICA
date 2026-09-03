@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flamehaven/mica/mica.handoff.schema.json",
+  "title": "MICA v0.2.9 Handoff Surface",
+  "description": "Bounded state carried from one session to the next. Holds references and unresolved items, never a transcript. Durable invariants and approved lessons stay in the archive or playbook; a handoff cannot promote them.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "handoff_id",
+    "created_at_utc",
+    "project_scope",
+    "source_invocation_id",
+    "state",
+    "handoff_hash"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mica.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "project_scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_invocation_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+      "description": "The invocation whose session produced this handoff."
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "superseded",
+        "closed"
+      ],
+      "description": "A superseded or closed handoff stays visible and must not be read as current project truth."
+    },
+    "artifact_refs": {
+      "type": "array",
+      "description": "External artifacts this session produced or acted on.",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "ref",
+          "trust_tier"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trust_tier": {
+            "type": "string",
+            "enum": [
+              "native",
+              "attested",
+              "opaque"
+            ],
+            "description": "Reuses the observation trust vocabulary rather than introducing a second one. 'opaque' is a bare reference; MICA never upgrades it on its own."
+          }
+        }
+      }
+    },
+    "verification_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "candidate_memory_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "description": "Candidate ids only. A handoff cannot promote a candidate; the existing review path decides that."
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "next_invocation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trigger_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "required_surfaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "expires_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "prev_handoff_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "handoff_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

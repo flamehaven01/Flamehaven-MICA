@@ -82,6 +82,7 @@ to receive its memory, so they no longer break the contract.
 | `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present and explicit `agent_context` surfaces |
 | `implicit_primary_pattern/` | v0.2.8 | - | - | - | CLOSED | Declared context with implicit `readme_protocol`; PCT-007 WARN and trace absent |
 | `invocation_capsule_v2/` | v3.0.0 P1 | PASS | INFO | INFO | CLOSED | Digest-bound `mica.invocation.v2` capsule; committed trace is byte-bound to its surfaces |
+| `handoff_surface/` | v0.2.9 | PASS | INFO | INFO | CLOSED | Handoff surface with `default`/`resume` profiles; `resume` delivers it, `default` does not |
 | `memory_profiles/` | v3.0.0 Origin P1/P2 | PASS | INFO | INFO | CLOSED | `default`/`review`/`incident` profiles select different surfaces, and slice the playbook |
 
 

@@ -1,0 +1,25 @@
+mica_spec: "0.2.9"
+name: handoff-surface
+mode: memory_injection
+
+layers:
+  - id: archive
+    kind: archive
+    path: memory/mica_archive.json
+  - id: playbook
+    kind: playbook
+    path: memory/mica_playbook.md
+  - id: handoff
+    kind: handoff
+    path: memory/mica_handoff.json
+    loading_hint: session_start_only
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  agent_context_surfaces: [archive, playbook, handoff]
+  profiles:
+    default:
+      surfaces: [archive, playbook]
+    resume:
+      description: Continuing work a previous session did not finish.
+      surfaces: [archive, playbook, handoff]

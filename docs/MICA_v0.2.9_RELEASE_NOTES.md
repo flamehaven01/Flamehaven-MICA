@@ -133,6 +133,39 @@ entered `agent_context`, which is an invocation question.
 
 ---
 
+## Handoff surface
+
+A session ends knowing what it produced and what it could not finish. Putting
+that in the archive would make unreviewed working state look like project truth;
+a transcript would move the context problem downstream rather than solve it.
+
+```yaml
+layers:
+  - id: handoff
+    kind: handoff
+    path: memory/mica_handoff.json
+    loading_hint: session_start_only
+
+invocation_protocol:
+  profiles:
+    default:
+      surfaces: [archive, playbook]
+    resume:
+      surfaces: [archive, playbook, handoff]
+```
+
+The handoff holds references and unresolved items under a `handoff_hash`. It
+expires; a superseded one stays visible rather than silently becoming current;
+and it may reference a candidate memory but never promote one, because the
+session writing it is the same session that produced those candidates.
+
+Artifact references carry a `trust_tier` of `native`, `attested`, or `opaque` --
+the same vocabulary the observation schema already uses, rather than a second
+set of trust words. MICA never upgrades `opaque` on its own.
+
+`mica_handoff.py` validates it (`HND-000` through `HND-004`). Absence is not a
+failure, and a stale handoff is reported without failing the run.
+
 ## Measurement
 
 `mica_measure.py` reports context budget in bytes, surface resolution, capsule
@@ -185,7 +218,7 @@ See `MICA_v0.2.9_MIGRATION_GUIDE.md`.
 |---|---|
 | Consumer pilot with a control | not run |
 | Memory profile adoption across live consumers | 0 / 6 |
-| Handoff surface (Context Continuity P2) | architecture proposal only |
+| Handoff surface | implemented and optional; no consumer declares one yet |
 | `mica_spec` alignment across the fleet (0.1.9 – 0.2.10) | unresolved |
 | `PCT-016` adapter maturity | reserved, not implemented |
 

@@ -185,7 +185,7 @@ def layer_role(layer: dict[str, Any]) -> str:
 
 
 _INVOKED_LOADING_HINTS = frozenset({"always", "session_start_only"})
-_AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "slots", "lessons", "memories")
+_AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "handoff", "slots", "lessons", "memories")
 _AGENT_CONTEXT_ALLOWED_SURFACES = frozenset(_AGENT_CONTEXT_ROLE_ORDER)
 _OPERATOR_ONLY_ALLOWED_SURFACES = frozenset(
     (
@@ -199,6 +199,7 @@ _OPERATOR_ONLY_ALLOWED_SURFACES = frozenset(
         "candidates",
         "slots",
         "graph",
+        "handoff",
     )
 )
 

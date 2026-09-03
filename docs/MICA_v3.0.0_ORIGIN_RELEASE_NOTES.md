@@ -1,7 +1,8 @@
 # MICA v3.0.0 Origin — Release Notes
 
 Milestone tag: `v3.0.0-origin`
-Stable release tag and tool banner remain `v0.2.8`. This is not a stable release.
+This is a milestone, not a release. The work described here shipped in the
+`v0.2.9` stable release; at the time of this milestone the stable tag was `v0.2.8`.
 
 ---
 

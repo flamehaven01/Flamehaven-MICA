@@ -153,6 +153,7 @@ Tools:
 | `tools/mica_evidence.py` | Capsule and invocation-trace validation (`IVC-*`) |
 | `tools/mica_flow.py` | Memory-authoring pipeline checks (PCT-013/014/015/017/018) |
 | `tools/mica_measure.py` | Context budget and surface resolution, in numbers |
+| `tools/mica_handoff.py` | Handoff surface validation (`HND-*`) and writer |
 | `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-015, PCT-017, PCT-018; PCT-016 reserved) |
 | `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
 | `tools/mica_invocation.py` | Standalone validator for `mica.invocation.jsonl` provenance artifacts |
@@ -265,6 +266,7 @@ Schemas:
 | [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema |
 | [mica-v0.2.7-archive-di-binding.schema.json](mica-v0.2.7-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.7) |
 | [mica.sessions.schema.json](mica.sessions.schema.json) | Session envelope schema draft for v0.2.9 memory-first packages |
+| [mica.handoff.schema.json](mica.handoff.schema.json) | Handoff surface: bounded state carried into the next session |
 | [mica.invocation.schema.json](mica.invocation.schema.json) | Invocation trace schema; accepts `v1` history and `v2` digest-bound capsules |
 | [mica.observe.schema.json](mica.observe.schema.json) | Observation record schema draft for v0.2.9 flow plane |
 | [mica.memories.schema.json](mica.memories.schema.json) | Durable memory record schema draft for v0.2.9 memory-first packages |

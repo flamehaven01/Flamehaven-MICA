@@ -124,7 +124,8 @@
             "recall",
             "candidates",
             "slots",
-            "graph"
+            "graph",
+            "handoff"
           ]
         },
         "path": {

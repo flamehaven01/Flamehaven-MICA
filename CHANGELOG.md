@@ -5,6 +5,42 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## Handoff surface implemented (2026-09-03)
+
+Closes the one item the v0.2.9 release notes listed as "architecture proposal
+only". Post-release addition; the `v0.2.9` tag does not contain it.
+
+A session ends knowing what it produced and what it could not finish. Putting
+that in the archive would make unreviewed working state look like project truth;
+storing a transcript would move the context problem downstream rather than solve
+it. The handoff holds references and unresolved items, nothing more.
+
+- `mica.handoff.schema.json` and `tools/mica_handoff.py` (`HND-000`..`HND-004`)
+- `handoff` accepted as a layer `kind` and as an agent-context surface, so it
+  flows through the existing profile machinery. No new PCT check: the Context
+  Continuity plan defers PCT promotion until a pilot shows a recurring failure
+- absence is not a failure; a stale handoff is reported without failing the run
+- `handoff_hash` covers everything the record asserts
+- a handoff may reference a candidate memory but never promote one. The session
+  writing it produced those candidates, so a promoting writer would be reviewing
+  its own work
+- `state` of `superseded` or `closed`, and an elapsed `expires_at_utc`, keep the
+  record visible while marking it not current
+
+### Trust vocabulary: reused, not reinvented
+
+The Context Continuity plan proposed `referenced` / `attested` / `unverified`
+for artifact references. The observation schema already ships
+`trust_tier: native | attested | opaque`, and the candidates and memories
+schemas build `trust_basis` on top of it. A third set of trust words for the
+same question would be exactly the drift MICA exists to catch, so artifact
+references use `trust_tier`. A test asserts the two enums stay identical.
+
+New fixture `handoff_surface`, new suite `tests/test_handoff_surface.py`.
+Tests 203 -> 224.
+
+---
+
 ## v0.2.9 - Selection Edition (2026-09-03)
 
 **Stable release.** Supersedes `v0.2.8` as the canonical spec and tool banner.

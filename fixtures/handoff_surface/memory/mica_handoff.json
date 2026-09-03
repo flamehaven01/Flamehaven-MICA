@@ -1,0 +1,36 @@
+{
+  "schema_version": "mica.handoff.v1",
+  "handoff_id": "handoff_20260903T122433Z",
+  "created_at_utc": "2026-09-03T12:24:33Z",
+  "project_scope": "handoff-surface",
+  "source_invocation_id": "inv_20260903T040000Z",
+  "state": "active",
+  "artifact_refs": [
+    {
+      "kind": "review",
+      "ref": "git:4fa5f53",
+      "trust_tier": "opaque"
+    }
+  ],
+  "verification_refs": [
+    "ci:33742148043"
+  ],
+  "candidate_memory_refs": [
+    "cand_00071"
+  ],
+  "unresolved": [
+    "profile adoption not yet measured against a control"
+  ],
+  "next_invocation": {
+    "trigger_kind": "review",
+    "profile": "resume",
+    "required_surfaces": [
+      "archive",
+      "playbook",
+      "handoff"
+    ]
+  },
+  "expires_at_utc": "2027-09-10T04:00:00Z",
+  "prev_handoff_hash": null,
+  "handoff_hash": "sha256:99d8ff18a4403aa1e1ed63063dd7af015325575b6285c11d1c0ad2da7304473b"
+}

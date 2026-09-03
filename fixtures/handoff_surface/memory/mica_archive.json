@@ -1,0 +1,18 @@
+{
+  "mica_spec": "0.2.9",
+  "project": { "name": "handoff-surface", "version": "1.0.0" },
+  "operation_meta": { "last_updated": "2026-09-03" },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "handoff-cannot-promote",
+      "statement": "A handoff records candidate references and unresolved items. It never promotes a candidate into archive truth.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-HND-1 (v0.2.9): the session that produces a candidate is the same one writing the handoff, so a handoff writer that could promote would be reviewing its own work.",
+        "violation_count": 0,
+        "last_triggered": ""
+      }
+    }
+  ]
+}
