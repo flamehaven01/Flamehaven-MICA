@@ -31,20 +31,37 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-HARD_FAIL_CHECKS = frozenset(
+# MICA is a memory and playbook package, not a governance engine. The contract
+# it makes is about invocation: did the declared memory surfaces actually reach
+# this session, and did anything reach it that should not have?
+#
+# Archive content quality and memory-authoring integrity matter, but they are
+# supporting concerns. They report on their own axes and do not break the
+# invocation contract. v3.0.0-declaration said this in prose; these three sets
+# are that statement in code.
+CONTRACT_CHECKS = frozenset(
     {
-        "PCT-001",
-        "PCT-002",
-        "PCT-003",
-        "PCT-004",
-        "PCT-007",
-        "PCT-008",
-        "PCT-010",
-        "PCT-013",
-        "PCT-015",
-        "PCT-017",
+        "PCT-001",  # mica.yaml present
+        "PCT-002",  # required fields + archive/playbook layers declared
+        "PCT-003",  # declared layer paths resolve
+        "PCT-004",  # mode and layer roles cohere
+        "PCT-007",  # invocation protocol / agent_context surfaces
+        "PCT-008",  # hook carrier present when declared
+        "PCT-017",  # unapproved memory must not enter agent_context
     }
 )
+
+# Is the memory content well formed? Opt-in escalation (di_policy) still
+# applies here; it just reports on this axis instead of the contract.
+ARCHIVE_CHECKS = frozenset({"PCT-005", "PCT-006", "PCT-010", "PCT-011", "PCT-012"})
+
+# Is the memory-authoring pipeline coherent? Producing memory is a different
+# job from invoking it.
+FLOW_CHECKS = frozenset({"PCT-013", "PCT-014", "PCT-015", "PCT-018"})
+
+# Retained for consumer packages that vendored an earlier tools/ copy. The set
+# is now contract-only; archive and flow failures no longer appear here.
+HARD_FAIL_CHECKS = CONTRACT_CHECKS
 
 MICA_CANONICAL_VERSION = "0.2.8"
 MICA_TOOL_VERSION = MICA_CANONICAL_VERSION
@@ -1909,14 +1926,56 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
     results.append(_run_pct018(project_root, flow_policy))
     results.append(_run_pct017(project_root, flow_policy, recall_policy))
 
-    fails = [r[0] for r in results if r[1] == "FAIL" and r[0] in HARD_FAIL_CHECKS]
+    fails = [r[0] for r in results if r[1] == "FAIL" and r[0] in CONTRACT_CHECKS]
     if fails:
-        results.append(("PCT-009", "FAIL", f"package incomplete. failing checks: {fails}"))
+        results.append(("PCT-009", "FAIL", f"invocation contract incomplete: {fails}"))
     else:
-        results.append(("PCT-009", "PASS", "package complete. closed contract verified."))
+        results.append(
+            ("PCT-009", "PASS", "declared memory surfaces reached the session; contract closed")
+        )
 
     return results
 
 
 def is_closed_contract(results: list[tuple[str, str, str]]) -> bool:
-    return not any(r[1] == "FAIL" and r[0] in HARD_FAIL_CHECKS for r in results)
+    return not any(r[1] == "FAIL" and r[0] in CONTRACT_CHECKS for r in results)
+
+
+def _axis_state(results: list[tuple[str, str, str]], members: frozenset[str]) -> str:
+    """Summarize one verdict axis as FAILED / ISSUES / OK / N-A."""
+    seen = [(status, pid) for pid, status, _ in results if pid in members]
+    if not seen:
+        return "N/A"
+    if any(status == "FAIL" for status, _ in seen):
+        return "FAILED"
+    if any(status == "WARN" for status, _ in seen):
+        return "ISSUES"
+    if all(status == "INFO" for status, _ in seen):
+        return "N/A"
+    return "OK"
+
+
+def evaluate_axes(results: list[tuple[str, str, str]]) -> dict[str, str]:
+    """Report the three concerns separately.
+
+    Collapsing them into one verdict is what let archive quality and pipeline
+    integrity fail a package whose memory loaded correctly.
+    """
+    return {
+        "contract": "CLOSED" if is_closed_contract(results) else "INCOMPLETE",
+        "archive": _axis_state(results, ARCHIVE_CHECKS),
+        "flow": _axis_state(results, FLOW_CHECKS),
+    }
+
+
+def failing_axes(results: list[tuple[str, str, str]]) -> list[str]:
+    """Axes carrying a FAIL. Used by --strict to widen the exit code."""
+    axes = evaluate_axes(results)
+    failing = []
+    if axes["contract"] == "INCOMPLETE":
+        failing.append("contract")
+    if axes["archive"] == "FAILED":
+        failing.append("archive")
+    if axes["flow"] == "FAILED":
+        failing.append("flow")
+    return failing

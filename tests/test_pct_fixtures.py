@@ -21,7 +21,7 @@ FIXTURES_DIR = REPO_ROOT / "fixtures"
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
-from mica_core import is_closed_contract, run_pct_checks
+from mica_core import evaluate_axes, is_closed_contract, run_pct_checks
 
 
 def _status(results: list, check_id: str) -> str | None:
@@ -56,10 +56,20 @@ def test_dead_lesson_ref_is_closed_with_warn():
     assert _status(results, "PCT-011") == "WARN"
 
 
-def test_binding_required_fail_is_incomplete():
+def test_binding_required_fail_reports_on_the_archive_axis():
+    """Opt-in DI strictness is archive quality, not an invocation failure.
+
+    The memory surfaces still load; the archive content is ungrounded. Before
+    the axis split this broke the contract, which let archive quality decide
+    whether a package could be invoked at all.
+    """
     results = run_pct_checks(FIXTURES_DIR / "binding_required_fail")
-    assert not is_closed_contract(results), "binding_required_fail should be INCOMPLETE"
+    axes = evaluate_axes(results)
+
     assert _status(results, "PCT-010") == "FAIL"
+    assert axes["archive"] == "FAILED"
+    assert axes["contract"] == "CLOSED"
+    assert is_closed_contract(results)
 
 
 def test_hook_output_violations_only_is_closed():

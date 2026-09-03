@@ -5,6 +5,46 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0 Origin P0 - Reclaim the invocation contract (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+
+MICA is a memory and playbook package, not a governance engine. v3.0.0-declaration
+said so in prose, but the code still let archive quality and memory-authoring
+integrity break the invocation contract: `HARD_FAIL_CHECKS` contained PCT-010,
+PCT-013, and PCT-015, so a package whose memory loaded correctly could be
+reported INCOMPLETE because a DI binding was ungrounded or a candidate's
+provenance was broken. The declaration demoted governance; it did not remove
+its authority. This step removes the authority.
+
+- verdict split into three axes: `CONTRACT_CHECKS`, `ARCHIVE_CHECKS`, `FLOW_CHECKS`
+- PCT-010, PCT-013, PCT-015 no longer break the contract; they report on their
+  own axis and keep their existing severities, including the opt-in escalation
+  from `di_policy.critical_binding_required`
+- PCT-017 stays on the contract axis. It asks what entered `agent_context`,
+  which is an invocation question, not a governance one -- this corrects an
+  earlier misclassification
+- PCT-009 narrowed to the contract axis and reworded accordingly
+- `evaluate_axes()` and `failing_axes()` added
+- `mica_pct.py` prints all three axes; `--strict` widens the exit code beyond
+  the contract for consumers that want a single gate
+- `HARD_FAIL_CHECKS` kept as a contract-only alias for vendored tool copies
+- `tests/test_verdict_axes.py` added: axis disjointness, membership, per-fixture
+  behavior, and CLI exit codes. Tests 127 -> 143
+
+Fixture behavior change:
+
+| Fixture | Before | After |
+|---|---|---|
+| `binding_required_fail` | INCOMPLETE | Contract CLOSED, Archive FAILED |
+| `flow_candidates_broken_provenance` | INCOMPLETE | Contract CLOSED, Flow FAILED |
+| `flow_recall_agent_context_violation` | INCOMPLETE | unchanged -- PCT-017 is invocation |
+
+Consumers relying on `mica_pct.py` exit 1 for archive or flow failures must add
+`--strict`.
+
+---
+
 ## v3.0.0 P1 - Digest-bound invocation evidence (2026-09-03)
 
 Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.

@@ -33,6 +33,19 @@ truthfully what was actually invoked.
 Archive, playbook, governance checks, and memory-first machinery exist to support that goal.
 They are important, but they are not the center of the system.
 
+That separation is enforced, not just stated. Results report on three axes:
+
+| Axis | Question | Checks |
+|---|---|---|
+| `Contract` | Did the declared memory reach this session, and did anything reach it that should not have? | PCT-001/002/003/004/007/008/017 |
+| `Archive` | Is the memory content well formed? | PCT-005/006/010/011/012 |
+| `Flow` | Is the memory-authoring pipeline coherent? | PCT-013/014/015/018 |
+
+Only the contract axis decides `CLOSED CONTRACT`. A package whose memory loads
+correctly but whose archive carries ungrounded bindings has a closed contract
+and a failing archive axis; both are reported. `mica_pct.py --strict` widens the
+exit code to every axis for consumers that want one gate.
+
 Three assets form the minimal MICA package surface:
 
 | Asset | Format | Role |

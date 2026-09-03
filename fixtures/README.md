@@ -32,6 +32,31 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 # missing-trace fixture intentionally has no mica.recall.jsonl
 ```
 
+## Verdict axes
+
+Results report on three axes. Only `Contract` decides `CLOSED CONTRACT`.
+
+| Axis | Question | Checks |
+|---|---|---|
+| `Contract` | Did the declared memory reach this session, and did anything reach it that should not have? | PCT-001/002/003/004/007/008/017 |
+| `Archive` | Is the memory content well formed? | PCT-005/006/010/011/012 |
+| `Flow` | Is the memory-authoring pipeline coherent? | PCT-013/014/015/018 |
+
+`mica_pct.py` exits 1 on a contract failure only. `--strict` widens it to every axis.
+
+| Fixture | Contract | Archive | Flow | exit |
+|---|---|---|---|---|
+| `binding_required_fail` | CLOSED | **FAILED** | N/A | 0 (1 with `--strict`) |
+| `flow_candidates_broken_provenance` | CLOSED | OK | **FAILED** | 0 (1 with `--strict`) |
+| `flow_recall_agent_context_violation` | **INCOMPLETE** | OK | OK | 1 |
+| `compact_mode` | **INCOMPLETE** | N/A | N/A | 1 |
+| `invocation_capsule_v2` | CLOSED | OK | N/A | 0 |
+| `memory_first_minimal` | CLOSED | OK | N/A | 0 |
+
+The first two used to report `INCOMPLETE`. Ungrounded DI bindings and broken
+promotion provenance are real problems, but they do not mean the session failed
+to receive its memory, so they no longer break the contract.
+
 ## Fixture Map
 
 | Fixture | Version | PCT-010 | PCT-011 | PCT-012 | Contract | Notes |
@@ -40,7 +65,7 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 | `unbound_critical_di/` | v0.2.5 | WARN | INFO | INFO | CLOSED | Critical DI lacks binding; no `critical_binding_required` |
 | `dead_lesson_ref/` | v0.2.5 | PASS | WARN | INFO | CLOSED | `lesson_ref` declared but file missing |
 | `hook_output_violations_only/` | v0.2.5 | WARN | INFO | INFO | CLOSED | Hook output filter demo |
-| `binding_required_fail/` | v0.2.6 | FAIL | INFO | INFO | INCOMPLETE | `critical_binding_required=true` + unbound DI |
+| `binding_required_fail/` | v0.2.6 | FAIL | INFO | INFO | CLOSED | `critical_binding_required=true` + unbound DI; fails the **Archive** axis |
 | `compact_mode/` | v0.2.7 | - | - | - | INCOMPLETE | No mica.yaml; PCT-001 FAIL. Runtime reports `LEGACY`; COMPACT is intent, not detection |
 | `domain_namespaced_di/` | v0.2.7 | PASS | INFO | INFO | CLOSED | DI-EQA-xxx/DI-BIO-xxx + `critical_binding_required` |
 | `doctrinal_binding/` | v0.2.8 | PASS+WARN | INFO | INFO | CLOSED | Bound but doctrinal `origin_episode` |
@@ -49,9 +74,9 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 | `flow_observation_valid/` | v0.2.9 draft | - | - | - | N/A | Hash-chain observation seed for `mica.observe.jsonl` schema |
 | `flow_candidates_pending/` | v0.2.9 draft | - | - | - | N/A | Pending candidate seed for `mica.candidates.json` schema |
 | `flow_candidates_approved_lesson/` | v0.2.9 draft | - | - | - | N/A | Approved lesson seed with non-null review provenance |
-| `flow_candidates_broken_provenance/` | v0.2.9 draft | - | - | - | INCOMPLETE | Approved lesson seed with missing source-event provenance |
+| `flow_candidates_broken_provenance/` | v0.2.9 draft | - | - | - | CLOSED | Missing source-event provenance; fails the **Flow** axis |
 | `flow_recall_operator_review_safe/` | v0.2.9 draft | - | - | - | CLOSED | Pending candidate surfaced only to `operator_review`; `PCT-017` PASS |
-| `flow_recall_agent_context_violation/` | v0.2.9 draft | - | - | - | INCOMPLETE | Pending candidate injected into `agent_context`; `PCT-017` FAIL |
+| `flow_recall_agent_context_violation/` | v0.2.9 draft | - | - | - | INCOMPLETE | Pending candidate injected into `agent_context`; `PCT-017` FAIL (contract axis) |
 | `flow_recall_enabled_missing_trace/` | v0.2.9 draft | - | - | - | CLOSED | Recall enabled but trace missing; `PCT-014` WARN and `Flow=FLOW_DEGRADED` |
 | `flow_recall_incomplete_telemetry/` | v0.2.9 draft | - | - | - | CLOSED | Recall trace exists but is not fully joinable; `PCT-018` WARN and `Flow=FLOW_DEGRADED` |
 | `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present and explicit `agent_context` surfaces |

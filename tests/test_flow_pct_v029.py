@@ -11,7 +11,7 @@ if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
 import mica_runtime
-from mica_core import is_closed_contract, run_pct_checks
+from mica_core import evaluate_axes, is_closed_contract, run_pct_checks
 
 
 def _status(results: list[tuple[str, str, str]], check_id: str) -> str | None:
@@ -35,10 +35,18 @@ def test_flow_candidates_approved_lesson_passes_pct015():
     assert _status(results, "PCT-015") == "PASS"
 
 
-def test_flow_candidates_broken_provenance_fails_pct015():
+def test_flow_candidates_broken_provenance_reports_on_the_flow_axis():
+    """Broken promotion provenance is an authoring-pipeline fault.
+
+    Producing memory is a different job from invoking it, so this fails the
+    flow axis and leaves the invocation contract closed.
+    """
     results = run_pct_checks(FIXTURES_DIR / "flow_candidates_broken_provenance")
-    assert not is_closed_contract(results)
+    axes = evaluate_axes(results)
+
     assert _status(results, "PCT-015") == "FAIL"
+    assert axes["flow"] == "FAILED"
+    assert axes["contract"] == "CLOSED"
 
 
 def test_runtime_text_reports_core_and_flow_for_flow_fixture():
