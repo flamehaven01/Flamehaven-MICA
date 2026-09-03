@@ -196,7 +196,8 @@ not adoption, and adoption would not be proof it helps.
 
 ## Tests
 
-204 tests across nine suites, passing on Python 3.9, 3.11, 3.12, and 3.13.
+203 tests across nine suites, passing on Python 3.9, 3.11, 3.12, and 3.13.
+Locally one is skipped: the symlink-escape test cannot create a link on Windows.
 
 Behavior preservation during the tooling refactor was verified against a golden
 baseline of `run_pct_checks` output — the 21 fixtures carrying a `mica.yaml`

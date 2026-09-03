@@ -52,7 +52,7 @@ Consumer pilot with a control (not run), memory profile adoption (0 / 6 live
 consumers), handoff surface (architecture proposal only), fleet `mica_spec`
 alignment (0.1.9 - 0.2.10, unresolved).
 
-204 tests on Python 3.9 / 3.11 / 3.12 / 3.13.
+203 tests on Python 3.9 / 3.11 / 3.12 / 3.13 (202 locally, one skipped on Windows).
 
 -> [MICA_v0.2.9_RELEASE_NOTES.md](docs/MICA_v0.2.9_RELEASE_NOTES.md) | [MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md)
 
