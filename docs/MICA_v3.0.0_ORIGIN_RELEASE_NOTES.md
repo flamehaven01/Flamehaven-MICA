@@ -230,5 +230,5 @@ would make one possible, and the baseline it produced.
 | Consumer pilot with a control | run once, on `flamehaven-audit-reports` |
 | Profile adoption in any consumer package | 1 / 6 |
 | `_run_pct018`, `_check_capsule_schema`, `mica_memory.main` | still critical |
-| `mica_spec` fleet alignment (0.1.9 … 0.2.10) | unresolved |
+| `mica_spec` fleet alignment (0.1.9 … 0.2.10) | not sought; divergence respected |
 | Handoff surface (Context Continuity P2) | implemented; no consumer declares one |

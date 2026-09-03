@@ -725,6 +725,13 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
 
     Patch distance is only stated when the minor matches. Otherwise the gap is
     named without a number.
+
+    The gap is reported, not prescribed. Consumer packages carry their own
+    mica.yaml and playbook in their own form and evolve on their own track;
+    that divergence is the fleet working as intended, not drift to be
+    corrected from the centre. What a maintainer needs from this check is
+    which spec their package declares and that the checks here are written
+    against canonical. The decision is theirs.
     """
     if not re.search(r"\d", declared_spec):
         return [
@@ -755,8 +762,8 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
                 "PCT-006",
                 "WARN",
                 f"mica_spec {declared_spec} is behind canonical "
-                f"{MICA_CANONICAL_VERSION} by at least one minor version "
-                f"-- consider upgrading",
+                f"{MICA_CANONICAL_VERSION} by at least one minor version; "
+                f"the checks here are written against canonical",
             )
         ]
     lag = can[2] - dec[2]
@@ -766,7 +773,8 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
                 "PCT-006",
                 "WARN",
                 f"mica_spec {declared_spec} is {lag} patch version(s) behind "
-                f"canonical {MICA_CANONICAL_VERSION} -- consider upgrading",
+                f"canonical {MICA_CANONICAL_VERSION}; the checks here are "
+                f"written against canonical",
             )
         ]
     return []

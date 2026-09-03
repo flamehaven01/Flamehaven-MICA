@@ -5,6 +5,29 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## Fleet spec divergence is respected, not resolved (2026-09-03)
+
+`mica_spec` alignment across the six live packages (`0.1.9` to `0.2.10`) had
+been listed as an unresolved limit for several releases. It was never a defect.
+
+Each consumer carries its own `mica.yaml` and its own playbook in its own form,
+and each is maintained by the AI working in that repository. Some are behind and
+want patches; that is their maintainer's work on their own track, not a
+fleet-wide number for this project to drive to zero. Pulling six distinct memory
+books toward one shape would make MICA a governance engine over its consumers,
+which is the thing it is not.
+
+- `PCT-006` stated the gap and then appended `-- consider upgrading`, twice. It
+  now reports which spec the package declares and that the checks here are
+  written against canonical, and stops there
+- a test asserts no lag message prescribes convergence
+- the three tracking entries move from `unresolved` to `not sought`
+
+Within a single package, `mica.yaml` disagreeing with its own archive is still
+drift and still fails. That check is unchanged.
+
+---
+
 ## Specialised surfaces and the agent-context ceiling (2026-09-03)
 
 Found while measuring the first consumer against memory profiles. Post-release;
@@ -146,7 +169,7 @@ rather than pinning a literal, which is what made them break on this bump.
 
 Consumer pilot with a control (run once), memory profile adoption (1 / 6 live
 consumers), handoff surface (architecture proposal only), fleet `mica_spec`
-alignment (0.1.9 - 0.2.10, unresolved).
+alignment (0.1.9 - 0.2.10, not sought -- each package keeps its own form).
 
 203 tests on Python 3.9 / 3.11 / 3.12 / 3.13 (202 locally, one skipped on Windows).
 

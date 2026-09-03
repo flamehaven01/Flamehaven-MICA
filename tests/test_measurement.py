@@ -89,6 +89,21 @@ def test_no_lag_message_claims_a_number_it_cannot_support():
                 assert spec.split(".")[1] == mica_core.MICA_CANONICAL_VERSION.split(".")[1]
 
 
+def test_the_lag_check_reports_the_gap_without_prescribing_convergence():
+    """Consumer packages keep their own mica.yaml and playbook in their own
+    form and evolve on their own track. MICA says which spec a package declares
+    and that the checks are written against canonical; whether to move is that
+    package maintainer's call, not this project's."""
+    prescriptions = ("consider upgrading", "should upgrade", "must upgrade", "please")
+
+    for spec in ("0.1.9", "0.0.1", _spec_behind_by(2), _spec_behind_by(4)):
+        message = _lag_message(spec)
+
+        assert message is not None, spec
+        for phrase in prescriptions:
+            assert phrase not in message.lower(), (spec, phrase)
+
+
 # --- the measurement itself --------------------------------------------------
 
 

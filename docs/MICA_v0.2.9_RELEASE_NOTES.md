@@ -219,7 +219,7 @@ See `MICA_v0.2.9_MIGRATION_GUIDE.md`.
 | Consumer pilot with a control | run once, on `flamehaven-audit-reports` |
 | Memory profile adoption across live consumers | 1 / 6 |
 | Handoff surface | implemented and optional; no consumer declares one yet |
-| `mica_spec` alignment across the fleet (0.1.9 – 0.2.10) | unresolved |
+| `mica_spec` alignment across the fleet (0.1.9 – 0.2.10) | not sought; see below |
 | `PCT-016` adapter maturity | reserved, not implemented |
 
 The first adoption measured 46,682 agent-context bytes for a task session
@@ -229,6 +229,21 @@ that would have stopped any consumer with domain-specialised surfaces; see the
 CHANGELOG entry for 2026-09-03. Those are bytes and contract verdicts. Whether
 a session with its own domain playbook does better work is not measured, and
 one package is not a trend.
+
+### Fleet spec divergence is not on this list
+
+The six packages declare specs from `0.1.9` to `0.2.10` and were listed here as
+unresolved for several releases. They are not. Each carries its own `mica.yaml`
+and its own playbook in its own form, and each is maintained by the AI that
+works in that repository. Some are behind and want patches; that is their
+maintainer's work on their own track, not a fleet-wide number for this project
+to drive to zero.
+
+MICA reports which spec a package declares and that the checks are written
+against canonical. It does not ask the package to converge. Pulling six
+distinct memory books toward one shape would make this a governance engine over
+its consumers, which is the thing it is not. Within a single package, `mica.yaml`
+disagreeing with its own archive is still drift and still fails.
 
 ---
 
