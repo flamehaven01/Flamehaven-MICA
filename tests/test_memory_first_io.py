@@ -351,7 +351,9 @@ def test_review_memory_blocks_opaque_binding_promotion(tmp_path: Path):
 
 def test_export_surfaces_writes_archive_and_playbook_from_memories(tmp_path: Path):
     fixture_root = _copy_memory_first_fixture(tmp_path)
-    archive_seed = json.loads((fixture_root / "memory" / "mica_archive.json").read_text(encoding="utf-8"))
+    archive_seed = json.loads(
+        (fixture_root / "memory" / "mica_archive.json").read_text(encoding="utf-8")
+    )
     archive_seed["design_invariants"] = [
         {
             "id": "DI-001",
@@ -425,7 +427,10 @@ def test_export_surfaces_writes_archive_and_playbook_from_memories(tmp_path: Pat
     assert len(archive["design_invariants"]) == 2
     assert archive["design_invariants"][0]["id"] == "DI-001"
     assert archive["design_invariants"][1]["id"] == "DI-MEM-900"
-    assert archive["design_invariants"][1]["binding"]["origin_episode"] == "2026-07-07 promotion review"
+    assert (
+        archive["design_invariants"][1]["binding"]["origin_episode"]
+        == "2026-07-07 promotion review"
+    )
     assert archive["design_invariants"][1]["source_memory_id"] == "mem_bind_0001"
     assert archive["memory_exports"][0]["memory_id"] == "mem_lesson_0001"
     assert archive["memory_exports"][1]["memory_id"] == "mem_bind_0001"
@@ -499,7 +504,11 @@ def test_review_then_export_generates_design_invariant(tmp_path: Path):
     )
 
     archive = mica_memory.build_archive_export(fixture_root)
-    generated = [item for item in archive["design_invariants"] if item.get("source_memory_id") == "mem_bind_export_0001"]
+    generated = [
+        item
+        for item in archive["design_invariants"]
+        if item.get("source_memory_id") == "mem_bind_export_0001"
+    ]
     assert len(generated) == 1
     assert generated[0]["id"] == "DI-MEM-001"
     assert generated[0]["statement"] == "Binding export must synthesize a DI entry."

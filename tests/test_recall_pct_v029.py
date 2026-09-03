@@ -42,7 +42,6 @@ def test_runtime_text_surfaces_recall_violation_reason():
     assert "operator_review.state=pending" in output
 
 
-
 def test_recall_missing_trace_warns_pct014_but_keeps_core_closed():
     results = run_pct_checks(FIXTURES_DIR / "flow_recall_enabled_missing_trace")
     assert is_closed_contract(results)
@@ -57,7 +56,6 @@ def test_runtime_text_degrades_flow_on_missing_recall_trace_only():
     assert "Flow      : FLOW_DEGRADED" in output
     assert "Promotion gate: PASS" in output
     assert "mica.recall.jsonl missing" in output
-
 
 
 def test_recall_incomplete_telemetry_warns_pct018_but_keeps_core_closed():

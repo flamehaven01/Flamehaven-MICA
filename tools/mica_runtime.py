@@ -59,7 +59,9 @@ def detect_state(project_root: Path) -> tuple[str, Path | None, Path | None]:
     return ("INACTIVE", None, None)
 
 
-def resolve_paths(project_root: Path, mica_yaml_path: Path) -> tuple[dict[str, Any], Path | None, Path | None]:
+def resolve_paths(
+    project_root: Path, mica_yaml_path: Path
+) -> tuple[dict[str, Any], Path | None, Path | None]:
     yd = load_yaml(mica_yaml_path)
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
     archive_path: Path | None = None
@@ -145,7 +147,9 @@ def _resolve_declared_layer_paths(project_root: Path, yd: dict[str, Any]) -> dic
 
 
 def _default_loaded_surfaces(mode: str | None, declared_roles: list[str]) -> list[str]:
-    preferred = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+    preferred = (
+        ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+    )
     return [role for role in preferred if role in declared_roles]
 
 
@@ -233,7 +237,9 @@ def _build_invocation_summary(
     contract = resolve_invocation_contract(yd)
     declared = list(contract["declared_surfaces"])
     expected_loaded = list(contract["loaded_surfaces"])
-    loaded = [role for role in expected_loaded if layer_paths.get(role) and layer_paths[role].exists()]
+    loaded = [
+        role for role in expected_loaded if layer_paths.get(role) and layer_paths[role].exists()
+    ]
     deferred = list(contract["deferred_surfaces"])
     missing = [role for role in expected_loaded if role not in loaded]
     agent_context_surfaces = [role for role in contract["agent_context_surfaces"] if role in loaded]
@@ -254,7 +260,9 @@ def _build_invocation_summary(
     }
 
 
-def _build_flow_summary(project_root: Path, yd: dict[str, Any], pct_results: list[tuple[str, str, str]]) -> dict[str, Any]:
+def _build_flow_summary(
+    project_root: Path, yd: dict[str, Any], pct_results: list[tuple[str, str, str]]
+) -> dict[str, Any]:
     flow_policy = yd.get("flow_policy", {}) if isinstance(yd.get("flow_policy"), dict) else {}
     flow_declared = isinstance(yd.get("flow_policy"), dict)
     enabled = bool(flow_policy.get("enabled", False))
@@ -391,7 +399,9 @@ def build_summary(project_root: Path) -> dict[str, Any]:
                 "flow_state": None,
             }
         )
-        base.update(_build_invocation_summary(project_root, state, None, None, legacy_archive, None))
+        base.update(
+            _build_invocation_summary(project_root, state, None, None, legacy_archive, None)
+        )
         return base
 
     assert mica_yaml is not None
@@ -404,7 +414,9 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     pct_results = run_pct_checks(project_root)
     core_state = "CLOSED" if is_closed_contract(pct_results) else "INCOMPLETE"
     flow_summary = _build_flow_summary(project_root, yd, pct_results)
-    invocation_summary = _build_invocation_summary(project_root, state, yd.get("mode"), yd, archive_path, playbook_path)
+    invocation_summary = _build_invocation_summary(
+        project_root, state, yd.get("mode"), yd, archive_path, playbook_path
+    )
     trace_path = Path(invocation_summary["invocation_trace_default_path"])
     base.update(
         {
@@ -412,7 +424,9 @@ def build_summary(project_root: Path) -> dict[str, Any]:
             "version": proj.get("version"),
             "mode": yd.get("mode"),
             "pattern": inv.get("primary_pattern", "readme_protocol"),
-            "pattern_source": "declared" if isinstance(inv.get("primary_pattern"), str) else "defaulted",
+            "pattern_source": "declared"
+            if isinstance(inv.get("primary_pattern"), str)
+            else "defaulted",
             "pct": core_state,
             "critical_count": crit,
             "high_count": high,
@@ -461,8 +475,15 @@ def build_invocation_trace_record(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def write_invocation_trace(project_root: Path, summary: dict[str, Any], output_path: Path | None = None) -> Path:
-    path = output_path or Path(str(summary.get("invocation_trace_default_path") or _default_invocation_trace_path(project_root)))
+def write_invocation_trace(
+    project_root: Path, summary: dict[str, Any], output_path: Path | None = None
+) -> Path:
+    path = output_path or Path(
+        str(
+            summary.get("invocation_trace_default_path")
+            or _default_invocation_trace_path(project_root)
+        )
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     record = build_invocation_trace_record(summary)
     serialized = json.dumps(record, ensure_ascii=False, sort_keys=True)
@@ -508,7 +529,11 @@ def emit_text(summary: dict[str, Any]) -> str:
         missing = ", ".join(summary.get("missing_invoked_surfaces") or [])
         lines.append(f"Missing   : {missing}")
     if summary.get("flow_state"):
-        counts = summary.get("flow_candidate_counts") if isinstance(summary.get("flow_candidate_counts"), dict) else {}
+        counts = (
+            summary.get("flow_candidate_counts")
+            if isinstance(summary.get("flow_candidate_counts"), dict)
+            else {}
+        )
         lines.extend(
             [
                 f"Core      : {summary.get('core_state')}",
@@ -527,7 +552,9 @@ def emit_text(summary: dict[str, Any]) -> str:
             lines.append(f"Reason    : {summary.get('flow_reason')}")
     else:
         lines.append(f"PCT       : {summary.get('pct')}")
-    lines.append(f"Invariants: {summary.get('critical_count', 0)} critical, {summary.get('high_count', 0)} high")
+    lines.append(
+        f"Invariants: {summary.get('critical_count', 0)} critical, {summary.get('high_count', 0)} high"
+    )
     crits = summary.get("critical_invariants", []) or []
     if crits:
         lines.append("")

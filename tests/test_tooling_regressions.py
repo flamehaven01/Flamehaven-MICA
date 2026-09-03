@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import sys
-from textwrap import dedent
 from pathlib import Path
+from textwrap import dedent
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TOOLS_DIR = REPO_ROOT / "tools"
@@ -92,7 +92,13 @@ def test_memory_first_record_schemas_exist_and_expose_expected_versions():
 
 
 def test_invocation_trace_validator_reports_schema_presence():
-    results = mica_core.run_invocation_trace_checks(REPO_ROOT / "fixtures" / "flow_recall_operator_review_safe" / "memory" / "mica.invocation.jsonl")
+    results = mica_core.run_invocation_trace_checks(
+        REPO_ROOT
+        / "fixtures"
+        / "flow_recall_operator_review_safe"
+        / "memory"
+        / "mica.invocation.jsonl"
+    )
 
     assert results[0][0] == "IVC-000"
     assert results[0][1] == "PASS"
@@ -100,7 +106,13 @@ def test_invocation_trace_validator_reports_schema_presence():
 
 
 def test_invocation_trace_validator_passes_on_fixture_trace():
-    trace_path = REPO_ROOT / "fixtures" / "flow_recall_operator_review_safe" / "memory" / "mica.invocation.jsonl"
+    trace_path = (
+        REPO_ROOT
+        / "fixtures"
+        / "flow_recall_operator_review_safe"
+        / "memory"
+        / "mica.invocation.jsonl"
+    )
 
     results = mica_core.run_invocation_trace_checks(trace_path)
 
@@ -150,7 +162,9 @@ def test_pct_validator_can_emit_invocation_trace_summary(tmp_path: Path):
     (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -229,7 +243,9 @@ def test_memory_first_contract_is_closed_and_resolves_export_paths(tmp_path: Pat
     (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -264,6 +280,7 @@ def test_memory_first_minimal_fixture_is_closed():
     summary = mica_runtime.build_summary(fixture_root)
     assert summary["mode"] == "memory_first"
     assert summary["core_state"] == "CLOSED"
+
 
 def test_memory_first_summary_reports_invoked_and_deferred_surfaces():
     fixture_root = REPO_ROOT / "fixtures" / "memory_first_minimal"
@@ -318,7 +335,9 @@ def test_memory_first_explicit_agent_context_surfaces_override_default(tmp_path:
     )
     (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -334,7 +353,9 @@ def test_memory_first_explicit_agent_context_surfaces_override_default(tmp_path:
     )
 
     summary = mica_runtime.build_summary(tmp_path)
-    pct007 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007")
+    pct007 = next(
+        (status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007"
+    )
 
     assert summary["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
     assert summary["agent_context_surfaces"] == ["archive", "playbook"]
@@ -364,7 +385,11 @@ def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
     written = mica_runtime.write_invocation_trace(fixture_root, summary, trace_path)
 
     assert written == trace_path
-    records = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    records = [
+        json.loads(line)
+        for line in trace_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     assert len(records) == 1
     assert records[0]["schema_version"] == "mica.invocation.v1"
     assert records[0]["session_id"] == "sess_20260707_0001"
@@ -414,7 +439,9 @@ def test_memory_first_invocation_contract_fails_when_slots_not_marked_session_st
     (memory_dir / "mica.sessions.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -435,6 +462,7 @@ def test_memory_first_invocation_contract_fails_when_slots_not_marked_session_st
     assert pct007[0] == "FAIL"
     assert "missing required session-start surfaces" in pct007[1]
     assert "slots" in pct007[1]
+
 
 def test_memory_first_operator_only_surface_must_not_overlap_agent_context(tmp_path: Path):
     memory_dir = tmp_path / "memory"
@@ -479,7 +507,9 @@ def test_memory_first_operator_only_surface_must_not_overlap_agent_context(tmp_p
     )
     (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -495,7 +525,9 @@ def test_memory_first_operator_only_surface_must_not_overlap_agent_context(tmp_p
     )
 
     summary = mica_runtime.build_summary(tmp_path)
-    pct007 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007")
+    pct007 = next(
+        (status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007"
+    )
 
     assert summary["operator_only_surfaces"] == ["memories"]
     assert pct007[0] == "FAIL"
@@ -503,7 +535,9 @@ def test_memory_first_operator_only_surface_must_not_overlap_agent_context(tmp_p
     assert "archive" in pct007[1]
 
 
-def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_session_start_invoked(tmp_path: Path):
+def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_session_start_invoked(
+    tmp_path: Path,
+):
     memory_dir = tmp_path / "memory"
     memory_dir.mkdir()
     (tmp_path / "mica.yaml").write_text(
@@ -544,7 +578,9 @@ def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_s
     )
     (memory_dir / "mica.observe.jsonl").write_text("", encoding="utf-8")
     (memory_dir / "mica.memories.jsonl").write_text("", encoding="utf-8")
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -559,11 +595,14 @@ def test_memory_first_invocation_contract_fails_when_agent_context_surface_not_s
         encoding="utf-8",
     )
 
-    pct007 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007")
+    pct007 = next(
+        (status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-007"
+    )
 
     assert pct007[0] == "FAIL"
     assert "agent_context surfaces not session-start invoked" in pct007[1]
     assert "memories" in pct007[1]
+
 
 def test_emit_hook_surfaces_flow_state_after_invocation_context():
     fixture_root = REPO_ROOT / "fixtures" / "flow_recall_agent_context_violation"
@@ -667,7 +706,9 @@ def test_pct018_warns_when_agent_context_recall_lacks_invocation_trace(tmp_path:
         ),
         encoding="utf-8",
     )
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -682,7 +723,9 @@ def test_pct018_warns_when_agent_context_recall_lacks_invocation_trace(tmp_path:
         encoding="utf-8",
     )
 
-    pct018 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018")
+    pct018 = next(
+        (status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018"
+    )
 
     assert pct018[0] == "WARN"
     assert "target=agent_context but mica.invocation.jsonl absent" in pct018[1]
@@ -765,7 +808,9 @@ def test_pct018_passes_when_agent_context_recall_joins_invocation_trace(tmp_path
         '{"schema_version":"mica.invocation.v1","invocation_id":"inv_001","timestamp_utc":"2026-07-08T00:01:05Z","session_id":"sess_001","loaded_surfaces":["observations","archive","playbook","slots"],"agent_context_surfaces":["archive","playbook","slots"]}\n',
         encoding="utf-8",
     )
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -780,12 +825,17 @@ def test_pct018_passes_when_agent_context_recall_joins_invocation_trace(tmp_path
         encoding="utf-8",
     )
 
-    pct018 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018")
+    pct018 = next(
+        (status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018"
+    )
 
     assert pct018[0] == "PASS"
     assert "joins cleanly with candidates, observations, and invocation trace" in pct018[1]
 
-def test_pct018_warns_when_operator_review_invocation_trace_omits_operator_only_surfaces(tmp_path: Path):
+
+def test_pct018_warns_when_operator_review_invocation_trace_omits_operator_only_surfaces(
+    tmp_path: Path,
+):
     memory_dir = tmp_path / "memory"
     memory_dir.mkdir()
     (tmp_path / "mica.yaml").write_text(
@@ -862,7 +912,9 @@ def test_pct018_warns_when_operator_review_invocation_trace_omits_operator_only_
         '{"schema_version":"mica.invocation.v1","invocation_id":"inv_001","timestamp_utc":"2026-07-08T00:01:05Z","session_id":"sess_001","loaded_surfaces":["observations","archive","playbook","slots"],"agent_context_surfaces":["archive","playbook","slots"]}\n',
         encoding="utf-8",
     )
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -877,7 +929,9 @@ def test_pct018_warns_when_operator_review_invocation_trace_omits_operator_only_
         encoding="utf-8",
     )
 
-    pct018 = next((status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018")
+    pct018 = next(
+        (status, msg) for pid, status, msg in mica_core.run_pct_checks(tmp_path) if pid == "PCT-018"
+    )
 
     assert pct018[0] == "WARN"
     assert "missing operator_only_surfaces for operator_review session" in pct018[1]
@@ -956,7 +1010,9 @@ def test_runtime_summary_reports_telemetry_warn_for_unjoinable_agent_context_tra
         ),
         encoding="utf-8",
     )
-    (memory_dir / "mica.slots.json").write_text('{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8")
+    (memory_dir / "mica.slots.json").write_text(
+        '{"schema_version":"mica.slots.v1","slots":[]}', encoding="utf-8"
+    )
     (memory_dir / "mica_playbook.md").write_text("# playbook\n", encoding="utf-8")
     (memory_dir / "mica_archive.json").write_text(
         json.dumps(
@@ -978,4 +1034,3 @@ def test_runtime_summary_reports_telemetry_warn_for_unjoinable_agent_context_tra
     assert summary["flow_telemetry_status"] == "WARN"
     assert "Recall    : PASS" in text
     assert "Telemetry : WARN" in text
-

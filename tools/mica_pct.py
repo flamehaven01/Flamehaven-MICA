@@ -27,7 +27,14 @@ _TOOLS_DIR = Path(__file__).resolve().parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from mica_core import MICA_TOOL_VERSION, find_flow_artifact, format_tool_banner, is_closed_contract, run_invocation_trace_checks, run_pct_checks
+from mica_core import (
+    MICA_TOOL_VERSION,
+    find_flow_artifact,
+    format_tool_banner,
+    is_closed_contract,
+    run_invocation_trace_checks,
+    run_pct_checks,
+)
 
 __version__ = MICA_TOOL_VERSION
 
@@ -64,4 +71,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

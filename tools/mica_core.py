@@ -264,25 +264,35 @@ def layer_role(layer: dict[str, Any]) -> str:
 _INVOKED_LOADING_HINTS = frozenset({"always", "session_start_only"})
 _AGENT_CONTEXT_ROLE_ORDER = ("archive", "playbook", "slots", "lessons", "memories")
 _AGENT_CONTEXT_ALLOWED_SURFACES = frozenset(_AGENT_CONTEXT_ROLE_ORDER)
-_OPERATOR_ONLY_ALLOWED_SURFACES = frozenset((
-    "archive",
-    "playbook",
-    "lessons",
-    "sessions",
-    "observations",
-    "memories",
-    "recall",
-    "candidates",
-    "slots",
-    "graph",
-))
+_OPERATOR_ONLY_ALLOWED_SURFACES = frozenset(
+    (
+        "archive",
+        "playbook",
+        "lessons",
+        "sessions",
+        "observations",
+        "memories",
+        "recall",
+        "candidates",
+        "slots",
+        "graph",
+    )
+)
 
 
 def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
-    raw_agent_context = inv.get("agent_context_surfaces") if isinstance(inv.get("agent_context_surfaces"), list) else None
-    raw_operator_only = inv.get("operator_only_surfaces") if isinstance(inv.get("operator_only_surfaces"), list) else None
+    raw_agent_context = (
+        inv.get("agent_context_surfaces")
+        if isinstance(inv.get("agent_context_surfaces"), list)
+        else None
+    )
+    raw_operator_only = (
+        inv.get("operator_only_surfaces")
+        if isinstance(inv.get("operator_only_surfaces"), list)
+        else None
+    )
     mode = str(yd.get("mode") or "")
     declared_surfaces: list[str] = []
     invoked_surfaces: list[str] = []
@@ -300,12 +310,18 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
             invoked_surfaces.append(role)
 
     if not explicit_invocation:
-        defaults = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+        defaults = (
+            ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+        )
         invoked_surfaces = [role for role in defaults if role in declared_surfaces]
 
     deferred_surfaces = [role for role in declared_surfaces if role not in invoked_surfaces]
-    required_session_start = ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
-    missing_invoked_surfaces = [role for role in required_session_start if role not in invoked_surfaces]
+    required_session_start = (
+        ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+    )
+    missing_invoked_surfaces = [
+        role for role in required_session_start if role not in invoked_surfaces
+    ]
 
     configured_agent_context_surfaces: list[str] = []
     invalid_agent_context_surfaces: list[str] = []
@@ -333,7 +349,9 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
             if role in _AGENT_CONTEXT_ALLOWED_SURFACES and role in invoked_surfaces
         ]
     else:
-        agent_context_surfaces = [role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces]
+        agent_context_surfaces = [
+            role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces
+        ]
         if not agent_context_surfaces:
             agent_context_surfaces = list(invoked_surfaces)
 
@@ -352,7 +370,9 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
         operator_only_surfaces = [
             role
             for role in configured_operator_only_surfaces
-            if role in _OPERATOR_ONLY_ALLOWED_SURFACES and role in declared_surfaces and role not in agent_context_surfaces
+            if role in _OPERATOR_ONLY_ALLOWED_SURFACES
+            and role in declared_surfaces
+            and role not in agent_context_surfaces
         ]
     else:
         operator_only_surfaces = []
@@ -374,8 +394,6 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
         "undeclared_operator_only_surfaces": undeclared_operator_only_surfaces,
         "overlapping_operator_only_surfaces": overlapping_operator_only_surfaces,
     }
-
-
 
 
 def find_flow_artifact(project_root: Path, filename: str) -> Path | None:
@@ -448,7 +466,10 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     if not trace_path.exists():
         return [schema_result, ("IVC-001", "FAIL", f"invocation trace missing: {trace_path}")]
 
-    results: list[tuple[str, str, str]] = [schema_result, ("IVC-001", "PASS", f"invocation trace present ({trace_path})")]
+    results: list[tuple[str, str, str]] = [
+        schema_result,
+        ("IVC-001", "PASS", f"invocation trace present ({trace_path})"),
+    ]
     try:
         records = load_jsonl(trace_path)
     except Exception as exc:
@@ -463,7 +484,16 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     allowed_core_states = {"CLOSED", "INCOMPLETE", "LEGACY", "INACTIVE"}
     allowed_flow_states = {None, "FLOW_OFFLINE", "FLOW_ENABLED", "FLOW_DEGRADED"}
     allowed_modes = {None, "memory_injection", "protocol_evolution", "memory_first"}
-    allowed_patterns = {None, "readme_protocol", "hook_trigger", "agent_yaml_bootstrap", "global_skill", "workspace_directive", "explicit", "legacy"}
+    allowed_patterns = {
+        None,
+        "readme_protocol",
+        "hook_trigger",
+        "agent_yaml_bootstrap",
+        "global_skill",
+        "workspace_directive",
+        "explicit",
+        "legacy",
+    }
     allowed_contracts = {None, "memory_first", "archive_first", "legacy_archive"}
 
     for index, record in enumerate(records, start=1):
@@ -472,7 +502,9 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
             schema_issues.append(f"record {index}: missing required fields {missing}")
             continue
         if record.get("schema_version") != "mica.invocation.v1":
-            schema_issues.append(f"record {index}: unsupported schema_version {record.get('schema_version')}")
+            schema_issues.append(
+                f"record {index}: unsupported schema_version {record.get('schema_version')}"
+            )
         if not _is_non_empty_string(record.get("invocation_id")):
             schema_issues.append(f"record {index}: invalid invocation_id")
         if not _is_non_empty_string(record.get("timestamp_utc")):
@@ -483,7 +515,9 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
         if not isinstance(project, dict) or "name" not in project or "version" not in project:
             schema_issues.append(f"record {index}: project must expose name and version")
         if record.get("package_state") not in allowed_package_states:
-            schema_issues.append(f"record {index}: invalid package_state {record.get('package_state')!r}")
+            schema_issues.append(
+                f"record {index}: invalid package_state {record.get('package_state')!r}"
+            )
         if record.get("core_state") not in allowed_core_states:
             schema_issues.append(f"record {index}: invalid core_state {record.get('core_state')!r}")
         if record.get("flow_state") not in allowed_flow_states:
@@ -493,33 +527,78 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
         if record.get("pattern") not in allowed_patterns:
             schema_issues.append(f"record {index}: invalid pattern {record.get('pattern')!r}")
         if record.get("invocation_contract") not in allowed_contracts:
-            schema_issues.append(f"record {index}: invalid invocation_contract {record.get('invocation_contract')!r}")
-        if record.get("session_id") is not None and not _is_non_empty_string(record.get("session_id")):
+            schema_issues.append(
+                f"record {index}: invalid invocation_contract {record.get('invocation_contract')!r}"
+            )
+        if record.get("session_id") is not None and not _is_non_empty_string(
+            record.get("session_id")
+        ):
             schema_issues.append(f"record {index}: invalid session_id")
 
-        for field in ("loaded_surfaces", "agent_context_surfaces", "operator_only_surfaces", "deferred_surfaces", "missing_invoked_surfaces", "active_critical_invariants"):
-            value = record.get(field, []) if field == "operator_only_surfaces" else record.get(field)
+        for field in (
+            "loaded_surfaces",
+            "agent_context_surfaces",
+            "operator_only_surfaces",
+            "deferred_surfaces",
+            "missing_invoked_surfaces",
+            "active_critical_invariants",
+        ):
+            value = (
+                record.get(field, []) if field == "operator_only_surfaces" else record.get(field)
+            )
             if not _is_unique_string_list(value):
                 schema_issues.append(f"record {index}: {field} must be a unique string list")
 
-        loaded_surfaces = record.get("loaded_surfaces") if isinstance(record.get("loaded_surfaces"), list) else []
-        context_surfaces = record.get("agent_context_surfaces") if isinstance(record.get("agent_context_surfaces"), list) else []
-        operator_surfaces = record.get("operator_only_surfaces") if isinstance(record.get("operator_only_surfaces"), list) else []
-        deferred_surfaces = record.get("deferred_surfaces") if isinstance(record.get("deferred_surfaces"), list) else []
-        missing_invoked_surfaces = record.get("missing_invoked_surfaces") if isinstance(record.get("missing_invoked_surfaces"), list) else []
+        loaded_surfaces = (
+            record.get("loaded_surfaces") if isinstance(record.get("loaded_surfaces"), list) else []
+        )
+        context_surfaces = (
+            record.get("agent_context_surfaces")
+            if isinstance(record.get("agent_context_surfaces"), list)
+            else []
+        )
+        operator_surfaces = (
+            record.get("operator_only_surfaces")
+            if isinstance(record.get("operator_only_surfaces"), list)
+            else []
+        )
+        deferred_surfaces = (
+            record.get("deferred_surfaces")
+            if isinstance(record.get("deferred_surfaces"), list)
+            else []
+        )
+        missing_invoked_surfaces = (
+            record.get("missing_invoked_surfaces")
+            if isinstance(record.get("missing_invoked_surfaces"), list)
+            else []
+        )
 
         extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
         if extra_context:
-            coherence_issues.append(f"record {index}: agent_context_surfaces not loaded {extra_context}")
-        overlapping_operator = [surface for surface in operator_surfaces if surface in context_surfaces]
+            coherence_issues.append(
+                f"record {index}: agent_context_surfaces not loaded {extra_context}"
+            )
+        overlapping_operator = [
+            surface for surface in operator_surfaces if surface in context_surfaces
+        ]
         if overlapping_operator:
-            coherence_issues.append(f"record {index}: operator_only_surfaces overlap agent_context_surfaces {overlapping_operator}")
-        overlapping_deferred = [surface for surface in deferred_surfaces if surface in loaded_surfaces]
+            coherence_issues.append(
+                f"record {index}: operator_only_surfaces overlap agent_context_surfaces {overlapping_operator}"
+            )
+        overlapping_deferred = [
+            surface for surface in deferred_surfaces if surface in loaded_surfaces
+        ]
         if overlapping_deferred:
-            coherence_issues.append(f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}")
-        overlapping_missing = [surface for surface in missing_invoked_surfaces if surface in loaded_surfaces]
+            coherence_issues.append(
+                f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}"
+            )
+        overlapping_missing = [
+            surface for surface in missing_invoked_surfaces if surface in loaded_surfaces
+        ]
         if overlapping_missing:
-            coherence_issues.append(f"record {index}: missing_invoked_surfaces overlap loaded_surfaces {overlapping_missing}")
+            coherence_issues.append(
+                f"record {index}: missing_invoked_surfaces overlap loaded_surfaces {overlapping_missing}"
+            )
 
     if schema_issues:
         preview = "; ".join(schema_issues[:4])
@@ -527,7 +606,9 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
             preview += f"; ... (+{len(schema_issues) - 4} more)"
         results.append(("IVC-003", "FAIL", preview))
     else:
-        results.append(("IVC-003", "PASS", "invocation trace shape matches mica.invocation.v1 expectations"))
+        results.append(
+            ("IVC-003", "PASS", "invocation trace shape matches mica.invocation.v1 expectations")
+        )
 
     if coherence_issues:
         preview = "; ".join(coherence_issues[:4])
@@ -577,7 +658,11 @@ def _run_pct013(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         if missing:
             return ("PCT-013", "FAIL", f"record {index} missing required fields: {missing}")
         if record.get("schema_version") != "mica.observe.v1":
-            return ("PCT-013", "FAIL", f"record {index} has unsupported schema_version: {record.get('schema_version')}")
+            return (
+                "PCT-013",
+                "FAIL",
+                f"record {index} has unsupported schema_version: {record.get('schema_version')}",
+            )
         event_id = record.get("event_id")
         if not _is_non_empty_string(event_id):
             return ("PCT-013", "FAIL", f"record {index} has invalid event_id")
@@ -589,18 +674,34 @@ def _run_pct013(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         prev_hash = record.get("prev_event_hash")
         if previous_hash is None:
             if prev_hash not in (None, ""):
-                return ("PCT-013", "FAIL", f"record {index} unexpectedly declares prev_event_hash at stream head")
+                return (
+                    "PCT-013",
+                    "FAIL",
+                    f"record {index} unexpectedly declares prev_event_hash at stream head",
+                )
         elif prev_hash != previous_hash:
             return ("PCT-013", "FAIL", f"record {index} prev_event_hash mismatch for {event_id}")
         previous_hash = str(record.get("event_hash"))
         timestamp = record.get("timestamp_utc")
-        if _is_non_empty_string(previous_timestamp) and _is_non_empty_string(timestamp) and str(timestamp) < str(previous_timestamp):
+        if (
+            _is_non_empty_string(previous_timestamp)
+            and _is_non_empty_string(timestamp)
+            and str(timestamp) < str(previous_timestamp)
+        ):
             timestamp_regressed = True
         previous_timestamp = str(timestamp)
 
     if timestamp_regressed:
-        return ("PCT-013", "WARN", f"{observe_path.relative_to(project_root)} coherent but timestamps are not monotonic")
-    return ("PCT-013", "PASS", f"{observe_path.relative_to(project_root)} parseable and hash-chain coherent ({len(records)} records)")
+        return (
+            "PCT-013",
+            "WARN",
+            f"{observe_path.relative_to(project_root)} coherent but timestamps are not monotonic",
+        )
+    return (
+        "PCT-013",
+        "PASS",
+        f"{observe_path.relative_to(project_root)} parseable and hash-chain coherent ({len(records)} records)",
+    )
 
 
 def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, str, str]:
@@ -612,15 +713,27 @@ def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         return ("PCT-015", "FAIL", "flow enabled but mica.candidates.json missing")
     candidates_doc = load_json(candidates_path)
     if candidates_doc.get("schema_version") != "mica.candidates.v1":
-        return ("PCT-015", "FAIL", f"candidate registry has unsupported schema_version: {candidates_doc.get('schema_version')}")
+        return (
+            "PCT-015",
+            "FAIL",
+            f"candidate registry has unsupported schema_version: {candidates_doc.get('schema_version')}",
+        )
     candidates = candidates_doc.get("candidates")
     if not isinstance(candidates, list):
         return ("PCT-015", "FAIL", "candidate registry missing candidates list")
     observe_path = find_flow_artifact(project_root, "mica.observe.jsonl")
     if not observe_path:
-        return ("PCT-015", "FAIL", "cannot validate promotion provenance because mica.observe.jsonl is missing")
+        return (
+            "PCT-015",
+            "FAIL",
+            "cannot validate promotion provenance because mica.observe.jsonl is missing",
+        )
     observations = load_jsonl(observe_path)
-    observation_ids = {record.get("event_id") for record in observations if _is_non_empty_string(record.get("event_id"))}
+    observation_ids = {
+        record.get("event_id")
+        for record in observations
+        if _is_non_empty_string(record.get("event_id"))
+    }
     governed = []
     for candidate in candidates:
         if not isinstance(candidate, dict):
@@ -628,7 +741,11 @@ def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         if candidate.get("stage") in {"approved_lesson", "bound_invariant_evidence"}:
             governed.append(candidate)
     if not governed:
-        return ("PCT-015", "INFO", f"{candidates_path.relative_to(project_root)} contains no approved or promoted artifacts requiring provenance validation")
+        return (
+            "PCT-015",
+            "INFO",
+            f"{candidates_path.relative_to(project_root)} contains no approved or promoted artifacts requiring provenance validation",
+        )
 
     issues: list[str] = []
     for candidate in governed:
@@ -637,11 +754,15 @@ def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         if not isinstance(source_event_ids, list) or not source_event_ids:
             issues.append(f"{candidate_id}: missing source_event_ids")
         else:
-            missing_source_ids = [source_id for source_id in source_event_ids if source_id not in observation_ids]
+            missing_source_ids = [
+                source_id for source_id in source_event_ids if source_id not in observation_ids
+            ]
             if missing_source_ids:
                 issues.append(f"{candidate_id}: unknown source_event_ids {missing_source_ids}")
         if not _review_is_approved(candidate.get("operator_review")):
-            issues.append(f"{candidate_id}: operator_review must be approved with non-null review metadata")
+            issues.append(
+                f"{candidate_id}: operator_review must be approved with non-null review metadata"
+            )
         if candidate.get("stage") == "bound_invariant_evidence":
             if not _is_non_empty_string(candidate.get("origin_episode")):
                 issues.append(f"{candidate_id}: missing origin_episode")
@@ -649,9 +770,13 @@ def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
             if not isinstance(supporting_event_ids, list) or not supporting_event_ids:
                 issues.append(f"{candidate_id}: missing supporting_event_ids")
             else:
-                missing_support_ids = [event_id for event_id in supporting_event_ids if event_id not in observation_ids]
+                missing_support_ids = [
+                    event_id for event_id in supporting_event_ids if event_id not in observation_ids
+                ]
                 if missing_support_ids:
-                    issues.append(f"{candidate_id}: unknown supporting_event_ids {missing_support_ids}")
+                    issues.append(
+                        f"{candidate_id}: unknown supporting_event_ids {missing_support_ids}"
+                    )
             if candidate.get("trust_basis") == "opaque_observation_trace":
                 issues.append(f"{candidate_id}: Stage 3 evidence may not use opaque trust_basis")
     if issues:
@@ -659,7 +784,12 @@ def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         if len(issues) > 4:
             preview += f"; ... (+{len(issues) - 4} more)"
         return ("PCT-015", "FAIL", preview)
-    return ("PCT-015", "PASS", f"validated promotion provenance for {len(governed)} governed candidate(s)")
+    return (
+        "PCT-015",
+        "PASS",
+        f"validated promotion provenance for {len(governed)} governed candidate(s)",
+    )
+
 
 def _archive_version_key(path: Path, archive: dict[str, Any]) -> tuple[int, ...]:
     project = archive.get("project") if isinstance(archive.get("project"), dict) else {}
@@ -675,7 +805,9 @@ def _archive_version_key(path: Path, archive: dict[str, Any]) -> tuple[int, ...]
 
 
 def _archive_last_updated_key(archive: dict[str, Any]) -> int:
-    op_meta = archive.get("operation_meta") if isinstance(archive.get("operation_meta"), dict) else {}
+    op_meta = (
+        archive.get("operation_meta") if isinstance(archive.get("operation_meta"), dict) else {}
+    )
     last_updated = op_meta.get("last_updated")
     if not isinstance(last_updated, str) or not last_updated:
         return -1
@@ -693,8 +825,6 @@ def _legacy_archive_sort_key(path: Path) -> tuple[tuple[int, ...], int, int, str
         path.stat().st_mtime_ns,
         path.name,
     )
-
-
 
 
 def _run_pct014(
@@ -715,12 +845,18 @@ def _run_pct014(
     except Exception as exc:
         return ("PCT-014", "WARN", f"cannot parse recall trace: {exc}")
     if not records:
-        return ("PCT-014", "WARN", f"{recall_path.relative_to(project_root)} empty while recall is active")
+        return (
+            "PCT-014",
+            "WARN",
+            f"{recall_path.relative_to(project_root)} empty while recall is active",
+        )
 
     issues: list[str] = []
     for index, record in enumerate(records, start=1):
         if record.get("schema_version") != "mica.recall.v1":
-            issues.append(f"record {index}: unsupported schema_version {record.get('schema_version')}")
+            issues.append(
+                f"record {index}: unsupported schema_version {record.get('schema_version')}"
+            )
         target = record.get("target")
         if target not in {"operator_review", "agent_context"}:
             issues.append(f"record {index}: invalid target {target!r}")
@@ -736,12 +872,14 @@ def _run_pct014(
         if len(issues) > 4:
             preview += f"; ... (+{len(issues) - 4} more)"
         return ("PCT-014", "WARN", preview)
-    return ("PCT-014", "PASS", f"{recall_path.relative_to(project_root)} provides recall trace coverage ({len(records)} records)")
+    return (
+        "PCT-014",
+        "PASS",
+        f"{recall_path.relative_to(project_root)} provides recall trace coverage ({len(records)} records)",
+    )
 
 
-def _run_pct018(
-    project_root: Path, flow_policy: dict[str, Any]
-) -> tuple[str, str, str]:
+def _run_pct018(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, str, str]:
     if not _flow_enabled(flow_policy):
         return ("PCT-018", "INFO", "flow disabled; telemetry completeness not required")
 
@@ -755,22 +893,38 @@ def _run_pct018(
     try:
         observations = load_jsonl(observe_path)
     except Exception as exc:
-        return ("PCT-018", "WARN", f"cannot load observation stream for telemetry completeness: {exc}")
+        return (
+            "PCT-018",
+            "WARN",
+            f"cannot load observation stream for telemetry completeness: {exc}",
+        )
     candidates_doc = load_json(candidates_path)
-    candidates = candidates_doc.get("candidates") if isinstance(candidates_doc.get("candidates"), list) else []
+    candidates = (
+        candidates_doc.get("candidates")
+        if isinstance(candidates_doc.get("candidates"), list)
+        else []
+    )
     try:
         recall_records = load_jsonl(recall_path)
     except Exception as exc:
         return ("PCT-018", "WARN", f"cannot load recall trace for telemetry completeness: {exc}")
     if not recall_records:
-        return ("PCT-018", "INFO", "recall trace empty; completeness deferred to PCT-014 coverage warning")
+        return (
+            "PCT-018",
+            "INFO",
+            "recall trace empty; completeness deferred to PCT-014 coverage warning",
+        )
 
     invocation_records: list[dict[str, Any]] = []
     if invocation_path:
         try:
             invocation_records = load_jsonl(invocation_path)
         except Exception as exc:
-            return ("PCT-018", "WARN", f"cannot load invocation trace for telemetry completeness: {exc}")
+            return (
+                "PCT-018",
+                "WARN",
+                f"cannot load invocation trace for telemetry completeness: {exc}",
+            )
 
     observation_ids = {
         record.get("event_id")
@@ -801,55 +955,83 @@ def _run_pct018(
             continue
         candidate = candidate_map.get(candidate_id)
         if not isinstance(candidate, dict):
-            issues.append(f"record {index}: candidate_id {candidate_id} not found in mica.candidates.json")
+            issues.append(
+                f"record {index}: candidate_id {candidate_id} not found in mica.candidates.json"
+            )
             continue
 
         session_id = record.get("session_id")
         if not _is_non_empty_string(session_id) or session_id not in observation_sessions:
-            issues.append(f"record {index}: session_id {session_id!r} not linked to observation stream")
+            issues.append(
+                f"record {index}: session_id {session_id!r} not linked to observation stream"
+            )
 
         source_event_ids = record.get("source_event_ids")
         if not isinstance(source_event_ids, list) or not source_event_ids:
             issues.append(f"record {index}: missing source_event_ids for candidate {candidate_id}")
             continue
 
-        missing_observation_ids = [event_id for event_id in source_event_ids if event_id not in observation_ids]
+        missing_observation_ids = [
+            event_id for event_id in source_event_ids if event_id not in observation_ids
+        ]
         if missing_observation_ids:
-            issues.append(f"record {index}: source_event_ids not found in observation stream: {missing_observation_ids}")
+            issues.append(
+                f"record {index}: source_event_ids not found in observation stream: {missing_observation_ids}"
+            )
 
         candidate_source_ids = candidate.get("source_event_ids")
         if isinstance(candidate_source_ids, list):
-            extra_ids = [event_id for event_id in source_event_ids if event_id not in candidate_source_ids]
+            extra_ids = [
+                event_id for event_id in source_event_ids if event_id not in candidate_source_ids
+            ]
             if extra_ids:
-                issues.append(f"record {index}: source_event_ids not declared on candidate {candidate_id}: {extra_ids}")
+                issues.append(
+                    f"record {index}: source_event_ids not declared on candidate {candidate_id}: {extra_ids}"
+                )
 
         target = record.get("target")
         if target == "agent_context":
             if not invocation_path:
-                issues.append(f"record {index}: target=agent_context but mica.invocation.jsonl absent")
+                issues.append(
+                    f"record {index}: target=agent_context but mica.invocation.jsonl absent"
+                )
                 continue
             invocation = invocation_by_session.get(session_id)
             if not isinstance(invocation, dict):
-                issues.append(f"record {index}: session_id {session_id!r} not linked to invocation trace")
+                issues.append(
+                    f"record {index}: session_id {session_id!r} not linked to invocation trace"
+                )
                 continue
             loaded_surfaces = invocation.get("loaded_surfaces")
             if not isinstance(loaded_surfaces, list) or not loaded_surfaces:
-                issues.append(f"record {index}: invocation trace missing loaded_surfaces for session {session_id}")
+                issues.append(
+                    f"record {index}: invocation trace missing loaded_surfaces for session {session_id}"
+                )
             context_surfaces = invocation.get("agent_context_surfaces")
             if not isinstance(context_surfaces, list) or not context_surfaces:
-                issues.append(f"record {index}: invocation trace missing agent_context_surfaces for session {session_id}")
+                issues.append(
+                    f"record {index}: invocation trace missing agent_context_surfaces for session {session_id}"
+                )
             elif isinstance(loaded_surfaces, list):
-                extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
+                extra_context = [
+                    surface for surface in context_surfaces if surface not in loaded_surfaces
+                ]
                 if extra_context:
-                    issues.append(f"record {index}: invocation trace agent_context_surfaces not loaded for session {session_id}: {extra_context}")
+                    issues.append(
+                        f"record {index}: invocation trace agent_context_surfaces not loaded for session {session_id}: {extra_context}"
+                    )
         elif target == "operator_review" and invocation_path:
             invocation = invocation_by_session.get(session_id)
             if not isinstance(invocation, dict):
-                issues.append(f"record {index}: operator_review session_id {session_id!r} not linked to invocation trace")
+                issues.append(
+                    f"record {index}: operator_review session_id {session_id!r} not linked to invocation trace"
+                )
                 continue
             operator_surfaces = invocation.get("operator_only_surfaces")
             if not isinstance(operator_surfaces, list) or not operator_surfaces:
-                issues.append(f"record {index}: invocation trace missing operator_only_surfaces for operator_review session {session_id}")
+                issues.append(
+                    f"record {index}: invocation trace missing operator_only_surfaces for operator_review session {session_id}"
+                )
 
     if issues:
         preview = "; ".join(issues[:4])
@@ -857,8 +1039,17 @@ def _run_pct018(
             preview += f"; ... (+{len(issues) - 4} more)"
         return ("PCT-018", "WARN", preview)
     if invocation_path:
-        return ("PCT-018", "PASS", f"{recall_path.relative_to(project_root)} joins cleanly with candidates, observations, and invocation trace")
-    return ("PCT-018", "PASS", f"{recall_path.relative_to(project_root)} joins cleanly with candidates and observations")
+        return (
+            "PCT-018",
+            "PASS",
+            f"{recall_path.relative_to(project_root)} joins cleanly with candidates, observations, and invocation trace",
+        )
+    return (
+        "PCT-018",
+        "PASS",
+        f"{recall_path.relative_to(project_root)} joins cleanly with candidates and observations",
+    )
+
 
 def _run_pct017(
     project_root: Path, flow_policy: dict[str, Any], recall_policy: dict[str, Any]
@@ -871,11 +1062,19 @@ def _run_pct017(
     if not recall_enabled and not recall_path:
         return ("PCT-017", "INFO", "recall trace absent; runtime injection safety not active")
     if not recall_path:
-        return ("PCT-017", "INFO", "recall enabled but trace file absent; PCT-017 deferred until runtime trace exists")
+        return (
+            "PCT-017",
+            "INFO",
+            "recall enabled but trace file absent; PCT-017 deferred until runtime trace exists",
+        )
 
     candidates_path = find_flow_artifact(project_root, "mica.candidates.json")
     candidates_doc = load_json(candidates_path)
-    candidates = candidates_doc.get("candidates") if isinstance(candidates_doc.get("candidates"), list) else []
+    candidates = (
+        candidates_doc.get("candidates")
+        if isinstance(candidates_doc.get("candidates"), list)
+        else []
+    )
     candidate_map = {
         candidate.get("candidate_id"): candidate
         for candidate in candidates
@@ -887,13 +1086,19 @@ def _run_pct017(
     except Exception as exc:
         return ("PCT-017", "FAIL", f"cannot parse recall trace: {exc}")
     if not records:
-        return ("PCT-017", "INFO", f"{recall_path.relative_to(project_root)} empty; no recall injection recorded")
+        return (
+            "PCT-017",
+            "INFO",
+            f"{recall_path.relative_to(project_root)} empty; no recall injection recorded",
+        )
 
     inject_unapproved = bool(recall_policy.get("inject_unapproved_candidates", False))
     issues: list[str] = []
     for index, record in enumerate(records, start=1):
         if record.get("schema_version") != "mica.recall.v1":
-            issues.append(f"record {index}: unsupported schema_version {record.get('schema_version')}")
+            issues.append(
+                f"record {index}: unsupported schema_version {record.get('schema_version')}"
+            )
             continue
         target = record.get("target")
         if target not in {"operator_review", "agent_context"}:
@@ -914,7 +1119,11 @@ def _run_pct017(
             issues.append(f"candidate {candidate_id} entered agent_context while status={status}")
             continue
         if not inject_unapproved and status not in {"approved", "promoted"}:
-            review = candidate.get("operator_review") if isinstance(candidate.get("operator_review"), dict) else {}
+            review = (
+                candidate.get("operator_review")
+                if isinstance(candidate.get("operator_review"), dict)
+                else {}
+            )
             review_state = review.get("state") or "unknown"
             issues.append(
                 f"candidate {candidate_id} entered agent_context while operator_review.state={review_state}"
@@ -925,7 +1134,12 @@ def _run_pct017(
         if len(issues) > 4:
             preview += f"; ... (+{len(issues) - 4} more)"
         return ("PCT-017", "FAIL", preview)
-    return ("PCT-017", "PASS", f"{recall_path.relative_to(project_root)} enforces approved-only agent_context injection")
+    return (
+        "PCT-017",
+        "PASS",
+        f"{recall_path.relative_to(project_root)} enforces approved-only agent_context injection",
+    )
+
 
 # ---------------------------------------------------------------------------
 # PCT checks
@@ -999,14 +1213,18 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
         results.append(("PCT-004", "PASS", "protocol_evolution coherence ok"))
     elif mode == "protocol_evolution":
         results.append(("PCT-004", "FAIL", "protocol_evolution requires lessons layer"))
-    elif mode == "memory_first" and {
-        "archive",
-        "playbook",
-        "sessions",
-        "observations",
-        "memories",
-        "slots",
-    } <= layer_role_set:
+    elif (
+        mode == "memory_first"
+        and {
+            "archive",
+            "playbook",
+            "sessions",
+            "observations",
+            "memories",
+            "slots",
+        }
+        <= layer_role_set
+    ):
         results.append(("PCT-004", "PASS", "memory_first coherence ok"))
     elif mode == "memory_first":
         results.append(
@@ -1093,16 +1311,26 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
     if invalid_context_surfaces:
         context_config_issues.append(f"invalid agent_context surfaces {invalid_context_surfaces}")
     if undeclared_context_surfaces:
-        context_config_issues.append(f"agent_context surfaces not declared as layers {undeclared_context_surfaces}")
+        context_config_issues.append(
+            f"agent_context surfaces not declared as layers {undeclared_context_surfaces}"
+        )
     if non_invoked_context_surfaces:
-        context_config_issues.append(f"agent_context surfaces not session-start invoked {non_invoked_context_surfaces}")
+        context_config_issues.append(
+            f"agent_context surfaces not session-start invoked {non_invoked_context_surfaces}"
+        )
     operator_config_issues: list[str] = []
     if invalid_operator_only_surfaces:
-        operator_config_issues.append(f"invalid operator_only surfaces {invalid_operator_only_surfaces}")
+        operator_config_issues.append(
+            f"invalid operator_only surfaces {invalid_operator_only_surfaces}"
+        )
     if undeclared_operator_only_surfaces:
-        operator_config_issues.append(f"operator_only surfaces not declared as layers {undeclared_operator_only_surfaces}")
+        operator_config_issues.append(
+            f"operator_only surfaces not declared as layers {undeclared_operator_only_surfaces}"
+        )
     if overlapping_operator_only_surfaces:
-        operator_config_issues.append(f"operator_only surfaces overlap agent_context {overlapping_operator_only_surfaces}")
+        operator_config_issues.append(
+            f"operator_only surfaces overlap agent_context {overlapping_operator_only_surfaces}"
+        )
     invocation_config_issues = context_config_issues + operator_config_issues
 
     if pattern is None:
@@ -1159,7 +1387,13 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
             )
         )
     else:
-        results.append(("PCT-007", "PASS", f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}; operator={operator_label}"))
+        results.append(
+            (
+                "PCT-007",
+                "PASS",
+                f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}; operator={operator_label}",
+            )
+        )
 
     hook_hint_layers = [
         layer_label(lyr)
@@ -1352,5 +1586,3 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
 
 def is_closed_contract(results: list[tuple[str, str, str]]) -> bool:
     return not any(r[1] == "FAIL" and r[0] in HARD_FAIL_CHECKS for r in results)
-
-

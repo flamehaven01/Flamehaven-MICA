@@ -188,7 +188,9 @@ def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as fh:
         for record in records:
-            serialized = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            serialized = json.dumps(
+                record, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            )
             fh.write(serialized)
             fh.write("\n")
 
@@ -463,7 +465,11 @@ def synthesize_memories(project_root: Path) -> list[dict[str, Any]]:
         session_id = observation.get("session_id")
         timestamp_utc = str(observation.get("timestamp_utc") or "")
         scope = observation.get("scope") if isinstance(observation.get("scope"), dict) else {}
-        project_scope = scope.get("project") if _is_non_empty_string(scope.get("project")) else project_root.name
+        project_scope = (
+            scope.get("project")
+            if _is_non_empty_string(scope.get("project"))
+            else project_root.name
+        )
         memory_id = f"mem.obs.{_sanitize_memory_ref(str(event_id))}"
         if memory_id in existing_memory_ids:
             continue
@@ -496,7 +502,9 @@ def synthesize_slots(project_root: Path) -> dict[str, Any]:
 
     active_goal = _pick_latest(
         memories,
-        lambda memory: memory.get("kind") == "task_state" and memory.get("status") in _ACTIVE_MEMORY_STATUSES,
+        lambda memory: (
+            memory.get("kind") == "task_state" and memory.get("status") in _ACTIVE_MEMORY_STATUSES
+        ),
     )
     if active_goal:
         slots.append(
@@ -512,8 +520,10 @@ def synthesize_slots(project_root: Path) -> dict[str, Any]:
 
     next_operator_decision = _pick_latest(
         memories,
-        lambda memory: memory.get("promotion_stage") == "candidate_memory"
-        and memory.get("status") in {"active", "pending_review"},
+        lambda memory: (
+            memory.get("promotion_stage") == "candidate_memory"
+            and memory.get("status") in {"active", "pending_review"}
+        ),
     )
     if next_operator_decision:
         slots.append(
@@ -529,8 +539,10 @@ def synthesize_slots(project_root: Path) -> dict[str, Any]:
 
     current_invariant_set = _pick_latest(
         memories,
-        lambda memory: memory.get("promotion_stage") == "bound_invariant_evidence"
-        and memory.get("status") in _ACTIVE_MEMORY_STATUSES,
+        lambda memory: (
+            memory.get("promotion_stage") == "bound_invariant_evidence"
+            and memory.get("status") in _ACTIVE_MEMORY_STATUSES
+        ),
     )
     if current_invariant_set:
         slots.append(
@@ -607,7 +619,10 @@ def synthesize_graph(project_root: Path) -> list[dict[str, Any]]:
                 edges.append(edge)
                 seen_edge_ids.add(edge["edge_id"])
 
-        if memory.get("promotion_stage") in _PLAYBOOK_EXPORT_STAGES or memory.get("kind") == "lesson":
+        if (
+            memory.get("promotion_stage") in _PLAYBOOK_EXPORT_STAGES
+            or memory.get("kind") == "lesson"
+        ):
             edge = {
                 "schema_version": "mica.graph.v1",
                 "edge_id": _edge_id(memory_id, "exported_as", "playbook_export"),
@@ -651,7 +666,9 @@ def review_memory(project_root: Path, memory_id: str, review: dict[str, Any]) ->
         updated["operator_review"] = _build_operator_review(review, "approved")
     elif decision == "bound_invariant_evidence":
         if updated.get("trust_basis") == "opaque_observation_trace":
-            raise ValueError("opaque_observation_trace may not be promoted to bound_invariant_evidence")
+            raise ValueError(
+                "opaque_observation_trace may not be promoted to bound_invariant_evidence"
+            )
         origin_episode = review.get("origin_episode")
         supporting_event_ids = review.get("supporting_event_ids")
         if not _is_non_empty_string(origin_episode):
@@ -713,7 +730,10 @@ def _playbook_memories(memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
             continue
         if memory.get("status") not in _EXPORTABLE_STATUSES:
             continue
-        if memory.get("promotion_stage") in _PLAYBOOK_EXPORT_STAGES or memory.get("kind") == "lesson":
+        if (
+            memory.get("promotion_stage") in _PLAYBOOK_EXPORT_STAGES
+            or memory.get("kind") == "lesson"
+        ):
             selected.append(memory)
     return _sort_memories(selected)
 
@@ -782,18 +802,24 @@ def build_archive_export(project_root: Path) -> dict[str, Any]:
     if not _is_non_empty_string(project_meta.get("version")):
         project_meta["version"] = "1.0.0"
     archive["project"] = project_meta
-    operation_meta = archive.get("operation_meta") if isinstance(archive.get("operation_meta"), dict) else {}
+    operation_meta = (
+        archive.get("operation_meta") if isinstance(archive.get("operation_meta"), dict) else {}
+    )
     operation_meta["last_updated"] = _last_updated_from_memories(memories)
     archive["operation_meta"] = operation_meta
     existing_design_invariants = (
-        archive.get("design_invariants") if isinstance(archive.get("design_invariants"), list) else []
+        archive.get("design_invariants")
+        if isinstance(archive.get("design_invariants"), list)
+        else []
     )
     manual_design_invariants = [
         item
         for item in existing_design_invariants
         if not (isinstance(item, dict) and _is_non_empty_string(item.get("source_memory_id")))
     ]
-    archive["design_invariants"] = manual_design_invariants + _build_generated_design_invariants(memories)
+    archive["design_invariants"] = manual_design_invariants + _build_generated_design_invariants(
+        memories
+    )
     archive["memory_exports"] = exports
     return archive
 
@@ -839,7 +865,9 @@ def export_surfaces(project_root: Path) -> tuple[Path, Path]:
     paths = resolve_memory_first_paths(project_root)
     archive = build_archive_export(project_root)
     paths.archive.parent.mkdir(parents=True, exist_ok=True)
-    paths.archive.write_text(json.dumps(archive, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    paths.archive.write_text(
+        json.dumps(archive, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     playbook_text = build_playbook_export(project_root)
     paths.playbook.parent.mkdir(parents=True, exist_ok=True)
     paths.playbook.write_text(playbook_text + "\n", encoding="utf-8")
@@ -909,18 +937,31 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.command == "paths":
-            data = {k: str(v) if isinstance(v, Path) else v for k, v in asdict(resolve_memory_first_paths(project_root)).items()}
+            data = {
+                k: str(v) if isinstance(v, Path) else v
+                for k, v in asdict(resolve_memory_first_paths(project_root)).items()
+            }
             _print_json(data)
             return 0
 
         if args.command == "synthesize-memories":
             created = synthesize_memories(project_root)
-            _print_json({"created_count": len(created), "memory_ids": [item["memory_id"] for item in created]})
+            _print_json(
+                {
+                    "created_count": len(created),
+                    "memory_ids": [item["memory_id"] for item in created],
+                }
+            )
             return 0
 
         if args.command == "synthesize-slots":
             slots = synthesize_slots(project_root)
-            _print_json({"slot_count": len(slots["slots"]), "slot_ids": [slot["slot_id"] for slot in slots["slots"]]})
+            _print_json(
+                {
+                    "slot_count": len(slots["slots"]),
+                    "slot_ids": [slot["slot_id"] for slot in slots["slots"]],
+                }
+            )
             return 0
 
         if args.command == "synthesize-graph":
@@ -939,7 +980,13 @@ def main(argv: list[str] | None = None) -> int:
                 parser.error("review-memory requires --record-file")
             record = _load_record_arg(args.record_file)
             updated = review_memory(project_root, args.memory_id, record)
-            _print_json({"memory_id": updated["memory_id"], "status": updated["status"], "promotion_stage": updated["promotion_stage"]})
+            _print_json(
+                {
+                    "memory_id": updated["memory_id"],
+                    "status": updated["status"],
+                    "promotion_stage": updated["promotion_stage"],
+                }
+            )
             return 0
 
         if args.command == "export":
