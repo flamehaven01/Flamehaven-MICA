@@ -30,6 +30,7 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from mica_core import MICA_TOOL_VERSION, find_mica_yaml, load_yaml
+from mica_primitives import _is_non_empty_string
 
 __version__ = MICA_TOOL_VERSION
 
@@ -128,10 +129,6 @@ class MemoryFirstPaths:
     recall: Path | None
     slots: Path
     graph: Path | None
-
-
-def _is_non_empty_string(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip())
 
 
 def _layer_role(layer: dict[str, Any]) -> str:

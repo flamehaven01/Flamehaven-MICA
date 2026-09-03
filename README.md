@@ -147,11 +147,27 @@ Tools:
 
 | File | Role |
 |---|---|
-| `tools/mica_core.py` | Shared PCT judgment and YAML loading |
+| `tools/mica_primitives.py` | Loading, hashing, path canonicalization, markdown sections (no internal deps) |
+| `tools/mica_core.py` | Contract resolution, PCT-001..012, verdict axes |
+| `tools/mica_evidence.py` | Capsule and invocation-trace validation (`IVC-*`) |
+| `tools/mica_flow.py` | Memory-authoring pipeline checks (PCT-013/014/015/017/018) |
 | `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-015, PCT-017, PCT-018; PCT-016 reserved) |
 | `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
 | `tools/mica_invocation.py` | Standalone validator for `mica.invocation.jsonl` provenance artifacts |
 | `tools/mica_memory.py` | Memory-first read/write utility for sessions, memories, graph edges, and slot projections |
+
+Module layering is acyclic:
+
+```
+mica_primitives          no internal imports
+    ^-- mica_evidence    capsule and trace validation
+    ^-- mica_flow        memory-authoring pipeline checks
+            ^-- mica_core  contract resolution, PCT-001..012, axes
+```
+
+`mica_core` re-exports the primitive and evidence names it used to define, so
+`from mica_core import ...` keeps working in consumer packages that vendored an
+earlier `tools/` copy.
 
 Fixtures:
 

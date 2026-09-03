@@ -24,12 +24,81 @@ for v0.2.9 observation, recall coverage, promotion provenance, injection safety,
 
 from __future__ import annotations
 
-import hashlib
-import json
 import re
+import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
+
+_TOOLS_DIR = Path(__file__).resolve().parent
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+
+# Re-exported so `from mica_core import load_yaml` keeps working in consumer
+# packages that vendored an earlier tools/ copy.
+from mica_primitives import (  # noqa: E402
+    MICA_CANONICAL_VERSION as MICA_CANONICAL_VERSION,
+)
+from mica_primitives import (
+    MICA_TOOL_VERSION as MICA_TOOL_VERSION,
+)
+from mica_primitives import (
+    _coerce as _coerce,
+)
+from mica_primitives import (
+    _is_non_empty_string as _is_non_empty_string,
+)
+from mica_primitives import (
+    _minimal_yaml_parse as _minimal_yaml_parse,
+)
+from mica_primitives import (
+    _normalized_json_text as _normalized_json_text,
+)
+from mica_primitives import (
+    _parse_block as _parse_block,
+)
+from mica_primitives import (
+    _parse_list as _parse_list,
+)
+from mica_primitives import (
+    _resolve_within_root as _resolve_within_root,
+)
+from mica_primitives import (
+    _tokenize as _tokenize,
+)
+from mica_primitives import (
+    canonical_surface_path as canonical_surface_path,
+)
+from mica_primitives import (
+    find_flow_artifact as find_flow_artifact,
+)
+from mica_primitives import (
+    find_invocation_schema as find_invocation_schema,
+)
+from mica_primitives import (
+    format_tool_banner as format_tool_banner,
+)
+from mica_primitives import (
+    hash_bytes as hash_bytes,
+)
+from mica_primitives import (
+    hash_surface_bytes as hash_surface_bytes,
+)
+from mica_primitives import (
+    load_json as load_json,
+)
+from mica_primitives import (
+    load_jsonl as load_jsonl,
+)
+from mica_primitives import (
+    load_yaml as load_yaml,
+)
+from mica_primitives import (
+    parse_markdown_sections as parse_markdown_sections,
+)
+from mica_primitives import (
+    select_markdown_sections as select_markdown_sections,
+)
 
 # MICA is a memory and playbook package, not a governance engine. The contract
 # it makes is about invocation: did the declared memory surfaces actually reach
@@ -63,133 +132,6 @@ FLOW_CHECKS = frozenset({"PCT-013", "PCT-014", "PCT-015", "PCT-018"})
 # is now contract-only; archive and flow failures no longer appear here.
 HARD_FAIL_CHECKS = CONTRACT_CHECKS
 
-MICA_CANONICAL_VERSION = "0.2.8"
-MICA_TOOL_VERSION = MICA_CANONICAL_VERSION
-
-_OBSERVE_REQUIRED_FIELDS = (
-    "schema_version",
-    "event_id",
-    "timestamp_utc",
-    "session_id",
-    "hook",
-    "scope",
-    "summary",
-    "redaction",
-    "trust_tier",
-    "source_system",
-    "event_hash",
-)
-
-_CANDIDATE_REVIEW_FIELDS = ("reviewed_by", "reviewed_at_utc", "decision_reason")
-_INVOCATION_REQUIRED_FIELDS = (
-    "schema_version",
-    "invocation_id",
-    "timestamp_utc",
-    "project_root",
-    "project",
-    "package_state",
-    "core_state",
-    "flow_state",
-    "mode",
-    "pattern",
-    "session_id",
-    "invocation_contract",
-    "loaded_surfaces",
-    "agent_context_surfaces",
-    "deferred_surfaces",
-    "missing_invoked_surfaces",
-    "active_critical_invariants",
-    "last_updated",
-)
-
-INVOCATION_SCHEMA_V1 = "mica.invocation.v1"
-INVOCATION_SCHEMA_V2 = "mica.invocation.v2"
-_SUPPORTED_INVOCATION_SCHEMAS = frozenset({INVOCATION_SCHEMA_V1, INVOCATION_SCHEMA_V2})
-
-# Delivery states are monotonic within one invocation and deliberately stop short
-# of any claim about comprehension. "emitted" means a MICA adapter reported that
-# bytes were written to its output channel; it never means read, understood, or
-# obeyed. "acknowledged" requires an independently supplied host reference and is
-# not produced by this tool.
-DELIVERY_STATES = ("declared", "resolved", "emitted", "acknowledged")
-
-# Audience values reuse the existing invocation-protocol surface separation.
-SURFACE_AUDIENCES = ("agent_context", "operator_only", "deferred")
-
-_SURFACE_EVIDENCE_FIELDS = ("role", "path", "sha256", "bytes", "audience", "delivery_state")
-_SURFACE_EVIDENCE_OPTIONAL_FIELDS = ("sections",)
-
-# project_root is an absolute, machine-specific path and is excluded so that the
-# same invocation hashes identically on every platform.
-_CAPSULE_HASH_FIELDS = (
-    "schema_version",
-    "invocation_id",
-    "timestamp_utc",
-    "session_id",
-    "trigger",
-    "surface_evidence",
-    "package_state",
-    "core_state",
-    "flow_state",
-    "mode",
-    "pattern",
-    "invocation_contract",
-    "loaded_surfaces",
-    "agent_context_surfaces",
-    "operator_only_surfaces",
-    "deferred_surfaces",
-    "missing_invoked_surfaces",
-    "active_critical_invariants",
-)
-
-
-def canonical_surface_path(project_root: Path, target: Path) -> str:
-    """Return a repository-relative, forward-slash path for invocation evidence.
-
-    Raises ValueError when the target escapes the project root, so that a
-    surface outside the package can never be recorded as invoked evidence.
-    """
-    root = Path(project_root).resolve()
-    resolved = Path(target).resolve()
-    try:
-        relative = resolved.relative_to(root)
-    except ValueError as exc:
-        raise ValueError(f"surface path escapes project root: {resolved}") from exc
-    return relative.as_posix()
-
-
-def hash_bytes(payload: bytes) -> tuple[str, int]:
-    """Hash exactly the bytes that will be delivered. Returns (sha256, count)."""
-    return f"sha256:{hashlib.sha256(payload).hexdigest()}", len(payload)
-
-
-def hash_surface_bytes(target: Path) -> tuple[str, int]:
-    """Hash the exact bytes selected for delivery. Returns (sha256, byte count)."""
-    data = Path(target).read_bytes()
-    return f"sha256:{hashlib.sha256(data).hexdigest()}", len(data)
-
-
-def _canonical_json(payload: Any) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
-
-def compute_capsule_hash(record: dict[str, Any]) -> str:
-    """Deterministic hash over the continuity-relevant fields of one record.
-
-    Field set, ordering, separators, and encoding are pinned so that two
-    implementations produce the same hash for the same capsule. The hash never
-    covers itself or the absolute project_root.
-    """
-    payload = {field: record.get(field) for field in _CAPSULE_HASH_FIELDS if field in record}
-    return f"sha256:{hashlib.sha256(_canonical_json(payload).encode('utf-8')).hexdigest()}"
-
-
-def format_tool_banner(tool_name: str) -> str:
-    return f"{tool_name} v{MICA_TOOL_VERSION}"
-
-
-# Patterns that mark a real incident-grounded origin_episode.
-# Any single match exempts the binding from the doctrinal WARN (v0.2.8).
 _EPISODE_PATTERNS = [
     re.compile(r"EXP-[A-Z]"),  # episode code: EXP-OS-1, EXP-PN-2
     re.compile(r"v\d+\.\d+"),  # version ref: v0.8.6, v1.2
@@ -201,114 +143,6 @@ _EPISODE_PATTERNS = [
 
 # ---------------------------------------------------------------------------
 # YAML loading
-# ---------------------------------------------------------------------------
-
-
-def load_yaml(path: Path) -> dict[str, Any]:
-    try:
-        import yaml  # type: ignore[import]
-
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except ImportError:
-        pass
-    return _minimal_yaml_parse(path)
-
-
-def _coerce(val: str) -> Any:
-    if val.lower() in ("true", "yes", "on"):
-        return True
-    if val.lower() in ("false", "no", "off"):
-        return False
-    if val.lower() in ("null", "none", "~"):
-        return None
-    try:
-        return int(val)
-    except ValueError:
-        pass
-    try:
-        return float(val)
-    except ValueError:
-        pass
-    return val
-
-
-def _tokenize(path: Path) -> list[tuple[int, str]]:
-    result = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        s = line.lstrip()
-        if s and not s.startswith("#"):
-            result.append((len(line) - len(s), s))
-    return result
-
-
-def _parse_block(
-    tokens: list[tuple[int, str]], pos: int, min_indent: int
-) -> tuple[dict[str, Any], int]:
-    result: dict[str, Any] = {}
-    while pos < len(tokens):
-        indent, content = tokens[pos]
-        if indent < min_indent:
-            break
-        if content.startswith("- ") or ":" not in content:
-            pos += 1
-            continue
-        key, _, rest = content.partition(":")
-        key = key.strip()
-        rest = rest.strip().strip('"').strip("'")
-        pos += 1
-        if rest:
-            result[key] = _coerce(rest)
-        elif pos < len(tokens) and tokens[pos][0] > indent:
-            next_indent, next_content = tokens[pos]
-            if next_content.startswith("- "):
-                val, pos = _parse_list(tokens, pos, next_indent)
-                result[key] = val
-            else:
-                val, pos = _parse_block(tokens, pos, next_indent)
-                result[key] = val
-        else:
-            result[key] = None
-    return result, pos
-
-
-def _parse_list(tokens: list[tuple[int, str]], pos: int, item_indent: int) -> tuple[list[Any], int]:
-    result: list[Any] = []
-    while pos < len(tokens):
-        indent, content = tokens[pos]
-        if indent < item_indent or not content.startswith("- "):
-            break
-        inner = content[2:].strip()
-        pos += 1
-        if not inner:
-            result.append(None)
-            continue
-        if ":" in inner:
-            k, _, v = inner.partition(":")
-            item: Any = {k.strip(): _coerce(v.strip().strip('"').strip("'"))}
-            if pos < len(tokens) and tokens[pos][0] > indent:
-                extra, pos = _parse_block(tokens, pos, tokens[pos][0])
-                item.update(extra)
-        else:
-            item = _coerce(inner.strip('"').strip("'"))
-        result.append(item)
-    return result, pos
-
-
-def _minimal_yaml_parse(path: Path) -> dict[str, Any]:
-    """
-    Best-effort YAML parser for MICA mica.yaml.
-    Handles: top-level keys, nested dicts (unlimited depth), lists of dicts.
-    Does NOT handle: anchors, tags, multi-line strings, flow syntax {}/{}.
-    Install PyYAML for full YAML support: pip install pyyaml
-    """
-    tokens = _tokenize(path)
-    result, _ = _parse_block(tokens, 0, 0)
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Package resolution
 # ---------------------------------------------------------------------------
 
 
@@ -331,16 +165,6 @@ def find_legacy_archive(project_root: Path) -> Path | None:
 def _parse_version(v: str) -> tuple[int, ...]:
     parts = re.findall(r"\d+", str(v))
     return tuple(int(x) for x in parts) if parts else (0,)
-
-
-def load_json(path: Path | None) -> dict[str, Any]:
-    if not path or not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
 
 
 def layer_label(layer: dict[str, Any]) -> str:
@@ -376,44 +200,6 @@ _OPERATOR_ONLY_ALLOWED_SURFACES = frozenset(
         "graph",
     )
 )
-
-
-def parse_markdown_sections(text: str) -> tuple[str, dict[str, str]]:
-    """Split a markdown surface into its preamble and its `##` sections.
-
-    Section names are the heading text. The preamble is everything before the
-    first `##`; it carries the title and any framing the sections assume, so a
-    sliced delivery keeps it.
-    """
-    preamble_lines: list[str] = []
-    sections: dict[str, list[str]] = {}
-    current: str | None = None
-    for line in text.splitlines(keepends=True):
-        match = re.match(r"^##\s+(.+?)\s*$", line.rstrip("\n"))
-        if match:
-            current = match.group(1)
-            sections.setdefault(current, []).append(line)
-            continue
-        if current is None:
-            preamble_lines.append(line)
-        else:
-            sections[current].append(line)
-    return "".join(preamble_lines), {name: "".join(body) for name, body in sections.items()}
-
-
-def select_markdown_sections(text: str, wanted: list[str]) -> tuple[str, list[str]]:
-    """Return the preamble plus the requested sections, and any that are missing.
-
-    Slicing is what makes the playbook addressable instead of an opaque blob:
-    a review session can receive the review section without the deployment
-    runbook. What is delivered is what gets hashed, so the evidence describes
-    the slice rather than the file it came from.
-    """
-    preamble, sections = parse_markdown_sections(text)
-    missing = [name for name in wanted if name not in sections]
-    parts = [preamble] if preamble.strip() else []
-    parts.extend(sections[name] for name in wanted if name in sections)
-    return "".join(parts), missing
 
 
 def _mode_default_surfaces(mode: str) -> list[str]:
@@ -601,691 +387,6 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
     }
 
 
-def find_flow_artifact(project_root: Path, filename: str) -> Path | None:
-    for rel in (filename, f"memory/{filename}"):
-        p = project_root / rel
-        if p.exists():
-            return p
-    return None
-
-
-def load_jsonl(path: Path | None) -> list[dict[str, Any]]:
-    if not path or not path.exists():
-        return []
-    result: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        data = json.loads(stripped)
-        if not isinstance(data, dict):
-            raise ValueError("jsonl record must be an object")
-        result.append(data)
-    return result
-
-
-def _normalized_json_text(data: dict[str, Any]) -> str:
-    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
-
-def compute_observation_event_hash(record: dict[str, Any]) -> str:
-    payload = {k: v for k, v in record.items() if k != "event_hash"}
-    digest = hashlib.sha256(_normalized_json_text(payload).encode("utf-8")).hexdigest()
-    return f"sha256:{digest}"
-
-
-def _is_non_empty_string(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip())
-
-
-def _review_is_approved(review: Any) -> bool:
-    if not isinstance(review, dict) or review.get("state") != "approved":
-        return False
-    return all(_is_non_empty_string(review.get(field)) for field in _CANDIDATE_REVIEW_FIELDS)
-
-
-def _is_unique_string_list(value: Any) -> bool:
-    if not isinstance(value, list):
-        return False
-    normalized = [item for item in value if _is_non_empty_string(item)]
-    return len(normalized) == len(value) == len(set(normalized))
-
-
-def find_invocation_schema() -> Path:
-    return Path(__file__).resolve().parent.parent / "mica.invocation.schema.json"
-
-
-def _check_capsule_schema(index: int, record: dict[str, Any]) -> list[str]:
-    """Structural checks for the v2 continuity fields."""
-    issues: list[str] = []
-
-    trigger = record.get("trigger")
-    if trigger is not None:
-        if not isinstance(trigger, dict):
-            issues.append(f"record {index}: trigger must be an object or null")
-        else:
-            if not _is_non_empty_string(trigger.get("kind")):
-                issues.append(f"record {index}: trigger.kind must be a non-empty string")
-            if trigger.get("ref") is not None and not _is_non_empty_string(trigger.get("ref")):
-                issues.append(f"record {index}: trigger.ref must be a non-empty string or null")
-
-    evidence = record.get("surface_evidence")
-    if not isinstance(evidence, list):
-        issues.append(f"record {index}: surface_evidence must be a list")
-        return issues
-
-    seen_roles: set[str] = set()
-    seen_paths: set[str] = set()
-    for position, entry in enumerate(evidence, start=1):
-        label = f"record {index} surface_evidence[{position}]"
-        if not isinstance(entry, dict):
-            issues.append(f"{label}: must be an object")
-            continue
-        missing = [field for field in _SURFACE_EVIDENCE_FIELDS if field not in entry]
-        if missing:
-            issues.append(f"{label}: missing fields {missing}")
-            continue
-
-        role = entry.get("role")
-        if not _is_non_empty_string(role):
-            issues.append(f"{label}: invalid role")
-        elif role in seen_roles:
-            issues.append(f"{label}: duplicate role {role!r}")
-        else:
-            seen_roles.add(str(role))
-
-        path = entry.get("path")
-        if not _is_non_empty_string(path):
-            issues.append(f"{label}: invalid path")
-        else:
-            path_text = str(path)
-            if "\\" in path_text:
-                issues.append(f"{label}: path must use forward slashes, got {path_text!r}")
-            elif path_text.startswith("/") or re.match(r"^[A-Za-z]:", path_text):
-                issues.append(f"{label}: path must be repository-relative, got {path_text!r}")
-            elif ".." in Path(path_text).parts:
-                issues.append(f"{label}: path must not escape the project root")
-            elif path_text in seen_paths:
-                issues.append(f"{label}: duplicate path {path_text!r}")
-            else:
-                seen_paths.add(path_text)
-
-        digest = entry.get("sha256")
-        if not isinstance(digest, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
-            issues.append(f"{label}: sha256 must match 'sha256:<64 hex>'")
-
-        size = entry.get("bytes")
-        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
-            issues.append(f"{label}: bytes must be a non-negative integer")
-
-        if entry.get("audience") not in SURFACE_AUDIENCES:
-            issues.append(f"{label}: invalid audience {entry.get('audience')!r}")
-
-        if entry.get("delivery_state") not in DELIVERY_STATES:
-            issues.append(f"{label}: invalid delivery_state {entry.get('delivery_state')!r}")
-
-        unknown = [
-            key
-            for key in entry
-            if key not in _SURFACE_EVIDENCE_FIELDS and key not in _SURFACE_EVIDENCE_OPTIONAL_FIELDS
-        ]
-        if unknown:
-            issues.append(f"{label}: unexpected fields {sorted(unknown)}")
-
-        sections = entry.get("sections")
-        if sections is not None and not _is_unique_string_list(sections):
-            issues.append(f"{label}: sections must be a unique non-empty string list")
-
-    capsule_hash = record.get("capsule_hash")
-    if not isinstance(capsule_hash, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", capsule_hash):
-        issues.append(f"record {index}: capsule_hash must match 'sha256:<64 hex>'")
-
-    return issues
-
-
-def _check_capsule_coherence(
-    index: int,
-    record: dict[str, Any],
-    loaded_surfaces: list[Any],
-    operator_surfaces: list[Any],
-) -> list[str]:
-    """Cross-field truthfulness checks for the v2 continuity fields."""
-    issues: list[str] = []
-    evidence = record.get("surface_evidence")
-    if not isinstance(evidence, list):
-        return issues
-
-    entries = [entry for entry in evidence if isinstance(entry, dict)]
-    context_surfaces = (
-        record.get("agent_context_surfaces")
-        if isinstance(record.get("agent_context_surfaces"), list)
-        else []
-    )
-
-    # Evidence must account for every loaded surface. A subset would let a
-    # record claim a loaded surface while silently omitting its bytes.
-    evidence_roles = {entry.get("role") for entry in entries}
-    unaccounted = [role for role in loaded_surfaces if role not in evidence_roles]
-    if unaccounted:
-        issues.append(f"record {index}: loaded surfaces without surface_evidence {unaccounted}")
-
-    for entry in entries:
-        role = entry.get("role")
-        audience = entry.get("audience")
-        if role not in loaded_surfaces:
-            issues.append(
-                f"record {index}: surface_evidence role {role!r} is not in loaded_surfaces"
-            )
-        if audience == "agent_context":
-            if role in operator_surfaces:
-                issues.append(
-                    f"record {index}: operator_only surface {role!r} recorded as agent_context evidence"
-                )
-            elif role not in context_surfaces:
-                issues.append(
-                    f"record {index}: {role!r} labeled agent_context but absent from agent_context_surfaces"
-                )
-        elif audience == "operator_only" and role in context_surfaces:
-            issues.append(
-                f"record {index}: {role!r} labeled operator_only but present in agent_context_surfaces"
-            )
-
-    # A null session cannot carry evidence attributed to an identified AI session.
-    if record.get("session_id") is None:
-        overclaimed = [
-            entry.get("role")
-            for entry in entries
-            if entry.get("delivery_state") in {"emitted", "acknowledged"}
-        ]
-        if overclaimed:
-            issues.append(
-                f"record {index}: null session_id cannot claim delivery for {overclaimed}"
-            )
-
-    expected_hash = compute_capsule_hash(record)
-    if record.get("capsule_hash") != expected_hash:
-        issues.append(
-            f"record {index}: capsule_hash mismatch (recorded {record.get('capsule_hash')!r}, "
-            f"recomputed {expected_hash!r})"
-        )
-
-    return issues
-
-
-def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
-    trace_path = target
-    project_root: Path | None = None
-    schema_path = find_invocation_schema()
-    schema_result = (
-        "IVC-000",
-        "PASS" if schema_path.exists() else "FAIL",
-        f"invocation schema {'present' if schema_path.exists() else 'missing'} ({schema_path})",
-    )
-    if target.is_dir():
-        project_root = target
-        resolved = find_flow_artifact(target, "mica.invocation.jsonl")
-        if not resolved:
-            return [schema_result, ("IVC-001", "FAIL", "mica.invocation.jsonl missing")]
-        trace_path = resolved
-    if not trace_path.exists():
-        return [schema_result, ("IVC-001", "FAIL", f"invocation trace missing: {trace_path}")]
-
-    results: list[tuple[str, str, str]] = [
-        schema_result,
-        ("IVC-001", "PASS", f"invocation trace present ({trace_path})"),
-    ]
-    try:
-        records = load_jsonl(trace_path)
-    except Exception as exc:
-        return results + [("IVC-002", "FAIL", f"cannot parse invocation trace: {exc}")]
-    if not records:
-        return results + [("IVC-002", "FAIL", "invocation trace empty")]
-    results.append(("IVC-002", "PASS", f"parseable invocation trace ({len(records)} records)"))
-
-    schema_issues: list[str] = []
-    coherence_issues: list[str] = []
-    allowed_package_states = {"INVOCATION_MODE", "LEGACY_MODE", "INACTIVE"}
-    allowed_core_states = {"CLOSED", "INCOMPLETE", "LEGACY", "INACTIVE"}
-    allowed_flow_states = {None, "FLOW_OFFLINE", "FLOW_ENABLED", "FLOW_DEGRADED"}
-    allowed_modes = {None, "memory_injection", "protocol_evolution", "memory_first"}
-    allowed_patterns = {
-        None,
-        "readme_protocol",
-        "hook_trigger",
-        "agent_yaml_bootstrap",
-        "global_skill",
-        "workspace_directive",
-        "explicit",
-        "legacy",
-    }
-    allowed_contracts = {None, "memory_first", "archive_first", "legacy_archive"}
-
-    for index, record in enumerate(records, start=1):
-        missing = [field for field in _INVOCATION_REQUIRED_FIELDS if field not in record]
-        if missing:
-            schema_issues.append(f"record {index}: missing required fields {missing}")
-            continue
-        if record.get("schema_version") not in _SUPPORTED_INVOCATION_SCHEMAS:
-            schema_issues.append(
-                f"record {index}: unsupported schema_version {record.get('schema_version')}"
-            )
-        if not _is_non_empty_string(record.get("invocation_id")):
-            schema_issues.append(f"record {index}: invalid invocation_id")
-        if not _is_non_empty_string(record.get("timestamp_utc")):
-            schema_issues.append(f"record {index}: invalid timestamp_utc")
-        if not _is_non_empty_string(record.get("project_root")):
-            schema_issues.append(f"record {index}: invalid project_root")
-        project = record.get("project")
-        if not isinstance(project, dict) or "name" not in project or "version" not in project:
-            schema_issues.append(f"record {index}: project must expose name and version")
-        if record.get("package_state") not in allowed_package_states:
-            schema_issues.append(
-                f"record {index}: invalid package_state {record.get('package_state')!r}"
-            )
-        if record.get("core_state") not in allowed_core_states:
-            schema_issues.append(f"record {index}: invalid core_state {record.get('core_state')!r}")
-        if record.get("flow_state") not in allowed_flow_states:
-            schema_issues.append(f"record {index}: invalid flow_state {record.get('flow_state')!r}")
-        if record.get("mode") not in allowed_modes:
-            schema_issues.append(f"record {index}: invalid mode {record.get('mode')!r}")
-        if record.get("pattern") not in allowed_patterns:
-            schema_issues.append(f"record {index}: invalid pattern {record.get('pattern')!r}")
-        if record.get("invocation_contract") not in allowed_contracts:
-            schema_issues.append(
-                f"record {index}: invalid invocation_contract {record.get('invocation_contract')!r}"
-            )
-        if record.get("session_id") is not None and not _is_non_empty_string(
-            record.get("session_id")
-        ):
-            schema_issues.append(f"record {index}: invalid session_id")
-
-        for field in (
-            "loaded_surfaces",
-            "agent_context_surfaces",
-            "operator_only_surfaces",
-            "deferred_surfaces",
-            "missing_invoked_surfaces",
-            "active_critical_invariants",
-        ):
-            value = (
-                record.get(field, []) if field == "operator_only_surfaces" else record.get(field)
-            )
-            if not _is_unique_string_list(value):
-                schema_issues.append(f"record {index}: {field} must be a unique string list")
-
-        loaded_surfaces = (
-            record.get("loaded_surfaces") if isinstance(record.get("loaded_surfaces"), list) else []
-        )
-        context_surfaces = (
-            record.get("agent_context_surfaces")
-            if isinstance(record.get("agent_context_surfaces"), list)
-            else []
-        )
-        operator_surfaces = (
-            record.get("operator_only_surfaces")
-            if isinstance(record.get("operator_only_surfaces"), list)
-            else []
-        )
-        deferred_surfaces = (
-            record.get("deferred_surfaces")
-            if isinstance(record.get("deferred_surfaces"), list)
-            else []
-        )
-        missing_invoked_surfaces = (
-            record.get("missing_invoked_surfaces")
-            if isinstance(record.get("missing_invoked_surfaces"), list)
-            else []
-        )
-
-        extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
-        if extra_context:
-            coherence_issues.append(
-                f"record {index}: agent_context_surfaces not loaded {extra_context}"
-            )
-        overlapping_operator = [
-            surface for surface in operator_surfaces if surface in context_surfaces
-        ]
-        if overlapping_operator:
-            coherence_issues.append(
-                f"record {index}: operator_only_surfaces overlap agent_context_surfaces {overlapping_operator}"
-            )
-        overlapping_deferred = [
-            surface for surface in deferred_surfaces if surface in loaded_surfaces
-        ]
-        if overlapping_deferred:
-            coherence_issues.append(
-                f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}"
-            )
-        if record.get("schema_version") == INVOCATION_SCHEMA_V2:
-            schema_issues.extend(_check_capsule_schema(index, record))
-            coherence_issues.extend(
-                _check_capsule_coherence(index, record, loaded_surfaces, operator_surfaces)
-            )
-
-        overlapping_missing = [
-            surface for surface in missing_invoked_surfaces if surface in loaded_surfaces
-        ]
-        if overlapping_missing:
-            coherence_issues.append(
-                f"record {index}: missing_invoked_surfaces overlap loaded_surfaces {overlapping_missing}"
-            )
-
-    if schema_issues:
-        preview = "; ".join(schema_issues[:4])
-        if len(schema_issues) > 4:
-            preview += f"; ... (+{len(schema_issues) - 4} more)"
-        results.append(("IVC-003", "FAIL", preview))
-    else:
-        results.append(
-            (
-                "IVC-003",
-                "PASS",
-                "invocation trace shape matches supported schema expectations "
-                f"({', '.join(sorted(_SUPPORTED_INVOCATION_SCHEMAS))})",
-            )
-        )
-
-    if coherence_issues:
-        preview = "; ".join(coherence_issues[:4])
-        if len(coherence_issues) > 4:
-            preview += f"; ... (+{len(coherence_issues) - 4} more)"
-        results.append(("IVC-004", "FAIL", preview))
-    else:
-        results.append(("IVC-004", "PASS", "invocation surfaces are internally coherent"))
-
-    record_is_sound = not any(
-        cid in {"IVC-003", "IVC-004"} and status == "FAIL" for cid, status, _ in results
-    )
-    results.append(_check_live_surface_bytes(project_root, records, record_is_sound))
-
-    return results
-
-
-def _resolve_within_root(project_root: Path, relative: str) -> Path | None:
-    """Resolve a recorded path and refuse anything outside the project root.
-
-    The recorded path is untrusted input. Symlinks are followed by resolve(),
-    so a link inside the package that points outside is rejected too.
-    """
-    try:
-        root = Path(project_root).resolve()
-        candidate = (root / relative).resolve()
-        candidate.relative_to(root)
-    except (ValueError, OSError):
-        return None
-    return candidate
-
-
-def rehash_evidence_entry(project_root: Path, entry: dict[str, Any]) -> tuple[str, int] | str:
-    """Recompute the digest a recorded evidence entry should have right now.
-
-    Returns (sha256, bytes) or a string describing why it cannot be compared.
-    Both the write-time re-resolve and IVC-005 go through here so a sectioned
-    capsule is never compared against the whole file it was sliced from.
-    """
-    rel = entry.get("path")
-    if not _is_non_empty_string(rel):
-        return "unusable path"
-    path = _resolve_within_root(project_root, str(rel))
-    if path is None:
-        return "path escapes project root; not read"
-    if not path.is_file():
-        return "missing"
-
-    wanted = entry.get("sections")
-    try:
-        if isinstance(wanted, list) and wanted:
-            delivered, absent = select_markdown_sections(
-                path.read_text(encoding="utf-8"), [str(name) for name in wanted]
-            )
-            if absent:
-                return f"sections removed: {absent}"
-            return hash_bytes(delivered.encode("utf-8"))
-        return hash_surface_bytes(path)
-    except (OSError, UnicodeDecodeError):
-        return "unreadable"
-
-
-def _check_live_surface_bytes(
-    project_root: Path | None,
-    records: list[dict[str, Any]],
-    record_is_sound: bool,
-) -> tuple[str, str, str]:
-    """IVC-005: compare the newest capsule's digests against the bytes on disk.
-
-    Drift is reported as WARN, not FAIL. An older record was true when written,
-    so a changed surface makes the capsule stale rather than invalid. The
-    operator re-invokes to record current bytes.
-
-    Nothing is read from disk unless the record already passed the schema and
-    coherence checks. An unsound record must not be able to direct the
-    validator at a file, and a recorded path is re-resolved against the root
-    before it is opened.
-    """
-    if project_root is None:
-        return (
-            "IVC-005",
-            "INFO",
-            "project root not supplied; recorded digests not compared against disk",
-        )
-    if not record_is_sound:
-        return (
-            "IVC-005",
-            "INFO",
-            "skipped: trace failed schema or coherence checks; no disk access performed",
-        )
-
-    newest = None
-    for record in reversed(records):
-        if not isinstance(record, dict):
-            continue
-        if record.get("schema_version") != INVOCATION_SCHEMA_V2:
-            continue
-        evidence = record.get("surface_evidence")
-        if isinstance(evidence, list) and evidence:
-            newest = record
-            break
-
-    if newest is None:
-        return ("IVC-005", "INFO", "no v2 capsule with surface evidence; nothing to re-hash")
-
-    drifted: list[str] = []
-    for entry in newest.get("surface_evidence") or []:
-        if not isinstance(entry, dict):
-            continue
-        role = str(entry.get("role"))
-        current = rehash_evidence_entry(project_root, entry)
-        if isinstance(current, str):
-            drifted.append(f"{role} ({current})")
-            continue
-        digest, size = current
-        if digest != entry.get("sha256") or size != entry.get("bytes"):
-            drifted.append(f"{role} (bytes changed)")
-
-    if drifted:
-        return (
-            "IVC-005",
-            "WARN",
-            f"recorded capsule {newest.get('invocation_id')} no longer matches disk: "
-            f"{drifted} -- re-invoke to record current bytes",
-        )
-    return (
-        "IVC-005",
-        "PASS",
-        f"capsule {newest.get('invocation_id')} digests match the current surface bytes",
-    )
-
-
-def _flow_enabled(flow_policy: dict[str, Any]) -> bool:
-    return bool(flow_policy.get("enabled", False))
-
-
-def _run_pct013(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, str, str]:
-    if not _flow_enabled(flow_policy):
-        return ("PCT-013", "INFO", "flow disabled; observation coherence not required")
-
-    observe_path = find_flow_artifact(project_root, "mica.observe.jsonl")
-    if not observe_path:
-        return ("PCT-013", "FAIL", "flow enabled but mica.observe.jsonl missing")
-
-    records: list[dict[str, Any]] = []
-    for lineno, raw in enumerate(observe_path.read_text(encoding="utf-8").splitlines(), start=1):
-        stripped = raw.strip()
-        if not stripped:
-            continue
-        try:
-            parsed = json.loads(stripped)
-        except json.JSONDecodeError as exc:
-            return ("PCT-013", "FAIL", f"line {lineno} JSON parse error: {exc.msg}")
-        if not isinstance(parsed, dict):
-            return ("PCT-013", "FAIL", f"line {lineno} is not a JSON object")
-        records.append(parsed)
-
-    if not records:
-        return ("PCT-013", "FAIL", "mica.observe.jsonl is empty")
-
-    seen_event_ids: set[str] = set()
-    previous_hash: str | None = None
-    previous_timestamp: str | None = None
-    timestamp_regressed = False
-    for index, record in enumerate(records, start=1):
-        missing = [field for field in _OBSERVE_REQUIRED_FIELDS if field not in record]
-        if missing:
-            return ("PCT-013", "FAIL", f"record {index} missing required fields: {missing}")
-        if record.get("schema_version") != "mica.observe.v1":
-            return (
-                "PCT-013",
-                "FAIL",
-                f"record {index} has unsupported schema_version: {record.get('schema_version')}",
-            )
-        event_id = record.get("event_id")
-        if not _is_non_empty_string(event_id):
-            return ("PCT-013", "FAIL", f"record {index} has invalid event_id")
-        if event_id in seen_event_ids:
-            return ("PCT-013", "FAIL", f"duplicate event_id detected: {event_id}")
-        seen_event_ids.add(event_id)
-        if record.get("event_hash") != compute_observation_event_hash(record):
-            return ("PCT-013", "FAIL", f"record {index} event_hash mismatch for {event_id}")
-        prev_hash = record.get("prev_event_hash")
-        if previous_hash is None:
-            if prev_hash not in (None, ""):
-                return (
-                    "PCT-013",
-                    "FAIL",
-                    f"record {index} unexpectedly declares prev_event_hash at stream head",
-                )
-        elif prev_hash != previous_hash:
-            return ("PCT-013", "FAIL", f"record {index} prev_event_hash mismatch for {event_id}")
-        previous_hash = str(record.get("event_hash"))
-        timestamp = record.get("timestamp_utc")
-        if (
-            _is_non_empty_string(previous_timestamp)
-            and _is_non_empty_string(timestamp)
-            and str(timestamp) < str(previous_timestamp)
-        ):
-            timestamp_regressed = True
-        previous_timestamp = str(timestamp)
-
-    if timestamp_regressed:
-        return (
-            "PCT-013",
-            "WARN",
-            f"{observe_path.relative_to(project_root)} coherent but timestamps are not monotonic",
-        )
-    return (
-        "PCT-013",
-        "PASS",
-        f"{observe_path.relative_to(project_root)} parseable and hash-chain coherent ({len(records)} records)",
-    )
-
-
-def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, str, str]:
-    if not _flow_enabled(flow_policy):
-        return ("PCT-015", "INFO", "flow disabled; promotion provenance not required")
-
-    candidates_path = find_flow_artifact(project_root, "mica.candidates.json")
-    if not candidates_path:
-        return ("PCT-015", "FAIL", "flow enabled but mica.candidates.json missing")
-    candidates_doc = load_json(candidates_path)
-    if candidates_doc.get("schema_version") != "mica.candidates.v1":
-        return (
-            "PCT-015",
-            "FAIL",
-            f"candidate registry has unsupported schema_version: {candidates_doc.get('schema_version')}",
-        )
-    candidates = candidates_doc.get("candidates")
-    if not isinstance(candidates, list):
-        return ("PCT-015", "FAIL", "candidate registry missing candidates list")
-    observe_path = find_flow_artifact(project_root, "mica.observe.jsonl")
-    if not observe_path:
-        return (
-            "PCT-015",
-            "FAIL",
-            "cannot validate promotion provenance because mica.observe.jsonl is missing",
-        )
-    observations = load_jsonl(observe_path)
-    observation_ids = {
-        record.get("event_id")
-        for record in observations
-        if _is_non_empty_string(record.get("event_id"))
-    }
-    governed = []
-    for candidate in candidates:
-        if not isinstance(candidate, dict):
-            return ("PCT-015", "FAIL", "candidate registry contains a non-object item")
-        if candidate.get("stage") in {"approved_lesson", "bound_invariant_evidence"}:
-            governed.append(candidate)
-    if not governed:
-        return (
-            "PCT-015",
-            "INFO",
-            f"{candidates_path.relative_to(project_root)} contains no approved or promoted artifacts requiring provenance validation",
-        )
-
-    issues: list[str] = []
-    for candidate in governed:
-        candidate_id = str(candidate.get("candidate_id") or "?")
-        source_event_ids = candidate.get("source_event_ids")
-        if not isinstance(source_event_ids, list) or not source_event_ids:
-            issues.append(f"{candidate_id}: missing source_event_ids")
-        else:
-            missing_source_ids = [
-                source_id for source_id in source_event_ids if source_id not in observation_ids
-            ]
-            if missing_source_ids:
-                issues.append(f"{candidate_id}: unknown source_event_ids {missing_source_ids}")
-        if not _review_is_approved(candidate.get("operator_review")):
-            issues.append(
-                f"{candidate_id}: operator_review must be approved with non-null review metadata"
-            )
-        if candidate.get("stage") == "bound_invariant_evidence":
-            if not _is_non_empty_string(candidate.get("origin_episode")):
-                issues.append(f"{candidate_id}: missing origin_episode")
-            supporting_event_ids = candidate.get("supporting_event_ids")
-            if not isinstance(supporting_event_ids, list) or not supporting_event_ids:
-                issues.append(f"{candidate_id}: missing supporting_event_ids")
-            else:
-                missing_support_ids = [
-                    event_id for event_id in supporting_event_ids if event_id not in observation_ids
-                ]
-                if missing_support_ids:
-                    issues.append(
-                        f"{candidate_id}: unknown supporting_event_ids {missing_support_ids}"
-                    )
-            if candidate.get("trust_basis") == "opaque_observation_trace":
-                issues.append(f"{candidate_id}: Stage 3 evidence may not use opaque trust_basis")
-    if issues:
-        preview = "; ".join(issues[:4])
-        if len(issues) > 4:
-            preview += f"; ... (+{len(issues) - 4} more)"
-        return ("PCT-015", "FAIL", preview)
-    return (
-        "PCT-015",
-        "PASS",
-        f"validated promotion provenance for {len(governed)} governed candidate(s)",
-    )
-
-
 def _archive_version_key(path: Path, archive: dict[str, Any]) -> tuple[int, ...]:
     project = archive.get("project") if isinstance(archive.get("project"), dict) else {}
     project_version = project.get("version")
@@ -1320,325 +421,6 @@ def _legacy_archive_sort_key(path: Path) -> tuple[tuple[int, ...], int, int, str
         path.stat().st_mtime_ns,
         path.name,
     )
-
-
-def _run_pct014(
-    project_root: Path, flow_policy: dict[str, Any], recall_policy: dict[str, Any]
-) -> tuple[str, str, str]:
-    if not _flow_enabled(flow_policy):
-        return ("PCT-014", "INFO", "flow disabled; recall trace coverage not required")
-
-    recall_enabled = bool(recall_policy.get("enabled", False))
-    recall_path = find_flow_artifact(project_root, "mica.recall.jsonl")
-    if not recall_enabled and not recall_path:
-        return ("PCT-014", "INFO", "recall trace inactive")
-    if not recall_path:
-        return ("PCT-014", "WARN", "recall enabled but mica.recall.jsonl missing")
-
-    try:
-        records = load_jsonl(recall_path)
-    except Exception as exc:
-        return ("PCT-014", "WARN", f"cannot parse recall trace: {exc}")
-    if not records:
-        return (
-            "PCT-014",
-            "WARN",
-            f"{recall_path.relative_to(project_root)} empty while recall is active",
-        )
-
-    issues: list[str] = []
-    for index, record in enumerate(records, start=1):
-        if record.get("schema_version") != "mica.recall.v1":
-            issues.append(
-                f"record {index}: unsupported schema_version {record.get('schema_version')}"
-            )
-        target = record.get("target")
-        if target not in {"operator_review", "agent_context"}:
-            issues.append(f"record {index}: invalid target {target!r}")
-        if not _is_non_empty_string(record.get("candidate_id")):
-            issues.append(f"record {index}: missing candidate_id")
-        if not _is_non_empty_string(record.get("recall_id")):
-            issues.append(f"record {index}: missing recall_id")
-        if not _is_non_empty_string(record.get("session_id")):
-            issues.append(f"record {index}: missing session_id")
-
-    if issues:
-        preview = "; ".join(issues[:4])
-        if len(issues) > 4:
-            preview += f"; ... (+{len(issues) - 4} more)"
-        return ("PCT-014", "WARN", preview)
-    return (
-        "PCT-014",
-        "PASS",
-        f"{recall_path.relative_to(project_root)} provides recall trace coverage ({len(records)} records)",
-    )
-
-
-def _run_pct018(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, str, str]:
-    if not _flow_enabled(flow_policy):
-        return ("PCT-018", "INFO", "flow disabled; telemetry completeness not required")
-
-    recall_path = find_flow_artifact(project_root, "mica.recall.jsonl")
-    if not recall_path:
-        return ("PCT-018", "INFO", "recall trace absent; telemetry completeness not active")
-
-    observe_path = find_flow_artifact(project_root, "mica.observe.jsonl")
-    candidates_path = find_flow_artifact(project_root, "mica.candidates.json")
-    invocation_path = find_flow_artifact(project_root, "mica.invocation.jsonl")
-    try:
-        observations = load_jsonl(observe_path)
-    except Exception as exc:
-        return (
-            "PCT-018",
-            "WARN",
-            f"cannot load observation stream for telemetry completeness: {exc}",
-        )
-    candidates_doc = load_json(candidates_path)
-    candidates = (
-        candidates_doc.get("candidates")
-        if isinstance(candidates_doc.get("candidates"), list)
-        else []
-    )
-    try:
-        recall_records = load_jsonl(recall_path)
-    except Exception as exc:
-        return ("PCT-018", "WARN", f"cannot load recall trace for telemetry completeness: {exc}")
-    if not recall_records:
-        return (
-            "PCT-018",
-            "INFO",
-            "recall trace empty; completeness deferred to PCT-014 coverage warning",
-        )
-
-    invocation_records: list[dict[str, Any]] = []
-    if invocation_path:
-        try:
-            invocation_records = load_jsonl(invocation_path)
-        except Exception as exc:
-            return (
-                "PCT-018",
-                "WARN",
-                f"cannot load invocation trace for telemetry completeness: {exc}",
-            )
-
-    observation_ids = {
-        record.get("event_id")
-        for record in observations
-        if _is_non_empty_string(record.get("event_id"))
-    }
-    observation_sessions = {
-        record.get("session_id")
-        for record in observations
-        if _is_non_empty_string(record.get("session_id"))
-    }
-    candidate_map = {
-        candidate.get("candidate_id"): candidate
-        for candidate in candidates
-        if isinstance(candidate, dict) and _is_non_empty_string(candidate.get("candidate_id"))
-    }
-    invocation_by_session = {
-        record.get("session_id"): record
-        for record in invocation_records
-        if isinstance(record, dict) and _is_non_empty_string(record.get("session_id"))
-    }
-
-    issues: list[str] = []
-    for index, record in enumerate(recall_records, start=1):
-        candidate_id = record.get("candidate_id")
-        if not _is_non_empty_string(candidate_id):
-            issues.append(f"record {index}: missing candidate_id")
-            continue
-        candidate = candidate_map.get(candidate_id)
-        if not isinstance(candidate, dict):
-            issues.append(
-                f"record {index}: candidate_id {candidate_id} not found in mica.candidates.json"
-            )
-            continue
-
-        session_id = record.get("session_id")
-        if not _is_non_empty_string(session_id) or session_id not in observation_sessions:
-            issues.append(
-                f"record {index}: session_id {session_id!r} not linked to observation stream"
-            )
-
-        source_event_ids = record.get("source_event_ids")
-        if not isinstance(source_event_ids, list) or not source_event_ids:
-            issues.append(f"record {index}: missing source_event_ids for candidate {candidate_id}")
-            continue
-
-        missing_observation_ids = [
-            event_id for event_id in source_event_ids if event_id not in observation_ids
-        ]
-        if missing_observation_ids:
-            issues.append(
-                f"record {index}: source_event_ids not found in observation stream: {missing_observation_ids}"
-            )
-
-        candidate_source_ids = candidate.get("source_event_ids")
-        if isinstance(candidate_source_ids, list):
-            extra_ids = [
-                event_id for event_id in source_event_ids if event_id not in candidate_source_ids
-            ]
-            if extra_ids:
-                issues.append(
-                    f"record {index}: source_event_ids not declared on candidate {candidate_id}: {extra_ids}"
-                )
-
-        target = record.get("target")
-        if target == "agent_context":
-            if not invocation_path:
-                issues.append(
-                    f"record {index}: target=agent_context but mica.invocation.jsonl absent"
-                )
-                continue
-            invocation = invocation_by_session.get(session_id)
-            if not isinstance(invocation, dict):
-                issues.append(
-                    f"record {index}: session_id {session_id!r} not linked to invocation trace"
-                )
-                continue
-            loaded_surfaces = invocation.get("loaded_surfaces")
-            if not isinstance(loaded_surfaces, list) or not loaded_surfaces:
-                issues.append(
-                    f"record {index}: invocation trace missing loaded_surfaces for session {session_id}"
-                )
-            context_surfaces = invocation.get("agent_context_surfaces")
-            if not isinstance(context_surfaces, list) or not context_surfaces:
-                issues.append(
-                    f"record {index}: invocation trace missing agent_context_surfaces for session {session_id}"
-                )
-            elif isinstance(loaded_surfaces, list):
-                extra_context = [
-                    surface for surface in context_surfaces if surface not in loaded_surfaces
-                ]
-                if extra_context:
-                    issues.append(
-                        f"record {index}: invocation trace agent_context_surfaces not loaded for session {session_id}: {extra_context}"
-                    )
-        elif target == "operator_review" and invocation_path:
-            invocation = invocation_by_session.get(session_id)
-            if not isinstance(invocation, dict):
-                issues.append(
-                    f"record {index}: operator_review session_id {session_id!r} not linked to invocation trace"
-                )
-                continue
-            operator_surfaces = invocation.get("operator_only_surfaces")
-            if not isinstance(operator_surfaces, list) or not operator_surfaces:
-                issues.append(
-                    f"record {index}: invocation trace missing operator_only_surfaces for operator_review session {session_id}"
-                )
-
-    if issues:
-        preview = "; ".join(issues[:4])
-        if len(issues) > 4:
-            preview += f"; ... (+{len(issues) - 4} more)"
-        return ("PCT-018", "WARN", preview)
-    if invocation_path:
-        return (
-            "PCT-018",
-            "PASS",
-            f"{recall_path.relative_to(project_root)} joins cleanly with candidates, observations, and invocation trace",
-        )
-    return (
-        "PCT-018",
-        "PASS",
-        f"{recall_path.relative_to(project_root)} joins cleanly with candidates and observations",
-    )
-
-
-def _run_pct017(
-    project_root: Path, flow_policy: dict[str, Any], recall_policy: dict[str, Any]
-) -> tuple[str, str, str]:
-    if not _flow_enabled(flow_policy):
-        return ("PCT-017", "INFO", "flow disabled; recall injection safety not required")
-
-    recall_enabled = bool(recall_policy.get("enabled", False))
-    recall_path = find_flow_artifact(project_root, "mica.recall.jsonl")
-    if not recall_enabled and not recall_path:
-        return ("PCT-017", "INFO", "recall trace absent; runtime injection safety not active")
-    if not recall_path:
-        return (
-            "PCT-017",
-            "INFO",
-            "recall enabled but trace file absent; PCT-017 deferred until runtime trace exists",
-        )
-
-    candidates_path = find_flow_artifact(project_root, "mica.candidates.json")
-    candidates_doc = load_json(candidates_path)
-    candidates = (
-        candidates_doc.get("candidates")
-        if isinstance(candidates_doc.get("candidates"), list)
-        else []
-    )
-    candidate_map = {
-        candidate.get("candidate_id"): candidate
-        for candidate in candidates
-        if isinstance(candidate, dict) and _is_non_empty_string(candidate.get("candidate_id"))
-    }
-
-    try:
-        records = load_jsonl(recall_path)
-    except Exception as exc:
-        return ("PCT-017", "FAIL", f"cannot parse recall trace: {exc}")
-    if not records:
-        return (
-            "PCT-017",
-            "INFO",
-            f"{recall_path.relative_to(project_root)} empty; no recall injection recorded",
-        )
-
-    inject_unapproved = bool(recall_policy.get("inject_unapproved_candidates", False))
-    issues: list[str] = []
-    for index, record in enumerate(records, start=1):
-        if record.get("schema_version") != "mica.recall.v1":
-            issues.append(
-                f"record {index}: unsupported schema_version {record.get('schema_version')}"
-            )
-            continue
-        target = record.get("target")
-        if target not in {"operator_review", "agent_context"}:
-            issues.append(f"record {index}: invalid target {target!r}")
-            continue
-        candidate_id = record.get("candidate_id")
-        if not _is_non_empty_string(candidate_id):
-            issues.append(f"record {index}: missing candidate_id")
-            continue
-        candidate = candidate_map.get(candidate_id)
-        if not isinstance(candidate, dict):
-            issues.append(f"record {index}: unknown candidate_id {candidate_id}")
-            continue
-        status = candidate.get("status")
-        if target != "agent_context":
-            continue
-        if status in {"rejected", "superseded"}:
-            issues.append(f"candidate {candidate_id} entered agent_context while status={status}")
-            continue
-        if not inject_unapproved and status not in {"approved", "promoted"}:
-            review = (
-                candidate.get("operator_review")
-                if isinstance(candidate.get("operator_review"), dict)
-                else {}
-            )
-            review_state = review.get("state") or "unknown"
-            issues.append(
-                f"candidate {candidate_id} entered agent_context while operator_review.state={review_state}"
-            )
-
-    if issues:
-        preview = "; ".join(issues[:4])
-        if len(issues) > 4:
-            preview += f"; ... (+{len(issues) - 4} more)"
-        return ("PCT-017", "FAIL", preview)
-    return (
-        "PCT-017",
-        "PASS",
-        f"{recall_path.relative_to(project_root)} enforces approved-only agent_context injection",
-    )
-
-
-# ---------------------------------------------------------------------------
-# PCT checks
-# ---------------------------------------------------------------------------
 
 
 def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple[str, str, str]]:
@@ -2110,6 +892,14 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
             )
         )
 
+    from mica_flow import (
+        _run_pct013,
+        _run_pct014,
+        _run_pct015,
+        _run_pct017,
+        _run_pct018,
+    )
+
     results.append(_run_pct013(project_root, flow_policy))
     results.append(_run_pct014(project_root, flow_policy, recall_policy))
     results.append(_run_pct015(project_root, flow_policy))
@@ -2169,3 +959,45 @@ def failing_axes(results: list[tuple[str, str, str]]) -> list[str]:
     if axes["flow"] == "FAILED":
         failing.append("flow")
     return failing
+
+
+# --- evidence facade --------------------------------------------------------
+#
+# Vocabulary constants are re-exported eagerly; mica_evidence does not import
+# them back, so this does not create a cycle.
+from mica_evidence import (  # noqa: E402,F401
+    DELIVERY_STATES as DELIVERY_STATES,
+)
+from mica_evidence import (  # noqa: E402,F401
+    INVOCATION_SCHEMA_V1 as INVOCATION_SCHEMA_V1,
+)
+from mica_evidence import (  # noqa: E402,F401
+    INVOCATION_SCHEMA_V2 as INVOCATION_SCHEMA_V2,
+)
+from mica_evidence import (  # noqa: E402,F401
+    SURFACE_AUDIENCES as SURFACE_AUDIENCES,
+)
+
+#
+# The implementations live in mica_evidence. These thin delegations keep
+# `from mica_core import ...` working for consumer packages that vendored an
+# earlier tools/ copy, while the import stays local so mica_evidence can import
+# its primitives from here without a cycle.
+
+
+def compute_capsule_hash(record: dict[str, Any]) -> str:
+    from mica_evidence import compute_capsule_hash as _impl
+
+    return _impl(record)
+
+
+def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
+    from mica_evidence import run_invocation_trace_checks as _impl
+
+    return _impl(target)
+
+
+def rehash_evidence_entry(project_root: Path, entry: dict[str, Any]) -> tuple[str, int] | str:
+    from mica_evidence import rehash_evidence_entry as _impl
+
+    return _impl(project_root, entry)
