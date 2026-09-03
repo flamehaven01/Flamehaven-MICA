@@ -39,15 +39,18 @@ from mica_core import (
     find_flow_artifact,
     find_legacy_archive,
     find_mica_yaml,
+    hash_bytes,
     hash_surface_bytes,
     is_closed_contract,
     layer_role,
     load_json,
     load_jsonl,
     load_yaml,
+    rehash_evidence_entry,
     resolve_invocation_contract,
     run_invocation_trace_checks,
     run_pct_checks,
+    select_markdown_sections,
 )
 
 __version__ = MICA_TOOL_VERSION
@@ -155,13 +158,20 @@ def _build_surface_evidence(
     layer_paths: dict[str, Path],
     loaded: list[str],
     agent_context_surfaces: list[str],
+    profile_sections: dict[str, list[str]] | None = None,
 ) -> list[dict[str, Any]]:
     """Hash the exact bytes of each resolved surface.
 
     Evidence is produced only for surfaces that were actually loaded, so a
     record can never present bytes that were never read. Delivery state is
     "resolved": this function hashes, it does not deliver.
+
+    When a profile selects sections of a surface, the digest covers the sliced
+    delivery rather than the file on disk, and `sections` records the slice.
+    Hashing the whole file while delivering part of it would make the evidence
+    describe something the session never received.
     """
+    sections_by_role = profile_sections or {}
     evidence: list[dict[str, Any]] = []
     for role in loaded:
         path = layer_paths.get(role)
@@ -169,20 +179,34 @@ def _build_surface_evidence(
             continue
         try:
             canonical = canonical_surface_path(project_root, path)
-            digest, size = hash_surface_bytes(path)
-        except (ValueError, OSError):
-            # A surface that cannot be canonicalized or read is not evidence.
+        except ValueError:
+            # A surface that cannot be canonicalized is not evidence.
             continue
-        evidence.append(
-            {
-                "role": role,
-                "path": canonical,
-                "sha256": digest,
-                "bytes": size,
-                "audience": "agent_context" if role in agent_context_surfaces else "operator_only",
-                "delivery_state": "resolved",
-            }
-        )
+
+        wanted = sections_by_role.get(role)
+        try:
+            if wanted:
+                delivered, _missing = select_markdown_sections(
+                    path.read_text(encoding="utf-8"), wanted
+                )
+                payload = delivered.encode("utf-8")
+                digest, size = hash_bytes(payload)
+            else:
+                digest, size = hash_surface_bytes(path)
+        except (OSError, UnicodeDecodeError):
+            continue
+
+        entry: dict[str, Any] = {
+            "role": role,
+            "path": canonical,
+            "sha256": digest,
+            "bytes": size,
+            "audience": "agent_context" if role in agent_context_surfaces else "operator_only",
+            "delivery_state": "resolved",
+        }
+        if wanted:
+            entry["sections"] = list(wanted)
+        evidence.append(entry)
     return evidence
 
 
@@ -316,7 +340,11 @@ def _build_invocation_summary(
         "deferred_surfaces": deferred,
         "missing_invoked_surfaces": missing,
         "surface_evidence": _build_surface_evidence(
-            project_root, layer_paths, loaded, agent_context_surfaces
+            project_root,
+            layer_paths,
+            loaded,
+            agent_context_surfaces,
+            contract["profile_sections"],
         ),
         "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
     }
@@ -552,11 +580,11 @@ def _reresolve_surface_evidence(project_root: Path, evidence: list[dict[str, Any
     """
     drifted: list[str] = []
     for entry in evidence:
-        path = Path(project_root) / str(entry.get("path", ""))
-        if not path.is_file():
+        current = rehash_evidence_entry(Path(project_root), entry)
+        if isinstance(current, str):
             drifted.append(str(entry.get("role")))
             continue
-        digest, size = hash_surface_bytes(path)
+        digest, size = current
         if digest != entry.get("sha256") or size != entry.get("bytes"):
             drifted.append(str(entry.get("role")))
     return drifted

@@ -20,5 +20,12 @@ invocation_protocol:
       description: Baseline session. Same surfaces the mode defaults would give.
       surfaces: [archive, playbook]
     review:
-      description: Review needs the lessons that earlier reviews produced.
+      description: Review needs the review procedure and the lessons earlier reviews produced.
       surfaces: [archive, playbook, lessons]
+      sections:
+        playbook: [Review, Invariants]
+    incident:
+      description: An incident needs the runbook, not the review procedure.
+      surfaces: [archive, playbook]
+      sections:
+        playbook: [Incident Runbook]

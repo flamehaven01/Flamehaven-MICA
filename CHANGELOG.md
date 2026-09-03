@@ -5,6 +5,42 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0 Origin P2 - The playbook becomes addressable (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+
+MICA is a memory and playbook package, but structurally the playbook was one
+opaque file path. The archive had invariants, a schema, and binding provenance;
+the playbook had nothing. A profile could load it, but only whole -- an incident
+session received the review procedure and the onboarding notes as well.
+
+- `parse_markdown_sections()` and `select_markdown_sections()` split a markdown
+  surface into its preamble and `##` sections. The preamble always travels with
+  a slice, since sections assume the framing above them
+- profiles may declare `sections: {<role>: [names]}`; only surfaces the profile
+  invokes may be sliced
+- capsule evidence records `sections` and hashes the **delivered slice**. Hashing
+  the file while delivering part of it would make the evidence describe content
+  the session never received
+- drift is scoped to the delivery: editing a section the profile did not deliver
+  is not drift; editing or removing a delivered section is
+- PCT-007 fails the contract when a profile requests a section that does not
+  exist, or selects sections of a surface it does not invoke. Both are the same
+  class as an undeclared surface: the session asked for memory the package
+  cannot supply
+- `rehash_evidence_entry()` added so the write-time re-resolve and IVC-005 share
+  one definition of what a capsule covers
+
+Fixed while implementing: `write_invocation_trace` re-hashed the whole file
+during its resolve-to-emit check, so recording any sectioned capsule failed with
+a false drift error. IVC-005 had already been made slice-aware; the write path
+had not. Both now go through `rehash_evidence_entry`.
+
+Fixture `memory_profiles` gains an `incident` profile and a four-section
+playbook. Tests 157 -> 168.
+
+---
+
 ## v3.0.0 Origin P1 - Memory profiles: the selection half of invocation (2026-09-03)
 
 Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.

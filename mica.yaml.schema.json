@@ -338,6 +338,20 @@
               },
               "description": {
                 "type": "string"
+              },
+              "sections": {
+                "type": "object",
+                "description": "Per-surface markdown section selection, keyed by layer role. A profile may deliver only the playbook sections that session needs instead of the whole file. Only surfaces the profile invokes may be sliced.",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
               }
             }
           }

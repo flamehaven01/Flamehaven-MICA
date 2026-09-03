@@ -50,6 +50,22 @@ invocation_protocol:
 python tools/mica_runtime.py . --profile review
 ```
 
+A profile may also select sections of a markdown surface, so the playbook is
+addressable rather than an opaque file:
+
+```yaml
+    incident:
+      surfaces: [archive, playbook]
+      sections:
+        playbook: [Incident Runbook]
+```
+
+An incident session receives the runbook without the review procedure. The
+capsule digest then covers the delivered slice, not the file it came from --
+hashing the whole file while delivering part of it would describe context the
+session never received. Drift is scoped the same way: editing a section the
+profile did not deliver is not drift.
+
 A profile names the surfaces that session needs, so a review session and a
 routine session need not be given the same memory. Requesting an undeclared
 profile, or a profile naming a surface that is not a declared layer, fails the

@@ -82,7 +82,7 @@ to receive its memory, so they no longer break the contract.
 | `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present and explicit `agent_context` surfaces |
 | `implicit_primary_pattern/` | v0.2.8 | - | - | - | CLOSED | Declared context with implicit `readme_protocol`; PCT-007 WARN and trace absent |
 | `invocation_capsule_v2/` | v3.0.0 P1 | PASS | INFO | INFO | CLOSED | Digest-bound `mica.invocation.v2` capsule; committed trace is byte-bound to its surfaces |
-| `memory_profiles/` | v3.0.0 Origin P1 | PASS | INFO | INFO | CLOSED | `default` and `review` profiles select different surfaces |
+| `memory_profiles/` | v3.0.0 Origin P1/P2 | PASS | INFO | INFO | CLOSED | `default`/`review`/`incident` profiles select different surfaces, and slice the playbook |
 
 
 ## Expected Outputs
@@ -232,9 +232,26 @@ Profile   : review
 Resolved  : archive, playbook, lessons
 ```
 
-Requesting a profile that is not declared, or a profile naming a surface that
-is not a declared layer, fails `PCT-007` on the contract axis. The session asked
-for memory the package cannot supply, which is an invocation fault.
+The `incident` profile slices the playbook to a single section:
+
+```bash
+python tools/mica_runtime.py fixtures/memory_profiles --profile incident --format text
+```
+
+| Profile | playbook delivered | of file |
+|---|---|---|
+| `default` | whole file | 100% |
+| `review` | `Review`, `Invariants` | 57% |
+| `incident` | `Incident Runbook` | 47% |
+
+The capsule digest covers the slice, so drift is scoped to what the session
+actually received: editing the `Onboarding` section does not affect a `review`
+capsule, while editing `Review` does.
+
+Requesting a profile that is not declared, a profile naming a surface that is
+not a declared layer, or a section that does not exist, fails `PCT-007` on the
+contract axis. The session asked for memory the package cannot supply, which is
+an invocation fault.
 
 ### domain_namespaced_di
 

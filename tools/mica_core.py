@@ -117,6 +117,7 @@ DELIVERY_STATES = ("declared", "resolved", "emitted", "acknowledged")
 SURFACE_AUDIENCES = ("agent_context", "operator_only", "deferred")
 
 _SURFACE_EVIDENCE_FIELDS = ("role", "path", "sha256", "bytes", "audience", "delivery_state")
+_SURFACE_EVIDENCE_OPTIONAL_FIELDS = ("sections",)
 
 # project_root is an absolute, machine-specific path and is excluded so that the
 # same invocation hashes identically on every platform.
@@ -155,6 +156,11 @@ def canonical_surface_path(project_root: Path, target: Path) -> str:
     except ValueError as exc:
         raise ValueError(f"surface path escapes project root: {resolved}") from exc
     return relative.as_posix()
+
+
+def hash_bytes(payload: bytes) -> tuple[str, int]:
+    """Hash exactly the bytes that will be delivered. Returns (sha256, count)."""
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}", len(payload)
 
 
 def hash_surface_bytes(target: Path) -> tuple[str, int]:
@@ -372,6 +378,44 @@ _OPERATOR_ONLY_ALLOWED_SURFACES = frozenset(
 )
 
 
+def parse_markdown_sections(text: str) -> tuple[str, dict[str, str]]:
+    """Split a markdown surface into its preamble and its `##` sections.
+
+    Section names are the heading text. The preamble is everything before the
+    first `##`; it carries the title and any framing the sections assume, so a
+    sliced delivery keeps it.
+    """
+    preamble_lines: list[str] = []
+    sections: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in text.splitlines(keepends=True):
+        match = re.match(r"^##\s+(.+?)\s*$", line.rstrip("\n"))
+        if match:
+            current = match.group(1)
+            sections.setdefault(current, []).append(line)
+            continue
+        if current is None:
+            preamble_lines.append(line)
+        else:
+            sections[current].append(line)
+    return "".join(preamble_lines), {name: "".join(body) for name, body in sections.items()}
+
+
+def select_markdown_sections(text: str, wanted: list[str]) -> tuple[str, list[str]]:
+    """Return the preamble plus the requested sections, and any that are missing.
+
+    Slicing is what makes the playbook addressable instead of an opaque blob:
+    a review session can receive the review section without the deployment
+    runbook. What is delivered is what gets hashed, so the evidence describes
+    the slice rather than the file it came from.
+    """
+    preamble, sections = parse_markdown_sections(text)
+    missing = [name for name in wanted if name not in sections]
+    parts = [preamble] if preamble.strip() else []
+    parts.extend(sections[name] for name in wanted if name in sections)
+    return "".join(parts), missing
+
+
 def _mode_default_surfaces(mode: str) -> list[str]:
     """The pre-profile default: the same surfaces for every session."""
     if mode == "memory_first":
@@ -437,6 +481,8 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
     elif "default" in profiles:
         active_profile = "default"
 
+    profile_sections: dict[str, list[str]] = {}
+    sections_for_uninvoked_surfaces: list[str] = []
     if active_profile is not None:
         entry = profiles.get(active_profile)
         raw_surfaces = entry.get("surfaces") if isinstance(entry, dict) else None
@@ -446,6 +492,17 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
             ]
         undeclared_profile_surfaces = [
             role for role in profile_surfaces if role not in declared_surfaces
+        ]
+        raw_sections = entry.get("sections") if isinstance(entry, dict) else None
+        if isinstance(raw_sections, dict):
+            for role, names in raw_sections.items():
+                if not isinstance(names, list):
+                    continue
+                wanted = [str(name) for name in names if _is_non_empty_string(name)]
+                if wanted:
+                    profile_sections[str(role)] = wanted
+        sections_for_uninvoked_surfaces = [
+            role for role in profile_sections if role not in profile_surfaces
         ]
 
     if active_profile is not None and profile_surfaces:
@@ -525,6 +582,8 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         "active_profile": active_profile,
         "unknown_profile": unknown_profile,
         "undeclared_profile_surfaces": undeclared_profile_surfaces,
+        "profile_sections": profile_sections,
+        "sections_for_uninvoked_surfaces": sections_for_uninvoked_surfaces,
         "declared_surfaces": declared_surfaces,
         "loaded_surfaces": invoked_surfaces,
         "agent_context_surfaces": agent_context_surfaces,
@@ -664,6 +723,18 @@ def _check_capsule_schema(index: int, record: dict[str, Any]) -> list[str]:
 
         if entry.get("delivery_state") not in DELIVERY_STATES:
             issues.append(f"{label}: invalid delivery_state {entry.get('delivery_state')!r}")
+
+        unknown = [
+            key
+            for key in entry
+            if key not in _SURFACE_EVIDENCE_FIELDS and key not in _SURFACE_EVIDENCE_OPTIONAL_FIELDS
+        ]
+        if unknown:
+            issues.append(f"{label}: unexpected fields {sorted(unknown)}")
+
+        sections = entry.get("sections")
+        if sections is not None and not _is_unique_string_list(sections):
+            issues.append(f"{label}: sections must be a unique non-empty string list")
 
     capsule_hash = record.get("capsule_hash")
     if not isinstance(capsule_hash, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", capsule_hash):
@@ -945,6 +1016,36 @@ def _resolve_within_root(project_root: Path, relative: str) -> Path | None:
     return candidate
 
 
+def rehash_evidence_entry(project_root: Path, entry: dict[str, Any]) -> tuple[str, int] | str:
+    """Recompute the digest a recorded evidence entry should have right now.
+
+    Returns (sha256, bytes) or a string describing why it cannot be compared.
+    Both the write-time re-resolve and IVC-005 go through here so a sectioned
+    capsule is never compared against the whole file it was sliced from.
+    """
+    rel = entry.get("path")
+    if not _is_non_empty_string(rel):
+        return "unusable path"
+    path = _resolve_within_root(project_root, str(rel))
+    if path is None:
+        return "path escapes project root; not read"
+    if not path.is_file():
+        return "missing"
+
+    wanted = entry.get("sections")
+    try:
+        if isinstance(wanted, list) and wanted:
+            delivered, absent = select_markdown_sections(
+                path.read_text(encoding="utf-8"), [str(name) for name in wanted]
+            )
+            if absent:
+                return f"sections removed: {absent}"
+            return hash_bytes(delivered.encode("utf-8"))
+        return hash_surface_bytes(path)
+    except (OSError, UnicodeDecodeError):
+        return "unreadable"
+
+
 def _check_live_surface_bytes(
     project_root: Path | None,
     records: list[dict[str, Any]],
@@ -993,22 +1094,11 @@ def _check_live_surface_bytes(
         if not isinstance(entry, dict):
             continue
         role = str(entry.get("role"))
-        rel = entry.get("path")
-        if not _is_non_empty_string(rel):
-            drifted.append(f"{role} (unusable path)")
+        current = rehash_evidence_entry(project_root, entry)
+        if isinstance(current, str):
+            drifted.append(f"{role} ({current})")
             continue
-        path = _resolve_within_root(project_root, str(rel))
-        if path is None:
-            drifted.append(f"{role} (path escapes project root; not read)")
-            continue
-        if not path.is_file():
-            drifted.append(f"{role} (missing)")
-            continue
-        try:
-            digest, size = hash_surface_bytes(path)
-        except OSError:
-            drifted.append(f"{role} (unreadable)")
-            continue
+        digest, size = current
         if digest != entry.get("sha256") or size != entry.get("bytes"):
             drifted.append(f"{role} (bytes changed)")
 
@@ -1750,6 +1840,36 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
             f"memory profile {contract['active_profile']!r} names surfaces that are not "
             f"declared as layers {contract['undeclared_profile_surfaces']}"
         )
+    if contract["sections_for_uninvoked_surfaces"]:
+        profile_config_issues.append(
+            f"memory profile {contract['active_profile']!r} selects sections of surfaces it "
+            f"does not invoke {contract['sections_for_uninvoked_surfaces']}"
+        )
+    for role, wanted in (contract["profile_sections"] or {}).items():
+        rel = next(
+            (
+                lyr.get("path")
+                for lyr in layers
+                if isinstance(lyr, dict) and layer_role(lyr) == role
+            ),
+            None,
+        )
+        if not isinstance(rel, str):
+            continue
+        target = project_root / rel
+        if not target.is_file():
+            continue
+        try:
+            _, present = parse_markdown_sections(target.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError):
+            profile_config_issues.append(f"cannot read {role} to resolve requested sections")
+            continue
+        absent = [name for name in wanted if name not in present]
+        if absent:
+            profile_config_issues.append(
+                f"memory profile {contract['active_profile']!r} requests {role} sections that "
+                f"do not exist {absent} (available: {sorted(present) or 'none'})"
+            )
     invocation_config_issues = (
         profile_config_issues + context_config_issues + operator_config_issues
     )
