@@ -2,7 +2,7 @@
 
 Current stable tag: `v0.2.8` (`Binding Depth Edition`)
 Current declaration tag: `v3.0.0-declaration` (invocation-first floor freeze; non-release milestone)
-Current implementation milestone: `v3.0.0-invocation-truth` (resolved-versus-recorded runtime truth and consumer kit; non-release milestone)
+Current implementation milestone: `v3.0.0-origin` (invocation contract reclaimed from governance; selection, addressable playbook, measurement; non-release milestone)
 Current floor: invocation-first runtime truth, with `v0.2.9` drafts retained as groundwork and cross-repository adoption continuing in consuming repositories
 
 MICA (Memory Invocation & Context Archive) is a project memory package for AI maintenance work.
@@ -17,6 +17,7 @@ are in the `Legacy/` directory and are not tracked by git.
 | Stable | `v0.2.8` | Latest release tag and current tool banner version |
 | Declaration | `v3.0.0-declaration` | Invocation-first floor freeze; not a stable release |
 | Implementation milestone | `v3.0.0-invocation-truth` | PCT/runtime truthfulness and consumer authoring kit; not a stable release |
+| Implementation milestone | `v3.0.0-origin` | Invocation contract reclaimed from governance; memory profiles, addressable playbook, layered modules, measurement. Not a stable release |
 | Draft groundwork | `v0.2.9` | Unreleased blueprint, PCT drafts, memory-first schemas, and helper tooling |
 | Intended reset | `v3.0.0` | Invocation-first MICA: truthful context loading, session activation, and auditable invoked-state declaration |
 
@@ -124,7 +125,8 @@ This repository is being held at that invocation-first floor rather than continu
 | `di_policy.max_archive_age_days` field | New optional `mica.yaml` field activating PCT-012 |
 | 3 new fixtures | `doctrinal_binding`, `stale_archive`, `violation_count_incoherent` |
 
-No existing package breaks. All new signals are WARN or INFO. CLOSED CONTRACT definition unchanged.
+No existing package breaks. All new signals are WARN or INFO. CLOSED CONTRACT was unchanged
+*by v0.2.8*; Origin P0 later narrowed it to the contract axis — see the release notes above.
 
 ## What v0.2.7 added over v0.2.6
 
@@ -271,6 +273,14 @@ Schemas:
 | [mica.recall.schema.json](mica.recall.schema.json) | Recall trace schema draft for v0.2.9 flow plane |
 | [mica.slots.schema.json](mica.slots.schema.json) | Stable slot projection schema draft for v0.2.9 memory-first packages |
 | [mica.graph.schema.json](mica.graph.schema.json) | Memory graph edge schema draft for v0.2.9 memory-first packages |
+
+v3.0.0 Origin docs:
+
+| Document | Role |
+|---|---|
+| [docs/MICA_v3.0.0_ORIGIN_RELEASE_NOTES.md](docs/MICA_v3.0.0_ORIGIN_RELEASE_NOTES.md) | Origin P0-P4: what changed, what it measured, and what it does not establish |
+| [docs/MICA_v3.0.0_DECLARATION.md](docs/MICA_v3.0.0_DECLARATION.md) | Invocation-first direction declaration |
+| [docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md](docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md) | Invocation capsule and handoff surface architecture proposal |
 
 v0.2.9 draft docs:
 

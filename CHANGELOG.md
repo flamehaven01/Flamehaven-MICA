@@ -54,7 +54,8 @@ All six close the contract. All six can identify their invoked bytes.
 **None declares a memory profile**: P1 and P2 have zero adoption, and the 213,112
 bytes above are what every session in the fleet receives regardless of task.
 
-Tests 168 -> 184.
+Tests 168 -> 184 (183 pass plus one skipped on Windows, where the symlink
+escape test cannot create a link; CI runs it on Linux).
 
 ---
 
@@ -96,6 +97,10 @@ output was captured before the refactor across 20 fixtures x 5 profile
 selections -- 105 combinations, 1,840 results -- and compared after every step.
 Identical throughout.
 
+All figures below are AI-SLOP-DETECTOR v3.8.9 output on `tools/`, measured at
+this commit. Its line count is logic lines, not raw file lines -- `wc -l` on the
+same file reports 1,174, since the detector excludes comment and blank lines.
+
 | Measure | Before | After |
 |---|---|---|
 | cross-file risk | 0.13 | 0.00 |
@@ -104,7 +109,7 @@ Identical throughout.
 | `mica_core.py` high | 15 | 4 |
 | `mica_core.py` deficit | 68.2 | 29.0 |
 | `mica_core.py` status | `inflated_signal` | `clean` |
-| `mica_core.py` lines | 1,893 | 1,004 |
+| `mica_core.py` logic lines | 1,893 | 1,004 |
 
 Total high is unchanged at 23: splitting a large function produces more
 functions, several of which still exceed the 50-line threshold on their own.

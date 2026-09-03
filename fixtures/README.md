@@ -125,8 +125,18 @@ Overall: CLOSED CONTRACT
 ```text
 PCT-010 [FAIL] critical DIs missing binding.origin_episode: ['DI-001']
               -- di_policy.critical_binding_required is true
-Overall: INCOMPLETE CONTRACT
+
+Contract : CLOSED
+Archive  : FAILED
+Flow     : N/A
+
+Overall: CLOSED CONTRACT
 ```
+
+The opt-in escalation still produces a FAIL. Since Origin P0 it fails the
+archive axis rather than the contract: an ungrounded binding is a memory-quality
+problem, not evidence that the session failed to receive its memory. `--strict`
+exits 1 on it.
 
 ### compact_mode
 
@@ -322,9 +332,18 @@ Overall: CLOSED CONTRACT
 ```text
 PCT-013 [PASS] memory\mica.observe.jsonl parseable and hash-chain coherent (2 records)
 PCT-015 [FAIL] cand_00044: unknown source_event_ids ['obs_missing_999']
-PCT-009 [FAIL] package incomplete. failing checks: ['PCT-015']
-Overall: INCOMPLETE
+PCT-009 [PASS] declared memory surfaces reached the session; contract closed
+
+Contract : CLOSED
+Archive  : OK
+Flow     : FAILED
+
+Overall: CLOSED CONTRACT
 ```
+
+Broken promotion provenance is an authoring-pipeline fault. Since Origin P0 it
+fails the flow axis and leaves the invocation contract closed; the memory this
+session needed still reached it. `--strict` exits 1 on the flow failure.
 
 ### flow_recall_operator_review_safe (PCT-017 PASS)
 
