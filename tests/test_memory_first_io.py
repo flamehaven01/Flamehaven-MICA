@@ -136,7 +136,7 @@ def test_cli_paths_and_slots_dump(tmp_path: Path, capsys):
     assert exit_code == 0
     paths_output = capsys.readouterr().out
     payload = json.loads(paths_output)
-    assert payload["archive"].endswith("memory\\mica_archive.json")
+    assert Path(payload["archive"]).parts[-2:] == ("memory", "mica_archive.json")
 
     exit_code = mica_memory.main([str(fixture_root), "dump", "slots"])
     assert exit_code == 0
@@ -464,8 +464,8 @@ def test_cli_export_reports_written_paths(tmp_path: Path, capsys):
     exit_code = mica_memory.main([str(fixture_root), "export"])
     assert exit_code == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["archive"].endswith("memory\\mica_archive.json")
-    assert payload["playbook"].endswith("memory\\mica_playbook.md")
+    assert Path(payload["archive"]).parts[-2:] == ("memory", "mica_archive.json")
+    assert Path(payload["playbook"]).parts[-2:] == ("memory", "mica_playbook.md")
 
 
 def test_review_then_export_generates_design_invariant(tmp_path: Path):
