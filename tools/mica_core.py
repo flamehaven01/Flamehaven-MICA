@@ -365,6 +365,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
     mode = str(yd.get("mode") or "")
     declared_surfaces: list[str] = []
     invoked_surfaces: list[str] = []
+    role_loading_hints: dict[str, str] = {}
     explicit_invocation = False
 
     for layer in layers:
@@ -374,7 +375,9 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         if not role:
             continue
         declared_surfaces.append(role)
-        if layer.get("loading_hint") in _INVOKED_LOADING_HINTS:
+        hint = layer.get("loading_hint")
+        role_loading_hints[role] = str(hint) if _is_non_empty_string(hint) else "unset"
+        if hint in _INVOKED_LOADING_HINTS:
             explicit_invocation = True
             invoked_surfaces.append(role)
 
@@ -445,6 +448,27 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         role for role in required_session_start if role not in invoked_surfaces
     ]
 
+    # The selection basis: which mechanism left this surface out, not just its
+    # name. A bare name list lets someone see what was omitted; it does not let
+    # anyone later ask whether omitting it mattered. That question needs real
+    # sessions with a control -- this only preserves what would be needed to ask
+    # it: which rule did the deferring, and what the surface itself declared.
+    deferred_surfaces_basis: dict[str, str] = {}
+    for role in deferred_surfaces:
+        hint = role_loading_hints.get(role, "unset")
+        if active_profile is not None and profile_surfaces:
+            deferred_surfaces_basis[role] = (
+                f"profile {active_profile!r} does not name this surface (loading_hint={hint})"
+            )
+        elif explicit_invocation:
+            deferred_surfaces_basis[role] = (
+                f"loading_hint={hint} does not trigger session-start invocation"
+            )
+        else:
+            deferred_surfaces_basis[role] = (
+                f"mode {mode!r} default surfaces do not include this role (loading_hint={hint})"
+            )
+
     context = _resolve_agent_context_surfaces(
         raw_agent_context, declared_surfaces, invoked_surfaces
     )
@@ -478,6 +502,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         "deselected_agent_context_surfaces": deselected_agent_context_surfaces,
         "operator_only_surfaces": operator["operator_only_surfaces"],
         "deferred_surfaces": deferred_surfaces,
+        "deferred_surfaces_basis": deferred_surfaces_basis,
         "missing_invoked_surfaces": missing_invoked_surfaces,
         "configured_agent_context_surfaces": context["configured_agent_context_surfaces"],
         "invalid_agent_context_surfaces": context["invalid_agent_context_surfaces"],

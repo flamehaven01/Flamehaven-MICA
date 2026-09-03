@@ -5,6 +5,29 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## Selection basis on deferred surfaces (2026-09-03)
+
+`deferred_surfaces` named what was left out of a session; it did not say why.
+Delivery already carries evidence by construction -- bytes, hashes, capsule
+digests. Selection had none: a bare name list, indistinguishable whether a
+profile declined the surface, an explicit `loading_hint` never fired, or the
+mode default simply does not reach that far.
+
+`resolve_invocation_contract` now returns `deferred_surfaces_basis`, a
+`role -> reason` map naming the mechanism that deferred each surface and the
+`loading_hint` it declared. Purely additive -- no existing field changes shape,
+and golden PCT output across every fixture and profile is unchanged.
+
+This does not measure whether omitting a surface would have changed anything;
+that needs sessions with a control, which remains out of scope (see
+`mica_measure.py`'s own stated limit). It preserves what such a question would
+need later: which rule deferred the surface, not just its name. A test asserts
+the basis never claims an outcome it has not measured.
+
+Tests 253 -> 257.
+
+---
+
 ## Fleet spec divergence is respected, not resolved (2026-09-03)
 
 `mica_spec` alignment across the six live packages (`0.1.9` to `0.2.10`) had

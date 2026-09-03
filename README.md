@@ -83,6 +83,14 @@ the active profile decides what does. A permitted surface the profile did not
 select is deselected, not missing. Without profiles the two are the same thing,
 so an uninvoked permitted surface still fails the contract there.
 
+`deferred_surfaces` names what a declared surface was left out of this session.
+`deferred_surfaces_basis` says which rule did the leaving out -- the active
+profile did not name it, an explicit `loading_hint` did not trigger it, or the
+mode default does not include it -- and what the surface itself declared. This
+is not evidence that omitting a surface changed anything; that question needs a
+session with a control. It is what would be needed to ask that question later,
+instead of only a name.
+
 That separation is enforced, not just stated. Results report on three axes:
 
 | Axis | Question | Checks |

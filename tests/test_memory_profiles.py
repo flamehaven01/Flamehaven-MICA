@@ -442,6 +442,71 @@ def test_a_specialised_playbook_reaches_agent_context_through_the_contract(
 # --- the ceiling is not a per-session manifest -------------------------------
 
 
+# --- selection basis: which rule left a surface out, not just its name -------
+
+
+def test_a_profile_names_itself_as_the_reason_it_deferred_a_surface():
+    """The mechanism that did the deferring is part of the basis, not just the
+    surface's own loading_hint."""
+    contract = mica_core.resolve_invocation_contract(
+        __import__("mica_primitives").load_yaml(FIXTURES_DIR / "handoff_surface" / "mica.yaml"),
+        "default",
+    )
+
+    assert "handoff" in contract["deferred_surfaces"]
+    basis = contract["deferred_surfaces_basis"]["handoff"]
+    assert "profile 'default'" in basis
+    assert "loading_hint=session_start_only" in basis  # the fixture's own declaration
+
+
+def test_without_a_profile_the_basis_names_the_mode_default():
+    """No profile active and no layer declares an invoking loading_hint: the
+    fallback that deferred the surface is the mode default, not a profile that
+    never ran."""
+    contract = mica_core.resolve_invocation_contract(
+        {
+            "mode": "archive_first",
+            "layers": [
+                {"name": "archive", "loading_hint": "on_demand"},
+                {"name": "playbook", "loading_hint": "on_demand"},
+                {"name": "lessons", "loading_hint": "on_demand"},
+            ],
+        }
+    )
+
+    assert "lessons" in contract["deferred_surfaces"]
+    basis = contract["deferred_surfaces_basis"]["lessons"]
+    assert "mode 'archive_first'" in basis
+    assert "profile" not in basis
+
+
+def test_every_deferred_surface_has_a_basis_entry():
+    """The basis map is not an afterthought that can silently omit an entry."""
+    for package in sorted(p for p in FIXTURES_DIR.iterdir() if (p / "mica.yaml").exists()):
+        import mica_primitives
+
+        yd = mica_primitives.load_yaml(package / "mica.yaml")
+        for profile in [None, *_declared_profiles(package)]:
+            contract = mica_core.resolve_invocation_contract(yd, profile)
+            assert set(contract["deferred_surfaces"]) == set(contract["deferred_surfaces_basis"]), (
+                f"{package.name} profile={profile}"
+            )
+
+
+def test_the_basis_records_what_would_need_checking_not_the_outcome_itself():
+    """This preserves which rule deferred a surface and what it declared -- not
+    whether omitting it changed anything. That question needs a session with a
+    control, which is out of scope here and stays out of scope."""
+    contract = mica_core.resolve_invocation_contract(
+        __import__("mica_primitives").load_yaml(FIXTURES_DIR / "handoff_surface" / "mica.yaml"),
+        "default",
+    )
+
+    basis = contract["deferred_surfaces_basis"]["handoff"]
+    for outcome_word in ("outcome", "impact", "would have", "matters"):
+        assert outcome_word not in basis
+
+
 def test_a_permitted_surface_another_profile_uses_is_deselected_not_missing():
     """`agent_context_surfaces` says what may reach the agent. The profile says
     what does. Before this distinction, declaring a surface that only one
