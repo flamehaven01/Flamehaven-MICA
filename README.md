@@ -46,7 +46,10 @@ package, load the declared context surfaces, activate against invariants, and de
 
 For invocation-first packages, runtime and hook output must foreground resolved surfaces and `Context`
 before governance/supporting details. `MICA CONTRACT RESOLVED` means the declared surface files were
-found; `Trace: recorded` is separate timestamped invocation provenance. A package that declares
+found; `Trace` is separate timestamped invocation provenance and reports one of `absent`,
+`invalid`, `stale`, or `recorded`. `stale` means the recorded capsule no longer matches the
+bytes on disk: the record is still a truthful account of a past invocation, but it no longer
+describes the current surfaces. A package that declares
 `agent_context_surfaces` should declare `primary_pattern` explicitly; an omitted pattern remains a
 compatibility WARN and defaults to `readme_protocol`. `invocation_protocol.operator_only_surfaces`
 separates human-review surfaces that must not overlap agent context. Agent-context surfaces must be

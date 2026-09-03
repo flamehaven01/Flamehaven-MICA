@@ -428,3 +428,135 @@ def test_live_byte_check_is_skipped_without_a_project_root(tmp_path: Path):
 
     assert results["IVC-005"][0] == "INFO"
     assert "project root not supplied" in results["IVC-005"][1]
+
+
+# --- adversarial: live-byte safety and runtime truth -------------------------
+
+
+def test_live_byte_check_refuses_paths_outside_the_root(tmp_path: Path):
+    """A recorded path is untrusted input; the validator must not open it."""
+    root = tmp_path / "pkg"
+    root.mkdir()
+    outside = tmp_path / "outside.txt"
+    outside.write_text("outside the package", encoding="utf-8")
+
+    assert mica_core._resolve_within_root(root, "../outside.txt") is None
+    assert mica_core._resolve_within_root(root, "/etc/passwd") is None
+    assert mica_core._resolve_within_root(root, "memory/archive.json") is not None
+
+
+def test_root_escaping_evidence_is_rejected_without_disk_access(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("secret", encoding="utf-8")
+    digest, size = mica_core.hash_surface_bytes(outside)
+
+    trace = project_root / "memory" / "mica.invocation.jsonl"
+    record = json.loads(trace.read_text(encoding="utf-8").strip())
+    record["surface_evidence"] = [
+        {
+            "role": "archive",
+            "path": "../outside.txt",
+            "sha256": digest,
+            "bytes": size,
+            "audience": "agent_context",
+            "delivery_state": "resolved",
+        }
+    ]
+    record["loaded_surfaces"] = ["archive"]
+    record["agent_context_surfaces"] = ["archive"]
+    record["capsule_hash"] = mica_core.compute_capsule_hash(record)
+    trace.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    results = _statuses(mica_core.run_invocation_trace_checks(project_root))
+
+    assert results["IVC-003"][0] == "FAIL"
+    # Even though the recorded digest matches the outside file, IVC-005 must not
+    # confirm it: an unsound record cannot direct the validator at a file.
+    assert results["IVC-005"][0] == "INFO"
+    assert "no disk access performed" in results["IVC-005"][1]
+
+
+def test_live_byte_check_is_gated_on_coherence_failure(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+    trace = project_root / "memory" / "mica.invocation.jsonl"
+    record = json.loads(trace.read_text(encoding="utf-8").strip())
+    record["surface_evidence"] = record["surface_evidence"][:1]  # incomplete account
+    record["capsule_hash"] = mica_core.compute_capsule_hash(record)
+    trace.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    results = _statuses(mica_core.run_invocation_trace_checks(project_root))
+
+    assert results["IVC-004"][0] == "FAIL"
+    assert results["IVC-005"][0] == "INFO"
+
+
+def test_symlink_escaping_the_root_is_refused(tmp_path: Path):
+    root = tmp_path / "pkg"
+    (root / "memory").mkdir(parents=True)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("secret", encoding="utf-8")
+    link = root / "memory" / "linked.json"
+    try:
+        link.symlink_to(outside)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation not permitted on this platform")
+
+    assert mica_core._resolve_within_root(root, "memory/linked.json") is None
+
+
+# --- runtime trace state -----------------------------------------------------
+
+
+def test_runtime_reports_recorded_when_surfaces_match(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+
+    summary = mica_runtime.build_summary(project_root)
+
+    assert summary["invocation_evidence"] == "recorded"
+
+
+def test_runtime_reports_stale_after_surface_drift(tmp_path: Path):
+    """The runtime must not claim 'recorded' when the validator says stale."""
+    project_root = _seed_project(tmp_path)
+    (project_root / "memory" / "mica_archive.json").write_text(
+        '{"tampered": true}', encoding="utf-8"
+    )
+
+    summary = mica_runtime.build_summary(project_root)
+
+    assert summary["invocation_evidence"] == "stale"
+    assert "Trace     : stale" in mica_runtime.emit_text(summary)
+
+
+def test_runtime_reports_absent_without_a_trace(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+    (project_root / "memory" / "mica.invocation.jsonl").unlink()
+
+    summary = mica_runtime.build_summary(project_root)
+
+    assert summary["invocation_evidence"] == "absent"
+
+
+def test_runtime_reports_invalid_for_a_broken_trace(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+    trace = project_root / "memory" / "mica.invocation.jsonl"
+    record = json.loads(trace.read_text(encoding="utf-8").strip())
+    record["package_state"] = "NOT_A_STATE"
+    trace.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    summary = mica_runtime.build_summary(project_root)
+
+    assert summary["invocation_evidence"] == "invalid"
+
+
+def test_runtime_and_validator_agree_on_drift(tmp_path: Path):
+    """The two tools must not disagree about the same package."""
+    project_root = _seed_project(tmp_path)
+    (project_root / "memory" / "mica_playbook.md").write_text("# changed\n", encoding="utf-8")
+
+    runtime_state = mica_runtime.build_summary(project_root)["invocation_evidence"]
+    validator = _statuses(mica_core.run_invocation_trace_checks(project_root))
+
+    assert runtime_state == "stale"
+    assert validator["IVC-005"][0] == "WARN"

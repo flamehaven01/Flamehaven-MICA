@@ -155,10 +155,26 @@ IVC-005 [PASS] capsule inv_... digests match the current surface bytes
 
 `IVC-005` re-hashes the surfaces on disk and compares them to the newest
 capsule. It runs only when a project root is given, since a bare trace file
-provides no root to resolve relative paths against. Editing a surface without
-regenerating the trace turns it into a WARN and the verdict becomes
-`VALID INVOCATION TRACE (stale evidence)` -- stale, not invalid, because the
-record was true when it was written.
+provides no root to resolve relative paths against, and it is skipped entirely
+when `IVC-003` or `IVC-004` failed -- an unsound record must not be able to
+direct the validator at a file. Recorded paths are re-resolved against the root
+before being opened, so a `../` path or a symlink leaving the package is refused
+rather than read.
+
+Three states are reported separately and must not be collapsed:
+
+| Axis | Meaning | Where |
+|---|---|---|
+| Artifact validity | Is the record itself well-formed and coherent? | `IVC-003` / `IVC-004` |
+| Continuity freshness | Do the recorded digests still match disk? | `IVC-005` |
+| Runtime trace state | What should a session be told? | `mica_runtime.py` `Trace:` |
+
+Editing a surface without regenerating the trace makes `IVC-005` WARN, the
+validator verdict `VALID INVOCATION TRACE (stale evidence)` with exit 0, and
+the runtime `Trace: stale`. The artifact stays valid because the record was
+true when written; only its continuity with the current surfaces is broken.
+The runtime resolves the trace against the project root precisely so it cannot
+report `recorded` while the validator reports drift.
 
 Recorded evidence:
 

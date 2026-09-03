@@ -24,7 +24,7 @@ Implements P1 of `docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md`.
 - v1 records remain valid and are never rewritten; v2 fields stay optional
 - new fixture `invocation_capsule_v2` with a byte-bound committed trace
 - new suites `tests/test_invocation_capsule_v2.py` and
-  `tests/test_schema_metavalidation.py`; tests 62 -> 118
+  `tests/test_schema_metavalidation.py`; tests 62 -> 126
 
 Contract gaps found in review and closed before push:
 
@@ -48,6 +48,23 @@ Contract gaps found in review and closed before push:
 - `jsonschema` added to `requirements-dev.txt`; new suite metavalidates all ten
   shipped schemas and validates real runtime output and every committed trace
   against the invocation schema
+
+Adversarial review found two more, both closed before push:
+
+- `IVC-005` read the path recorded in the trace directly, so a record claiming
+  `../outside.txt` caused the validator to hash a file outside the package and
+  report PASS while `IVC-003` reported FAIL on the same record. Recorded paths
+  are now re-resolved against the root (symlinks included) and refused if they
+  escape, and the live-byte check is skipped entirely when `IVC-003` or
+  `IVC-004` failed. An unsound record cannot direct the validator at a file
+- the runtime passed only the trace file to the validator, so `IVC-005` was
+  skipped and a drifted package was reported as `Trace: recorded` while
+  `mica_invocation.py <root>` reported stale. The runtime now resolves against
+  the project root and reports `absent` / `invalid` / `stale` / `recorded`
+
+The three states stay separate: artifact validity (`IVC-003`/`IVC-004`),
+continuity freshness (`IVC-005`), and runtime trace state (`Trace:`). A stale
+capsule is a valid artifact whose continuity with current surfaces is broken.
 
 No new PCT was added. Per the plan, PCT promotion waits for a consumer pilot
 (P4) that demonstrates a recurring, machine-detectable contract failure.

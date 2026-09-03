@@ -851,25 +851,56 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     else:
         results.append(("IVC-004", "PASS", "invocation surfaces are internally coherent"))
 
-    results.append(_check_live_surface_bytes(project_root, records))
+    record_is_sound = not any(
+        cid in {"IVC-003", "IVC-004"} and status == "FAIL" for cid, status, _ in results
+    )
+    results.append(_check_live_surface_bytes(project_root, records, record_is_sound))
 
     return results
 
 
+def _resolve_within_root(project_root: Path, relative: str) -> Path | None:
+    """Resolve a recorded path and refuse anything outside the project root.
+
+    The recorded path is untrusted input. Symlinks are followed by resolve(),
+    so a link inside the package that points outside is rejected too.
+    """
+    try:
+        root = Path(project_root).resolve()
+        candidate = (root / relative).resolve()
+        candidate.relative_to(root)
+    except (ValueError, OSError):
+        return None
+    return candidate
+
+
 def _check_live_surface_bytes(
-    project_root: Path | None, records: list[dict[str, Any]]
+    project_root: Path | None,
+    records: list[dict[str, Any]],
+    record_is_sound: bool,
 ) -> tuple[str, str, str]:
     """IVC-005: compare the newest capsule's digests against the bytes on disk.
 
     Drift is reported as WARN, not FAIL. An older record was true when written,
     so a changed surface makes the capsule stale rather than invalid. The
     operator re-invokes to record current bytes.
+
+    Nothing is read from disk unless the record already passed the schema and
+    coherence checks. An unsound record must not be able to direct the
+    validator at a file, and a recorded path is re-resolved against the root
+    before it is opened.
     """
     if project_root is None:
         return (
             "IVC-005",
             "INFO",
             "project root not supplied; recorded digests not compared against disk",
+        )
+    if not record_is_sound:
+        return (
+            "IVC-005",
+            "INFO",
+            "skipped: trace failed schema or coherence checks; no disk access performed",
         )
 
     newest = None
@@ -895,7 +926,10 @@ def _check_live_surface_bytes(
         if not _is_non_empty_string(rel):
             drifted.append(f"{role} (unusable path)")
             continue
-        path = project_root / str(rel)
+        path = _resolve_within_root(project_root, str(rel))
+        if path is None:
+            drifted.append(f"{role} (path escapes project root; not read)")
+            continue
         if not path.is_file():
             drifted.append(f"{role} (missing)")
             continue

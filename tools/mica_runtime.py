@@ -200,11 +200,22 @@ def _default_invocation_trace_path(project_root: Path) -> Path:
     return project_root / "mica.invocation.jsonl"
 
 
-def _invocation_evidence_status(trace_path: Path) -> str:
+def _invocation_evidence_status(trace_path: Path, project_root: Path | None = None) -> str:
+    """Report trace state as absent / invalid / stale / recorded.
+
+    The project root is passed so IVC-005 can re-hash the recorded surfaces.
+    Without it the live-byte check is skipped and a drifted package would be
+    reported as `recorded`, which contradicts the validator and defeats the
+    point of an invocation-first runtime.
+    """
     if not trace_path.is_file():
         return "absent"
-    checks = run_invocation_trace_checks(trace_path)
-    return "recorded" if all(status != "FAIL" for _, status, _ in checks) else "invalid"
+    checks = run_invocation_trace_checks(project_root if project_root is not None else trace_path)
+    if any(status == "FAIL" for _, status, _ in checks):
+        return "invalid"
+    if any(cid == "IVC-005" and status == "WARN" for cid, status, _ in checks):
+        return "stale"
+    return "recorded"
 
 
 def _resolve_active_session_id(project_root: Path) -> str | None:
@@ -486,7 +497,7 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     )
     base.update(flow_summary)
     base.update(invocation_summary)
-    base["invocation_evidence"] = _invocation_evidence_status(trace_path)
+    base["invocation_evidence"] = _invocation_evidence_status(trace_path, project_root)
     return base
 
 
@@ -718,7 +729,7 @@ def main() -> None:
         )
         summary = dict(summary)
         summary["invocation_trace_path"] = str(trace_path)
-        summary["invocation_evidence"] = _invocation_evidence_status(trace_path)
+        summary["invocation_evidence"] = _invocation_evidence_status(trace_path, project_root)
 
     if args.format == "json":
         print(json.dumps(summary, indent=2))
