@@ -75,6 +75,59 @@ did before, `active_profile` is null, and no existing fixture changed behavior.
 
 ---
 
+## v3.0.0 Origin P4 - Measurement, and what it found (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+
+MICA has had no metrics. Every claim about it has been structural ("the check
+fires") rather than quantitative ("the session receives N bytes"). `mica_measure.py`
+reports what is deterministically observable at session start: context budget in
+bytes, surface resolution, capsule coverage, and verdict axes.
+
+It is a measurement instrument, not a result. It says nothing about whether MICA
+improves task outcomes; that needs sessions with a control, which a static scan
+cannot supply. The tool prints that caveat itself.
+
+### PCT-006 was stating a number it could not support
+
+Versions were packed as `major*10000 + minor*100 + patch` and the difference
+reported as "N version(s) behind". Within one minor that is a true patch count.
+Across a minor boundary it counts nothing: a package declaring `0.1.9` was told
+it was **99 version(s) behind** canonical `0.2.8`. One of the six live consumer
+packages declares `0.1.9`, so the false number was shipping.
+
+- same minor: reports a real patch count
+- different minor: names the gap without a number
+- ahead of canonical: now a WARN. `Flamehaven-CAS` declares `0.2.10` and the old
+  formula produced a negative lag, which fell below the threshold and stayed
+  silent. A spec with no canonical schema is worth saying out loud
+- `mica_measure.py` reads PCT-006's own message instead of recomputing the
+  comparison. Two implementations of one comparison is the drift MICA exists to
+  catch, and the first draft of the tool had exactly that
+
+Verified against the golden baseline captured for P3: across 105 (fixture,
+profile) combinations, PCT-006 is the only check whose output changed. Every
+other result is byte-identical.
+
+### Fleet baseline, six live consumer packages
+
+| Package | mica_spec | Contract | Agent context bytes |
+|---|---|---|---|
+| alecta-stock | 0.2.6 | CLOSED | 15,893 |
+| flamehaven-verification | 0.2.8 | CLOSED | 28,199 |
+| flamehaven-cas | 0.2.10 | CLOSED | 3,998 |
+| stem-ai-bio | 0.2.4 | CLOSED | 51,056 |
+| cocomini-ultimatepos | 0.2.8 | CLOSED | 16,406 |
+| flamehaven-space-maintainer | 0.1.9 | CLOSED | 97,560 |
+
+All six close the contract. All six can identify their invoked bytes.
+**None declares a memory profile**: P1 and P2 have zero adoption, and the 213,112
+bytes above are what every session in the fleet receives regardless of task.
+
+Tests 168 -> 184.
+
+---
+
 ## v3.0.0 Origin P0 - Reclaim the invocation contract (2026-09-03)
 
 Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.

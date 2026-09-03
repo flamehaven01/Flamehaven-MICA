@@ -151,6 +151,7 @@ Tools:
 | `tools/mica_core.py` | Contract resolution, PCT-001..012, verdict axes |
 | `tools/mica_evidence.py` | Capsule and invocation-trace validation (`IVC-*`) |
 | `tools/mica_flow.py` | Memory-authoring pipeline checks (PCT-013/014/015/017/018) |
+| `tools/mica_measure.py` | Context budget and surface resolution, in numbers |
 | `tools/mica_pct.py` | Package contract validator (PCT-001 through PCT-015, PCT-017, PCT-018; PCT-016 reserved) |
 | `tools/mica_runtime.py` | Portable runtime summary / hook emitter |
 | `tools/mica_invocation.py` | Standalone validator for `mica.invocation.jsonl` provenance artifacts |

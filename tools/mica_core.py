@@ -643,26 +643,60 @@ def _run_pct006(ctx: _PackageContext) -> list[tuple[str, str, str]]:
     else:
         out.append(("PCT-006", "INFO", "mica_spec absent in one or both files"))
 
-    # v0.2.8: warn when declared spec is >= 2 patch versions behind canonical
-    # MICA uses 0.MAJOR.PATCH increments; compare the full numeric value.
     declared_spec = yaml_spec or arch_spec
     if declared_spec:
-        can = _parse_version(MICA_CANONICAL_VERSION)
-        dec = _parse_version(declared_spec)
-        if len(can) >= 3 and len(dec) >= 3:
-            can_n = can[0] * 10000 + can[1] * 100 + can[2]
-            dec_n = dec[0] * 10000 + dec[1] * 100 + dec[2]
-            lag = can_n - dec_n
-            if lag >= 2:
-                out.append(
-                    (
-                        "PCT-006",
-                        "WARN",
-                        f"mica_spec {declared_spec} is {lag} version(s) behind "
-                        f"canonical {MICA_CANONICAL_VERSION} -- consider upgrading",
-                    )
-                )
+        out.extend(_spec_lag_result(declared_spec))
     return out
+
+
+def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
+    """Compare a declared mica_spec against canonical without inventing a count.
+
+    The original formula packed the version as major*10000 + minor*100 + patch
+    and reported the difference as "N version(s) behind". Within one minor that
+    is a true patch count, but across a minor boundary it is not a count of
+    anything: 0.1.9 against canonical 0.2.8 was reported as "99 versions
+    behind". Measuring the live packages surfaced it, since one of them
+    declares 0.1.9.
+
+    Patch distance is only stated when the minor matches. Otherwise the gap is
+    named without a number.
+    """
+    can = _parse_version(MICA_CANONICAL_VERSION)
+    dec = _parse_version(declared_spec)
+    if len(can) < 3 or len(dec) < 3:
+        return []
+
+    if dec > can:
+        return [
+            (
+                "PCT-006",
+                "WARN",
+                f"mica_spec {declared_spec} is ahead of canonical "
+                f"{MICA_CANONICAL_VERSION}; no canonical schema exists for it",
+            )
+        ]
+    if dec[:2] != can[:2]:
+        return [
+            (
+                "PCT-006",
+                "WARN",
+                f"mica_spec {declared_spec} is behind canonical "
+                f"{MICA_CANONICAL_VERSION} by at least one minor version "
+                f"-- consider upgrading",
+            )
+        ]
+    lag = can[2] - dec[2]
+    if lag >= 2:
+        return [
+            (
+                "PCT-006",
+                "WARN",
+                f"mica_spec {declared_spec} is {lag} patch version(s) behind "
+                f"canonical {MICA_CANONICAL_VERSION} -- consider upgrading",
+            )
+        ]
+    return []
 
 
 def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
