@@ -26,6 +26,7 @@ With --strict, an archive or flow FAILURE also exits 1.
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -65,28 +66,55 @@ def _report(results: list[tuple[str, str, str]]) -> dict[str, str]:
 
 
 def main() -> None:
-    argv = [a for a in sys.argv[1:] if a != "--strict"]
-    strict = "--strict" in sys.argv[1:]
-    root = Path(argv[0]).resolve() if argv else Path.cwd()
+    # Hand-rolled argument stripping silently accepted --profile and then
+    # validated the default profile instead. argparse rejects what it does not
+    # know rather than ignoring it.
+    parser = argparse.ArgumentParser(description="Validate a MICA package contract")
+    parser.add_argument("project_root", nargs="?", default=".", help="package root to validate")
+    parser.add_argument(
+        "--profile",
+        help="memory profile declared under invocation_protocol.profiles",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit 1 on an archive or flow failure, not just a contract failure",
+    )
+    args = parser.parse_args()
+
+    strict = args.strict
+    root = Path(args.project_root).resolve()
     if not root.is_dir():
         print(f"[ERROR] Not a directory: {root}")
         sys.exit(1)
     print(format_tool_banner("MICA PCT Validator"))
     print(f"Project root: {root}")
-    results = run_pct_checks(root)
+    if args.profile:
+        print(f"Profile     : {args.profile}")
+    results = run_pct_checks(root, args.profile)
     _report(results)
+    trace_failed = False
     invocation_trace = find_flow_artifact(root, "mica.invocation.jsonl")
     if invocation_trace:
         print("Invocation trace summary:")
         print()
         for cid, status, msg in run_invocation_trace_checks(root):
             print(f"{cid} [{status:<4}] {msg}")
+            if status == "FAIL":
+                trace_failed = True
         print()
+        if trace_failed:
+            print("[TRACE] recorded invocation evidence is invalid; see IVC-* above")
+            print()
     failing = failing_axes(results)
     if not strict:
         failing = [axis for axis in failing if axis == "contract"]
+    # A recorded trace that fails IVC-* is invalid evidence about this package.
+    # Reporting it while exiting 0 let a corrupted capsule pass a CI gate.
+    if trace_failed:
+        failing = failing + ["invocation_trace"]
     if failing:
-        print(f"[EXIT 1] failing axes: {failing}")
+        print(f"[EXIT 1] failing: {failing}")
     sys.exit(1 if failing else 0)
 
 

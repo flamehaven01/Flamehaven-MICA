@@ -374,6 +374,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
 
     profile_sections: dict[str, list[str]] = {}
     sections_for_uninvoked_surfaces: list[str] = []
+    malformed_profile: str | None = None
     if active_profile is not None:
         entry = profiles.get(active_profile)
         raw_surfaces = entry.get("surfaces") if isinstance(entry, dict) else None
@@ -384,6 +385,16 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         undeclared_profile_surfaces = [
             role for role in profile_surfaces if role not in declared_surfaces
         ]
+        if isinstance(raw_surfaces, list) and not profile_surfaces:
+            # An empty surface list is a declaration that resolves to nothing.
+            # Falling back to the mode defaults would silently ignore the
+            # operator's request.
+            malformed_profile = f"{active_profile!r} declares no usable surfaces"
+        elif len(set(profile_surfaces)) != len(profile_surfaces):
+            duplicates = sorted({r for r in profile_surfaces if profile_surfaces.count(r) > 1})
+            malformed_profile = f"{active_profile!r} repeats surfaces {duplicates}"
+        elif not isinstance(raw_surfaces, list):
+            malformed_profile = f"{active_profile!r} has no surfaces list"
         raw_sections = entry.get("sections") if isinstance(entry, dict) else None
         if isinstance(raw_sections, dict):
             for role, names in raw_sections.items():
@@ -427,6 +438,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         "active_profile": active_profile,
         "unknown_profile": unknown_profile,
         "undeclared_profile_surfaces": undeclared_profile_surfaces,
+        "malformed_profile": malformed_profile,
         "profile_sections": profile_sections,
         "sections_for_uninvoked_surfaces": sections_for_uninvoked_surfaces,
         "declared_surfaces": declared_surfaces,
@@ -570,8 +582,28 @@ def _run_pct002(ctx: _PackageContext) -> list[tuple[str, str, str]]:
 
 
 def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
-    """Every required layer path resolves on disk."""
+    """Every required layer path resolves to a readable file inside the root.
+
+    Existence alone is not enough. A directory at a declared surface path passed
+    this check while producing no evidence, and a path escaping the project root
+    would have resolved the same way.
+    """
     out: list[tuple[str, str, str]] = []
+    unusable: list[str] = []
+    for lyr in ctx.layers:
+        if not isinstance(lyr, dict) or not lyr.get("required", True):
+            continue
+        rel = lyr.get("path")
+        if not isinstance(rel, str):
+            continue
+        resolved = _resolve_within_root(ctx.project_root, rel)
+        if resolved is None:
+            unusable.append(f"{rel} (escapes project root)")
+        elif resolved.exists() and not resolved.is_file():
+            unusable.append(f"{rel} (not a file)")
+    if unusable:
+        out.append(("PCT-003", "FAIL", f"unusable layer paths: {unusable}"))
+        return out
     missing_paths = [
         lyr.get("path")
         for lyr in ctx.layers
@@ -662,6 +694,15 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
     Patch distance is only stated when the minor matches. Otherwise the gap is
     named without a number.
     """
+    if not re.search(r"\d", declared_spec):
+        return [
+            (
+                "PCT-006",
+                "WARN",
+                f"mica_spec {declared_spec!r} contains no version number; "
+                f"cannot be compared against canonical {MICA_CANONICAL_VERSION}",
+            )
+        ]
     can = _parse_version(MICA_CANONICAL_VERSION)
     dec = _parse_version(declared_spec)
     if len(can) < 3 or len(dec) < 3:
@@ -765,6 +806,8 @@ def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
             f"memory profile {contract['active_profile']!r} names surfaces that are not "
             f"declared as layers {contract['undeclared_profile_surfaces']}"
         )
+    if contract["malformed_profile"]:
+        profile_config_issues.append(f"memory profile {contract['malformed_profile']}")
     if contract["sections_for_uninvoked_surfaces"]:
         profile_config_issues.append(
             f"memory profile {contract['active_profile']!r} selects sections of surfaces it "
@@ -1116,7 +1159,12 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
         results.append(("PCT-009", "FAIL", f"invocation contract incomplete: {fails}"))
     else:
         results.append(
-            ("PCT-009", "PASS", "declared memory surfaces reached the session; contract closed")
+            (
+                "PCT-009",
+                "PASS",
+                "declared memory surfaces resolved for this session; contract closed. "
+                "Resolution is not delivery -- see IVC-* for recorded invocation evidence",
+            )
         )
 
     return results

@@ -47,6 +47,7 @@ _CAPSULE_HASH_FIELDS = (
     "timestamp_utc",
     "session_id",
     "trigger",
+    "profile",
     "surface_evidence",
     "package_state",
     "core_state",

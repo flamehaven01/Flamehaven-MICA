@@ -112,9 +112,13 @@ def measure(project_root: Path, profile: str | None = None) -> dict[str, Any]:
         # A v1 trace records surface roles. A v2 capsule records the digest of
         # each delivered surface, which is what makes "these exact bytes" a
         # checkable claim rather than an assertion.
+        # Coverage means every invoked surface carries a digest. A partial
+        # record identifies some bytes, not the session's bytes.
         "capsule_coverage": {
             "surfaces_with_digest": len(evidence),
-            "identifies_exact_bytes": bool(evidence),
+            "identifies_exact_bytes": (
+                bool(evidence) and len(evidence) == len(summary.get("loaded_surfaces") or [])
+            ),
             "trace_state": summary.get("invocation_evidence"),
         },
     }
@@ -167,15 +171,18 @@ def main() -> None:
     args = parser.parse_args()
 
     rows = []
+    skipped: list[str] = []
     for raw in args.roots:
         root = Path(raw).resolve()
         if not root.is_dir():
             print(f"[SKIP] not a directory: {root}", file=sys.stderr)
+            skipped.append(str(root))
             continue
         try:
             rows.append(measure(root, args.profile))
         except Exception as exc:  # a broken package must not hide the rest
             print(f"[SKIP] {root.name}: {type(exc).__name__}: {exc}", file=sys.stderr)
+            skipped.append(str(root))
 
     if args.json:
         print(json.dumps(rows, indent=2))
@@ -184,6 +191,11 @@ def main() -> None:
     print(format_tool_banner("MICA Measurement"))
     print()
     _print_report(rows)
+    if skipped:
+        # A fleet reading that silently drops packages is not a fleet reading.
+        print()
+        print(f"[EXIT 1] {len(skipped)} root(s) could not be measured: {skipped}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

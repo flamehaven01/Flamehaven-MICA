@@ -232,8 +232,18 @@ def parse_markdown_sections(text: str) -> tuple[str, dict[str, str]]:
     preamble_lines: list[str] = []
     sections: dict[str, list[str]] = {}
     current: str | None = None
+    fence: str | None = None
     for line in text.splitlines(keepends=True):
-        match = re.match(r"^##\s+(.+?)\s*$", line.rstrip("\n"))
+        # Track fenced blocks. A "## heading" inside a code block is content,
+        # not a section boundary; treating it as one truncated real sections.
+        fence_match = re.match(r"^(`{3,}|~{3,})", line.lstrip())
+        if fence_match:
+            marker = fence_match.group(1)[0]
+            if fence is None:
+                fence = marker
+            elif marker == fence:
+                fence = None
+        match = None if fence else re.match(r"^##\s+(.+?)\s*$", line.rstrip("\n"))
         if match:
             current = match.group(1)
             sections.setdefault(current, []).append(line)

@@ -5,6 +5,83 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0 Origin -- adversarial audit fixes (2026-09-03)
+
+Non-release implementation step. An adversarial pass against the Origin
+milestone produced nine findings; all reproduce, all are fixed, and each is now
+pinned by a counterexample in `tests/test_adversarial_findings.py`.
+
+### The contract said more than it verified
+
+`PCT-009` reported "declared memory surfaces reached the session" when what it
+had established was that the surfaces resolved. Resolution is not delivery. The
+message now says `resolved` and points at `IVC-*` for recorded invocation
+evidence.
+
+Worse, a corrupted capsule was reported and then ignored: `IVC-004` printed
+`FAIL` while `mica_pct.py` exited 0, because the trace checks ran after the exit
+code had already been decided. An invalid recorded trace now fails the run.
+
+### Evidence could be forged
+
+`profile` was recorded in the trace but absent from `_CAPSULE_HASH_FIELDS`.
+Rewriting `profile: null` to `forged_profile` left the capsule hash unchanged
+and passed `IVC-003`/`IVC-004`. The profile decides which memory was selected,
+so it is now covered by the hash.
+
+### A surface path only had to exist
+
+`PCT-003` called `.exists()`. A directory at a declared playbook path passed the
+contract while producing no evidence for that role, and a path escaping the root
+resolved the same way. Declared layer paths must now be readable files inside
+the project root.
+
+### Malformed profiles degraded quietly
+
+- `surfaces: []` fell back to the mode defaults, ignoring the operator's request
+- `surfaces: [archive, archive]` produced duplicate loaded surfaces and evidence
+
+Both now fail `PCT-007`.
+
+### The validator ignored an argument it was given
+
+`mica_pct.py` stripped `--strict` by hand and dropped everything else, so
+`--profile does_not_exist` validated the *default* profile and exited 0. The CLI
+uses `argparse` now: `--profile` is honoured and unknown flags are rejected.
+
+### The markdown parser mistook code for structure
+
+`parse_markdown_sections` did not track fences, so a `## heading` inside a
+```` ``` ```` block registered as a section and truncated the real one around it.
+This broke the P2 guarantee that a delivered slice is the section that was
+selected. The parser is fence-aware and handles both backtick and tilde fences.
+
+### Measurement reported coverage it did not have
+
+`identifies_exact_bytes` was `bool(evidence)`, so one digest out of two invoked
+surfaces read as full coverage. It now requires a digest for every invoked
+surface. `mica_measure.py` also exited 0 after skipping unreadable roots, which
+made a partial fleet reading indistinguishable from a complete one; skipped
+roots now exit 1.
+
+### A spec with no version number passed
+
+`mica_spec: not-a-version` produced `_parse_version(...) == (0,)` and PCT-006
+returned `mica_spec aligned`. It now warns that the value cannot be compared.
+
+### Documented arithmetic did not hold
+
+The P3 verification note said "20 fixtures x 5 profile selections: 105
+combinations". 20 x 5 is 100. The count was taken over the 21 fixtures carrying
+a `mica.yaml`; the derivation is corrected. The fleet baseline also read as
+though every session received 213,112 bytes -- that is the sum across six
+consumers, ranging 3,998 to 97,560 each. The invariant is that *within* each
+consumer, every task receives the same set.
+
+Tests 184 -> 204.
+
+---
+
 ## v3.0.0 Origin P4 - Measurement, and what it found (2026-09-03)
 
 Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
@@ -93,8 +170,9 @@ them, so both new helpers came out critical. They are now flattened around
 several lists.
 
 Behavior verified rather than assumed: a golden baseline of `run_pct_checks`
-output was captured before the refactor across 20 fixtures x 5 profile
-selections -- 105 combinations, 1,840 results -- and compared after every step.
+output was captured before the refactor across the 21 fixtures carrying a
+mica.yaml x 5 profile selections -- 105 combinations, 1,840 results -- and
+compared after every step.
 Identical throughout.
 
 All figures below are AI-SLOP-DETECTOR v3.8.9 output on `tools/`, measured at

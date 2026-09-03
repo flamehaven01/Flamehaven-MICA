@@ -159,7 +159,7 @@ three remaining criticals — `_run_pct018`, `_check_capsule_schema`, and
 ## Behavior verification
 
 A golden baseline of `run_pct_checks` output was captured before the P3 refactor
-across 20 fixtures × 5 profile selections: 105 combinations, 1,840 results. It
+across the 21 fixtures carrying a mica.yaml x 5 profile selections: 105 combinations, 1,840 results. It
 was compared after every subsequent step.
 
 - P3 refactor: identical at every checkpoint
@@ -181,11 +181,14 @@ Six live consumer packages, measured at this milestone:
 | cocomini-ultimatepos | 0.2.8 | CLOSED | 16,406 | — |
 | flamehaven-space-maintainer | 0.1.9 | CLOSED | 97,560 | — |
 
-All six close the contract. All six can identify their invoked bytes.
+All six close the contract. All six carry a digest for every invoked surface,
+so the exact bytes are identifiable.
 
-**None declares a memory profile.** P1 and P2 have zero adoption, and 213,112
-bytes of agent context is what every session in the fleet receives regardless of
-task. The selection half now exists; nothing uses it yet.
+**None declares a memory profile.** Per package the baseline ranges from 3,998
+to 97,560 bytes, summing to 213,112 across the fleet. The problem is not that a
+session receives 213 KB -- it is that *within* each consumer, review, routine
+maintenance, and incident work all receive the same declared context set
+regardless of task. The selection half now exists; nothing uses it yet.
 
 ---
 
