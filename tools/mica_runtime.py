@@ -251,6 +251,7 @@ def _build_invocation_summary(
     yd: dict[str, Any] | None,
     archive_path: Path | None,
     playbook_path: Path | None,
+    profile: str | None = None,
 ) -> dict[str, Any]:
     if state == "INACTIVE":
         return {
@@ -290,7 +291,7 @@ def _build_invocation_summary(
     if playbook_path is not None:
         layer_paths["playbook"] = playbook_path
 
-    contract = resolve_invocation_contract(yd)
+    contract = resolve_invocation_contract(yd, profile)
     declared = list(contract["declared_surfaces"])
     expected_loaded = list(contract["loaded_surfaces"])
     loaded = [
@@ -306,6 +307,8 @@ def _build_invocation_summary(
     return {
         "session_id": _resolve_active_session_id(project_root),
         "invocation_contract": contract["invocation_contract"],
+        "declared_profiles": contract["declared_profiles"],
+        "active_profile": contract["active_profile"],
         "declared_surfaces": declared,
         "loaded_surfaces": loaded,
         "agent_context_surfaces": agent_context_surfaces,
@@ -414,7 +417,7 @@ def pct_status(project_root: Path) -> str:
     return "CLOSED" if is_closed_contract(results) else "INCOMPLETE"
 
 
-def build_summary(project_root: Path) -> dict[str, Any]:
+def build_summary(project_root: Path, profile: str | None = None) -> dict[str, Any]:
     state, mica_yaml, legacy_archive = detect_state(project_root)
     base: dict[str, Any] = {"state": state, "project_root": str(project_root)}
 
@@ -470,11 +473,11 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     hook_output_raw = inv.get("hook_output") if isinstance(inv.get("hook_output"), dict) else {}
     proj = archive.get("project") if isinstance(archive.get("project"), dict) else {}
-    pct_results = run_pct_checks(project_root)
+    pct_results = run_pct_checks(project_root, profile)
     core_state = "CLOSED" if is_closed_contract(pct_results) else "INCOMPLETE"
     flow_summary = _build_flow_summary(project_root, yd, pct_results)
     invocation_summary = _build_invocation_summary(
-        project_root, state, yd.get("mode"), yd, archive_path, playbook_path
+        project_root, state, yd.get("mode"), yd, archive_path, playbook_path, profile
     )
     trace_path = Path(invocation_summary["invocation_trace_default_path"])
     base.update(
@@ -534,6 +537,7 @@ def build_invocation_trace_record(
         "active_critical_invariants": critical_ids,
         "last_updated": summary.get("last_updated"),
         "trigger": trigger,
+        "profile": summary.get("active_profile"),
         "surface_evidence": [dict(entry) for entry in summary.get("surface_evidence") or []],
     }
     record["capsule_hash"] = compute_capsule_hash(record)
@@ -609,6 +613,7 @@ def emit_text(summary: dict[str, Any]) -> str:
         f"[MICA CONTRACT RESOLVED] {summary.get('name') or 'unknown'} v{summary.get('version') or 'unknown'}",
         f"Mode      : {summary.get('mode') or 'legacy'}",
         f"Pattern   : {summary.get('pattern') or 'legacy'} ({summary.get('pattern_source') or 'legacy'})",
+        f"Profile   : {summary.get('active_profile') or 'default (mode)'}",
         f"Resolved  : {loaded_surfaces}",
         f"Context   : {agent_context_surfaces}",
         f"Operator  : {operator_only_surfaces}",
@@ -712,6 +717,10 @@ def main() -> None:
     parser.add_argument("--format", choices=["text", "json", "hook"], default="text")
     parser.add_argument("--write-invocation-trace", action="store_true")
     parser.add_argument("--trace-file")
+    parser.add_argument(
+        "--profile",
+        help="memory profile declared under invocation_protocol.profiles",
+    )
     args = parser.parse_args()
 
     project_root = Path(args.project_root).resolve()
@@ -719,7 +728,7 @@ def main() -> None:
         print(f"[ERROR] Not a directory: {project_root}", file=sys.stderr)
         sys.exit(1)
 
-    summary = build_summary(project_root)
+    summary = build_summary(project_root, args.profile)
     trace_path: Path | None = None
     if args.write_invocation_trace or args.trace_file:
         trace_path = write_invocation_trace(

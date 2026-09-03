@@ -275,6 +275,14 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$",
       "description": "Deterministic hash over trigger, surface evidence, session binding, and invocation state. Excludes itself and the absolute project_root so the same capsule hashes identically across platforms."
+    },
+    "profile": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "description": "Memory profile that selected this session's surfaces, from invocation_protocol.profiles. Null when the package declares no profiles and the mode defaults applied."
     }
   },
   "allOf": [

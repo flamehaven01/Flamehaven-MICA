@@ -1,0 +1,18 @@
+{
+  "mica_spec": "0.2.8",
+  "project": { "name": "memory-profiles", "version": "1.0.0" },
+  "operation_meta": { "last_updated": "2026-09-03" },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "memory-is-event-shaped",
+      "statement": "A session receives the surfaces its profile names. Giving every session the same memory is a default, not a contract.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-SEL-1 (v3.0.0 Origin P1): surface selection was two hardcoded lists keyed on mode, so a review session and a routine session received identical memory.",
+        "violation_count": 0,
+        "last_triggered": ""
+      }
+    }
+  ]
+}

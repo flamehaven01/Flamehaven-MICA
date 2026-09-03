@@ -33,6 +33,29 @@ truthfully what was actually invoked.
 Archive, playbook, governance checks, and memory-first machinery exist to support that goal.
 They are important, but they are not the center of the system.
 
+Invocation has two halves: deciding which memory a session receives, and
+proving it received it. Surface selection is declared with memory profiles:
+
+```yaml
+invocation_protocol:
+  primary_pattern: readme_protocol
+  profiles:
+    default:
+      surfaces: [archive, playbook]
+    review:
+      surfaces: [archive, playbook, lessons]
+```
+
+```bash
+python tools/mica_runtime.py . --profile review
+```
+
+A profile names the surfaces that session needs, so a review session and a
+routine session need not be given the same memory. Requesting an undeclared
+profile, or a profile naming a surface that is not a declared layer, fails the
+invocation contract. Packages that declare no profiles fall back to the mode
+defaults and resolve exactly as before.
+
 That separation is enforced, not just stated. Results report on three axes:
 
 | Axis | Question | Checks |

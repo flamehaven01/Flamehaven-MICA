@@ -5,6 +5,40 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0 Origin P1 - Memory profiles: the selection half of invocation (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+
+Invocation has two halves. MICA had built one of them to ~580 lines -- capsules,
+digests, IVC checks, live-byte comparison, all proving that whatever loaded had
+loaded. The other half, deciding what should load, was two hardcoded lists:
+
+    ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
+
+Every session received the same surfaces regardless of what it was for.
+
+- `invocation_protocol.profiles`: named surface sets. A profile declares which
+  layers a session invokes at session start
+- `resolve_invocation_contract(yd, profile)` and `run_pct_checks(root, profile)`
+  accept a profile; `mica_runtime.py --profile <name>` selects one
+- precedence: requested profile, then `loading_hint: session_start` on layers,
+  then the mode defaults
+- a `default` profile applies when none is requested
+- PCT-007 fails the contract when a requested profile is undeclared, or when a
+  profile names a surface that is not a declared layer. Both are invocation
+  faults: the session asked for memory the package cannot supply
+- capsule evidence and `agent_context` follow the profile, so the digests
+  recorded for a session cover exactly the surfaces that session selected
+- the invocation trace records `profile`; null when no profiles are declared
+- `mica_runtime.py --format text` reports the active profile
+- new fixture `memory_profiles`; new suite `tests/test_memory_profiles.py`
+- tests 143 -> 157
+
+Backward compatible. A package that declares no profiles resolves exactly as it
+did before, `active_profile` is null, and no existing fixture changed behavior.
+
+---
+
 ## v3.0.0 Origin P0 - Reclaim the invocation contract (2026-09-03)
 
 Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.

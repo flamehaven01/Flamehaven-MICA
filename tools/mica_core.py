@@ -372,7 +372,27 @@ _OPERATOR_ONLY_ALLOWED_SURFACES = frozenset(
 )
 
 
-def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
+def _mode_default_surfaces(mode: str) -> list[str]:
+    """The pre-profile default: the same surfaces for every session."""
+    if mode == "memory_first":
+        return ["archive", "playbook", "slots"]
+    return ["archive", "playbook"]
+
+
+def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) -> dict[str, Any]:
+    """Decide which memory surfaces this session receives.
+
+    This is the selection half of invocation. Before memory profiles it was two
+    hardcoded lists keyed on `mode`, which meant every session received the same
+    surfaces regardless of what it was for.
+
+    Precedence:
+      1. a requested profile from `invocation_protocol.profiles`
+      2. `loading_hint: session_start` declared on individual layers
+      3. the mode defaults
+
+    A package that declares no profiles resolves exactly as it did before.
+    """
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     raw_agent_context = (
@@ -401,16 +421,45 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
             explicit_invocation = True
             invoked_surfaces.append(role)
 
-    if not explicit_invocation:
-        defaults = (
-            ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
-        )
-        invoked_surfaces = [role for role in defaults if role in declared_surfaces]
+    profiles = inv.get("profiles") if isinstance(inv.get("profiles"), dict) else {}
+    declared_profiles = sorted(str(key) for key in profiles)
+    requested_profile = str(profile) if _is_non_empty_string(profile) else None
+    active_profile: str | None = None
+    unknown_profile: str | None = None
+    profile_surfaces: list[str] = []
+    undeclared_profile_surfaces: list[str] = []
+
+    if requested_profile is not None:
+        if requested_profile in profiles:
+            active_profile = requested_profile
+        else:
+            unknown_profile = requested_profile
+    elif "default" in profiles:
+        active_profile = "default"
+
+    if active_profile is not None:
+        entry = profiles.get(active_profile)
+        raw_surfaces = entry.get("surfaces") if isinstance(entry, dict) else None
+        if isinstance(raw_surfaces, list):
+            profile_surfaces = [
+                str(surface) for surface in raw_surfaces if _is_non_empty_string(surface)
+            ]
+        undeclared_profile_surfaces = [
+            role for role in profile_surfaces if role not in declared_surfaces
+        ]
+
+    if active_profile is not None and profile_surfaces:
+        # The profile is the request. What it names is what the session needs.
+        invoked_surfaces = [role for role in profile_surfaces if role in declared_surfaces]
+        required_session_start = list(profile_surfaces)
+    else:
+        if not explicit_invocation:
+            invoked_surfaces = [
+                role for role in _mode_default_surfaces(mode) if role in declared_surfaces
+            ]
+        required_session_start = _mode_default_surfaces(mode)
 
     deferred_surfaces = [role for role in declared_surfaces if role not in invoked_surfaces]
-    required_session_start = (
-        ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
-    )
     missing_invoked_surfaces = [
         role for role in required_session_start if role not in invoked_surfaces
     ]
@@ -471,6 +520,11 @@ def resolve_invocation_contract(yd: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "invocation_contract": "memory_first" if mode == "memory_first" else "archive_first",
+        "declared_profiles": declared_profiles,
+        "requested_profile": requested_profile,
+        "active_profile": active_profile,
+        "unknown_profile": unknown_profile,
+        "undeclared_profile_surfaces": undeclared_profile_surfaces,
         "declared_surfaces": declared_surfaces,
         "loaded_surfaces": invoked_surfaces,
         "agent_context_surfaces": agent_context_surfaces,
@@ -1497,10 +1551,13 @@ def _run_pct017(
 # ---------------------------------------------------------------------------
 
 
-def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
+def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple[str, str, str]]:
     """
     Run PCT-001 through PCT-018. Returns list of (id, status, message).
-    Hard-fail checks: PCT-001, 002, 003, 004, 007, 008, 010, 013, 015, 017.
+
+    Only CONTRACT_CHECKS decide CLOSED CONTRACT; ARCHIVE_CHECKS and FLOW_CHECKS
+    report on their own axes. `profile` selects a memory profile declared under
+    `invocation_protocol.profiles`.
     PCT-011, PCT-012, PCT-014, and PCT-018 remain WARN/INFO-only. PCT-013/014/015/017/018 are flow-gated.
     """
     results: list[tuple[str, str, str]] = []
@@ -1636,7 +1693,7 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
 
     inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
     pattern = inv.get("primary_pattern") if isinstance(inv.get("primary_pattern"), str) else None
-    contract = resolve_invocation_contract(yd)
+    contract = resolve_invocation_contract(yd, profile)
     invoked_surfaces = contract["loaded_surfaces"]
     context_surfaces = contract["agent_context_surfaces"]
     missing_invoked_surfaces = contract["missing_invoked_surfaces"]
@@ -1682,7 +1739,20 @@ def run_pct_checks(project_root: Path) -> list[tuple[str, str, str]]:
         operator_config_issues.append(
             f"operator_only surfaces overlap agent_context {overlapping_operator_only_surfaces}"
         )
-    invocation_config_issues = context_config_issues + operator_config_issues
+    profile_config_issues: list[str] = []
+    if contract["unknown_profile"]:
+        profile_config_issues.append(
+            f"requested memory profile {contract['unknown_profile']!r} is not declared "
+            f"(available: {contract['declared_profiles'] or 'none'})"
+        )
+    if contract["undeclared_profile_surfaces"]:
+        profile_config_issues.append(
+            f"memory profile {contract['active_profile']!r} names surfaces that are not "
+            f"declared as layers {contract['undeclared_profile_surfaces']}"
+        )
+    invocation_config_issues = (
+        profile_config_issues + context_config_issues + operator_config_issues
+    )
 
     if pattern is None:
         if missing_invoked_surfaces:

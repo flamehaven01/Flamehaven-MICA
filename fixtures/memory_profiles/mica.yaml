@@ -1,0 +1,24 @@
+mica_spec: "0.2.8"
+name: memory-profiles
+mode: memory_injection
+
+layers:
+  - id: archive
+    kind: archive
+    path: memory/mica_archive.json
+  - id: playbook
+    kind: playbook
+    path: memory/mica_playbook.md
+  - id: lessons
+    kind: lessons
+    path: memory/lessons.md
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  profiles:
+    default:
+      description: Baseline session. Same surfaces the mode defaults would give.
+      surfaces: [archive, playbook]
+    review:
+      description: Review needs the lessons that earlier reviews produced.
+      surfaces: [archive, playbook, lessons]
