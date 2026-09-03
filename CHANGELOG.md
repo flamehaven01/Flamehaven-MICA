@@ -5,6 +5,139 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v0.2.10 - Adoption Edition (2026-09-03)
+
+v0.2.9 shipped the selection machinery and said plainly that nothing used it.
+This release is what happened when something finally did.
+
+`flamehaven-audit-reports` became the first consumer to declare memory profiles.
+It declared eight surfaces and invoked three; five were domain playbooks marked
+`on_demand`, 33,326 bytes that reached no session at all. Adopting profiles was
+supposed to be a configuration change. It was blocked three separate ways, and
+each block was a defect in MICA rather than in the consumer.
+
+**Legally.** There was no LICENSE. All rights reserved by default.
+
+**Technically.** Agent-context eligibility tested a role against six literal
+names, so a package that keeps several playbooks apart could not deliver any of
+them. Declaring `playbook-eqa` produced an INCOMPLETE contract.
+
+**Structurally.** `agent_context_surfaces` was global while profiles are
+per-session, so a surface invoked by one profile failed the contract under every
+other. This had already shipped broken: the `handoff_surface` fixture closed its
+contract under `resume` and failed under `default` and under no profile at all,
+and no test looked.
+
+Measured, agent-context bytes, contract CLOSED throughout:
+
+| Session | Surfaces | Bytes | vs load-everything |
+|---|---|---|---|
+| load-everything control | 7 | 61,525 | -- |
+| `default` | 3 | 28,199 | -54.2% |
+| `eqa` | 5 | 50,321 | -18.2% |
+| `bav` | 5 | 44,773 | -27.2% |
+| `bsc` | 5 | 47,038 | -23.5% |
+| `mf` | 5 | 44,595 | -27.5% |
+
+The four task profiles average 46,682 bytes, 24.1% below the control. This is
+not a saving against the previous 28,199: it is what makes 33,326 bytes of
+declared-but-unreachable memory reachable at all, at a quarter less than loading
+it every session. Whether a session with its own domain playbook does better
+work is still not measured, and one package is not a trend.
+
+**Also in this release**
+
+- `deferred_surfaces_basis`: which rule left each surface out, not just its name
+- fleet spec divergence reclassified from an unresolved limit to something not
+  sought. Six packages keep their own form and evolve on their own track;
+  `PCT-006` reports the gap and no longer prescribes convergence
+- the handoff surface, implemented rather than proposed
+- MICA's own rules turned inward: golden check-output snapshot, canonical
+  version and spec-coverage gates in CI, cross-platform check messages
+- README restructured; GitHub description and topics no longer say governance
+
+**Adoption**: 1 of 6. **Tests**: 224 -> 306.
+
+---
+
+## The project meets its own demands (2026-09-03)
+
+MICA fails consumer packages for drift between schema, config, and docs. Three
+of the same demands were never turned inward.
+
+**No LICENSE.** `licenseInfo` was null, which means all rights reserved by
+default. A package built to be adopted by six consumers was not legally
+adoptable by any of them. MIT, matching the rest of the fleet.
+
+**Check messages carried the host OS.** The same package was described as
+`memory\mica.observe.jsonl` on Windows and `memory/mica.observe.jsonl` on
+Linux. `canonical_surface_path()` had already settled on forward slashes for
+recorded evidence; eleven message sites never followed that decision. Verified
+separator-only: every changed message is identical after normalising, and no
+check id or status moved.
+
+**CI tested Python, not MICA.** Three steps ran ruff, ruff format, and pytest.
+Nothing exercised what MICA itself claims. Two gates now do:
+
+- `tests/golden/pct_output.json` records what every check says about every
+  fixture, under every profile it declares. An intentional change regenerates
+  the snapshot and the diff appears in review; an unintentional one fails. This
+  defect has happened twice in this project, and both times the golden output
+  was reconstructed by hand from the previous commit's tools. Injecting a
+  one-word message change fails 27 of 30 cases, each naming its fixture.
+- `tests/test_repo_self_consistency.py` requires the declared canonical version
+  to have a changelog entry, and a shipping check to have a spec. The second
+  found the real number: 12 of 17 checks have none. They are named in
+  `SPEC_BACKLOG`, which may shrink and never grow.
+
+Writing the second gate surfaced that `PCT-009` is emitted but sits on no axis.
+That is correct -- it restates which contract checks failed, and on an axis it
+would fail that axis twice for one defect. A test now records why, so it is not
+"fixed" later.
+
+Tests 257 -> 295.
+
+---
+
+## README restructured around what a reader needs first (2026-09-03)
+
+The README opened with a release-status table, then two changelog sections
+(what v0.2.8 added over v0.2.7, and v0.2.7 over v0.2.6) before saying how to run
+anything. Quick Start sat at line 210 of 416. The document map listed 43 docs in
+version order across 140 lines, with one entry duplicated.
+
+Now: badges, a one-line value proposition, a 60-second first run that produces
+real output, the two halves of invocation, the verdict axes, the package
+surface, and a document map grouped by what a reader is trying to do.
+
+Removed four governance mentions. MICA is a memory book with rules about how the
+book is opened; it does not sit above the repositories that use it. Also removed
+both version-diff sections (CHANGELOG carries them in full), a reference to a
+`Legacy/` directory that does not exist, two sample outputs still showing Windows
+path separators, and roughly thirty lines of per-version archaeology.
+
+Every link and count was checked rather than asserted: 37 local links resolve,
+8 nav anchors resolve, and the fixture count and spec coverage match what the
+repository contains.
+
+The output examples were not, and two were wrong. The first-run example claimed
+`Archive : PASS` and `Flow : PASS`, using a verdict word `mica_pct.py` does not
+emit on that line; the real output is `OK`. A second example, inherited
+unchanged, claimed `Overall: INCOMPLETE` for a package with a failing `PCT-015`.
+That was true until Origin P0 narrowed `CLOSED CONTRACT` to the contract axis,
+after which a flow failure stops deciding the verdict. The example had been
+stale for five entries and nobody noticed, because README examples were read
+rather than run.
+
+`tests/test_readme_examples.py` now runs them. Every fenced `text` block whose
+first line is a `python tools/...` command is executed, and each following line
+must appear in its real output. Expected output is parsed out of the README, not
+listed in the test: a first version kept the expectations in the test file, and
+reintroducing the original mistake did not fail it. Adding an example to the
+README is now enough to have it verified.
+
+---
+
 ## Selection basis on deferred surfaces (2026-09-03)
 
 `deferred_surfaces` named what was left out of a session; it did not say why.

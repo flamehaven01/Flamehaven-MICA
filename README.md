@@ -6,7 +6,7 @@
   <a href="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml"><img src="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"/></a>
-  <img src="https://img.shields.io/badge/stable-v0.2.9-green.svg" alt="v0.2.9"/>
+  <img src="https://img.shields.io/badge/stable-v0.2.10-green.svg" alt="v0.2.10"/>
 </p>
 
 <p align="center"><b>Decide which memory a session receives, then prove it received it.</b></p>
@@ -18,7 +18,8 @@ A portable contract for loading project memory at session start and declaring, i
 
 **Release track**
 
-- Stable tag: `v0.2.9` (`Selection Edition`)
+- Stable tag: `v0.2.10` (`Adoption Edition`) — first consumer declaring memory profiles
+- Previous stable: `v0.2.9` (`Selection Edition`)
 - Milestone checkpoints, not releases: `v3.0.0-declaration`, `v3.0.0-invocation-truth`, `v3.0.0-origin`
 - Intended reset: `v3.0.0`, an invocation-first MICA
 - The preferred next step is not more MICA-internal expansion. It is helping other repositories consume the invocation contract cleanly.
@@ -66,26 +67,28 @@ Point it at any directory. No configuration needed to get a verdict.
 git clone https://github.com/flamehaven01/Flamehaven-MICA.git
 cd Flamehaven-MICA
 pip install -r requirements-dev.txt
-
-python tools/mica_pct.py fixtures/memory_profiles
 ```
 
 A package that resolves cleanly ends with:
 
 ```text
+python tools/mica_pct.py fixtures/flow_observation_valid
+
 Contract : CLOSED
-Archive  : PASS
-Flow     : PASS
+Archive  : OK
+Flow     : OK
+
+Overall: CLOSED CONTRACT
 ```
 
 `Contract` is the verdict that matters: the declared memory reached the session
-and nothing reached it that should not have. See what a session actually costs:
-
-```bash
-python tools/mica_measure.py fixtures/memory_profiles
-```
+and nothing reached it that should not have. The other two axes report without
+deciding it, so a package can close its contract while its archive shows
+`ISSUES`. See what a session actually costs:
 
 ```text
+python tools/mica_measure.py fixtures/memory_profiles
+
 PACKAGE                     SPEC   CONTRACT   CTX BYTES  CTX/DECL  PROFILES
 memory-profiles            0.2.8     CLOSED       1,375       2/3         3
 ```
@@ -328,8 +331,12 @@ PCT-013 [PASS] memory/mica.observe.jsonl parseable and hash-chain coherent (2 re
 ```text
 python tools/mica_pct.py fixtures/flow_candidates_broken_provenance
 PCT-015 [FAIL] cand_00044: unknown source_event_ids ['obs_missing_999']
-Overall: INCOMPLETE
+Overall: CLOSED CONTRACT
 ```
+
+That pairing is the axis split working: promotion provenance is broken, and the
+invocation contract still closed, because `PCT-015` reports on the flow axis and
+only the contract axis decides the verdict.
 
 ```text
 python tools/mica_runtime.py fixtures/flow_recall_agent_context_violation --format text

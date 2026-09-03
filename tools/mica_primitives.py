@@ -23,7 +23,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-MICA_CANONICAL_VERSION = "0.2.9"
+MICA_CANONICAL_VERSION = "0.2.10"
 
 MICA_TOOL_VERSION = MICA_CANONICAL_VERSION
 

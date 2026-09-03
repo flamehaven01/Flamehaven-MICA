@@ -55,6 +55,9 @@ jobs:
       - name: Project meets its own consistency rules
         run: pytest tests/test_repo_self_consistency.py -v
 
+      - name: README examples produce the output they claim
+        run: pytest tests/test_readme_examples.py -v
+
       - name: Every fixture resolves its contract
         run: |
           for pkg in fixtures/*/; do
