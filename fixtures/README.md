@@ -18,6 +18,8 @@ python tools/mica_pct.py fixtures/violation_count_incoherent
 python tools/mica_pct.py fixtures/implicit_primary_pattern
 python tools/mica_runtime.py fixtures/implicit_primary_pattern --format text
 python tools/mica_runtime.py fixtures/hook_output_violations_only --format hook
+python tools/mica_pct.py fixtures/invocation_capsule_v2
+python tools/mica_invocation.py fixtures/invocation_capsule_v2/memory/mica.invocation.jsonl
 
 # v0.2.9 flow fixtures
 cat fixtures/flow_observation_valid/memory/mica.observe.jsonl
@@ -53,7 +55,8 @@ python tools/mica_memory.py fixtures/memory_first_minimal materialize
 | `flow_recall_enabled_missing_trace/` | v0.2.9 draft | - | - | - | CLOSED | Recall enabled but trace missing; `PCT-014` WARN and `Flow=FLOW_DEGRADED` |
 | `flow_recall_incomplete_telemetry/` | v0.2.9 draft | - | - | - | CLOSED | Recall trace exists but is not fully joinable; `PCT-018` WARN and `Flow=FLOW_DEGRADED` |
 | `memory_first_minimal/` | v0.2.9 draft | - | - | - | CLOSED | Minimal memory-first portable package with sessions/observe/memories/slots/graph exports present and explicit `agent_context` surfaces |
-| implicit_primary_pattern/ | v0.2.8 | - | - | - | CLOSED | Declared context with implicit eadme_protocol; PCT-007 WARN and trace absent |
+| `implicit_primary_pattern/` | v0.2.8 | - | - | - | CLOSED | Declared context with implicit `readme_protocol`; PCT-007 WARN and trace absent |
+| `invocation_capsule_v2/` | v3.0.0 P1 | PASS | INFO | INFO | CLOSED | Digest-bound `mica.invocation.v2` capsule; committed trace is byte-bound to its surfaces |
 
 
 ## Expected Outputs
@@ -130,6 +133,36 @@ an absent `mica.yaml` cannot distinguish an intentional archive/playbook-only
 deployment (COMPACT_MODE) from an unmigrated package (LEGACY_MODE). The runtime
 therefore reports `LEGACY`, and does not claim `COMPACT`. Treating absence as
 evidence of intent would misclassify every unmigrated package as deliberate.
+
+### invocation_capsule_v2 (v3.0.0 P1)
+
+Digest-bound invocation evidence. The committed trace records the exact bytes of
+each loaded surface, so editing a surface without regenerating the trace is
+detected rather than silently accepted.
+
+```bash
+python tools/mica_invocation.py fixtures/invocation_capsule_v2/memory/mica.invocation.jsonl
+```
+
+```text
+IVC-000 [PASS] invocation schema present
+IVC-001 [PASS] invocation trace present
+IVC-002 [PASS] parseable invocation trace (1 records)
+IVC-003 [PASS] invocation trace shape matches supported schema expectations
+IVC-004 [PASS] invocation surfaces are internally coherent
+```
+
+Recorded evidence:
+
+| role | path | audience | delivery_state |
+|---|---|---|---|
+| `archive` | `memory/mica_archive.json` | `agent_context` | `resolved` |
+| `playbook` | `memory/mica_playbook.md` | `agent_context` | `resolved` |
+
+`delivery_state` is `resolved` because the bytes were hashed, not delivered.
+Only a MICA adapter that actually writes to an output channel may record
+`emitted`, and no state in this vocabulary claims the model read or understood
+the content.
 
 ### domain_namespaced_di
 

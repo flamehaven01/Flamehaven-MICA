@@ -107,8 +107,11 @@ Fixtures:
 | `fixtures/dead_lesson_ref/` | PCT-011 WARN scenario |
 | `fixtures/hook_output_violations_only/` | Hook output filter demo |
 | `fixtures/binding_required_fail/` | PCT-010 FAIL scenario (v0.2.6) |
-| `fixtures/compact_mode/` | COMPACT_MODE: no mica.yaml, pct=LEGACY expected (v0.2.7) |
+| `fixtures/compact_mode/` | No mica.yaml: PCT `INCOMPLETE`, runtime `LEGACY` (v0.2.7) |
 | `fixtures/domain_namespaced_di/` | DI-EQA-xxx / DI-BIO-xxx, CLOSED CONTRACT (v0.2.7) |
+| `fixtures/invocation_capsule_v2/` | Digest-bound `mica.invocation.v2` capsule (v3.0.0 P1) |
+
+Full fixture map and expected outputs: [fixtures/README.md](fixtures/README.md).
 
 ## Quick Start
 
@@ -189,7 +192,7 @@ Schemas:
 | [mica.yaml.schema.json](mica.yaml.schema.json) | mica.yaml schema |
 | [mica-v0.2.7-archive-di-binding.schema.json](mica-v0.2.7-archive-di-binding.schema.json) | Archive DI binding schema (v0.2.7) |
 | [mica.sessions.schema.json](mica.sessions.schema.json) | Session envelope schema draft for v0.2.9 memory-first packages |
-| [mica.invocation.schema.json](mica.invocation.schema.json) | Invocation provenance schema draft for independently validating `mica.invocation.jsonl` artifacts |
+| [mica.invocation.schema.json](mica.invocation.schema.json) | Invocation trace schema; accepts `v1` history and `v2` digest-bound capsules |
 | [mica.observe.schema.json](mica.observe.schema.json) | Observation record schema draft for v0.2.9 flow plane |
 | [mica.memories.schema.json](mica.memories.schema.json) | Durable memory record schema draft for v0.2.9 memory-first packages |
 | [mica.candidates.schema.json](mica.candidates.schema.json) | Candidate registry schema draft for v0.2.9 flow plane |

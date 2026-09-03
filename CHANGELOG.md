@@ -5,6 +5,31 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## v3.0.0 P1 - Digest-bound invocation evidence (2026-09-03)
+
+Non-release implementation step. Stable tag and tool banner remain `v0.2.8`.
+Implements P1 of `docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md`.
+
+- `mica.invocation.v2`: adds `trigger`, `surface_evidence`, and `capsule_hash`
+- `surface_evidence` records canonical repo-relative path, `sha256`, byte count,
+  audience, and delivery state for each loaded surface
+- delivery states pinned to `declared` / `resolved` / `emitted` / `acknowledged`;
+  none of them claims the model read, understood, or obeyed the content
+- runtime records `resolved` only -- it hashes bytes, it does not deliver them
+- `capsule_hash` excludes the absolute `project_root` so a capsule reproduces
+  identically across platforms; field set, ordering, and encoding are pinned
+- `write_invocation_trace` re-resolves digests before writing and refuses to
+  record a capsule when a surface changed between resolution and emission
+- `canonical_surface_path` rejects paths that escape the project root
+- v1 records remain valid and are never rewritten; v2 fields stay optional
+- new fixture `invocation_capsule_v2` with a byte-bound committed trace
+- new suite `tests/test_invocation_capsule_v2.py`; tests 62 -> 83
+
+No new PCT was added. Per the plan, PCT promotion waits for a consumer pilot
+(P4) that demonstrates a recurring, machine-detectable contract failure.
+
+---
+
 ## Consumer adoption note - 2026-07-19
 
 - Added a concrete Cocomini UltimatePOS/StoreAiAssist adoption note.
