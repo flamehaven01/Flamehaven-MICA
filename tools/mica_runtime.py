@@ -32,10 +32,14 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from mica_core import (
+    INVOCATION_SCHEMA_V2,
     MICA_TOOL_VERSION,
+    canonical_surface_path,
+    compute_capsule_hash,
     find_flow_artifact,
     find_legacy_archive,
     find_mica_yaml,
+    hash_surface_bytes,
     is_closed_contract,
     layer_role,
     load_json,
@@ -146,6 +150,42 @@ def _resolve_declared_layer_paths(project_root: Path, yd: dict[str, Any]) -> dic
     return result
 
 
+def _build_surface_evidence(
+    project_root: Path,
+    layer_paths: dict[str, Path],
+    loaded: list[str],
+    agent_context_surfaces: list[str],
+) -> list[dict[str, Any]]:
+    """Hash the exact bytes of each resolved surface.
+
+    Evidence is produced only for surfaces that were actually loaded, so a
+    record can never present bytes that were never read. Delivery state is
+    "resolved": this function hashes, it does not deliver.
+    """
+    evidence: list[dict[str, Any]] = []
+    for role in loaded:
+        path = layer_paths.get(role)
+        if path is None or not path.is_file():
+            continue
+        try:
+            canonical = canonical_surface_path(project_root, path)
+            digest, size = hash_surface_bytes(path)
+        except (ValueError, OSError):
+            # A surface that cannot be canonicalized or read is not evidence.
+            continue
+        evidence.append(
+            {
+                "role": role,
+                "path": canonical,
+                "sha256": digest,
+                "bytes": size,
+                "audience": "agent_context" if role in agent_context_surfaces else "operator_only",
+                "delivery_state": "resolved",
+            }
+        )
+    return evidence
+
+
 def _default_loaded_surfaces(mode: str | None, declared_roles: list[str]) -> list[str]:
     preferred = (
         ["archive", "playbook", "slots"] if mode == "memory_first" else ["archive", "playbook"]
@@ -211,10 +251,12 @@ def _build_invocation_summary(
             "operator_only_surfaces": [],
             "deferred_surfaces": [],
             "missing_invoked_surfaces": [],
+            "surface_evidence": [],
             "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
         }
 
     if state == "LEGACY_MODE":
+        legacy_paths = {"archive": archive_path} if archive_path is not None else {}
         return {
             "session_id": _resolve_active_session_id(project_root),
             "invocation_contract": "legacy_archive",
@@ -224,6 +266,9 @@ def _build_invocation_summary(
             "operator_only_surfaces": [],
             "deferred_surfaces": [],
             "missing_invoked_surfaces": [],
+            "surface_evidence": _build_surface_evidence(
+                project_root, legacy_paths, ["archive"], ["archive"]
+            ),
             "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
         }
 
@@ -256,6 +301,9 @@ def _build_invocation_summary(
         "operator_only_surfaces": operator_only_surfaces,
         "deferred_surfaces": deferred,
         "missing_invoked_surfaces": missing,
+        "surface_evidence": _build_surface_evidence(
+            project_root, layer_paths, loaded, agent_context_surfaces
+        ),
         "invocation_trace_default_path": str(_default_invocation_trace_path(project_root)),
     }
 
@@ -442,15 +490,17 @@ def build_summary(project_root: Path) -> dict[str, Any]:
     return base
 
 
-def build_invocation_trace_record(summary: dict[str, Any]) -> dict[str, Any]:
+def build_invocation_trace_record(
+    summary: dict[str, Any], trigger: dict[str, Any] | None = None
+) -> dict[str, Any]:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     critical_ids = [
         str(item.get("id"))
         for item in summary.get("critical_invariants", []) or []
         if isinstance(item, dict) and item.get("id")
     ]
-    return {
-        "schema_version": "mica.invocation.v1",
+    record = {
+        "schema_version": INVOCATION_SCHEMA_V2,
         "invocation_id": f"inv_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
         "timestamp_utc": now,
         "project_root": summary.get("project_root"),
@@ -472,11 +522,36 @@ def build_invocation_trace_record(summary: dict[str, Any]) -> dict[str, Any]:
         "missing_invoked_surfaces": list(summary.get("missing_invoked_surfaces") or []),
         "active_critical_invariants": critical_ids,
         "last_updated": summary.get("last_updated"),
+        "trigger": trigger,
+        "surface_evidence": [dict(entry) for entry in summary.get("surface_evidence") or []],
     }
+    record["capsule_hash"] = compute_capsule_hash(record)
+    return record
+
+
+def _reresolve_surface_evidence(project_root: Path, evidence: list[dict[str, Any]]) -> list[str]:
+    """Recheck recorded digests against disk immediately before writing.
+
+    Catches a surface that changed between resolution and emission. Returns the
+    roles whose bytes no longer match the recorded digest.
+    """
+    drifted: list[str] = []
+    for entry in evidence:
+        path = Path(project_root) / str(entry.get("path", ""))
+        if not path.is_file():
+            drifted.append(str(entry.get("role")))
+            continue
+        digest, size = hash_surface_bytes(path)
+        if digest != entry.get("sha256") or size != entry.get("bytes"):
+            drifted.append(str(entry.get("role")))
+    return drifted
 
 
 def write_invocation_trace(
-    project_root: Path, summary: dict[str, Any], output_path: Path | None = None
+    project_root: Path,
+    summary: dict[str, Any],
+    output_path: Path | None = None,
+    trigger: dict[str, Any] | None = None,
 ) -> Path:
     path = output_path or Path(
         str(
@@ -484,8 +559,14 @@ def write_invocation_trace(
             or _default_invocation_trace_path(project_root)
         )
     )
+    drifted = _reresolve_surface_evidence(project_root, summary.get("surface_evidence") or [])
+    if drifted:
+        raise RuntimeError(
+            f"surface bytes changed between resolution and emission: {drifted}; "
+            "re-resolve before recording an invocation capsule"
+        )
     path.parent.mkdir(parents=True, exist_ok=True)
-    record = build_invocation_trace_record(summary)
+    record = build_invocation_trace_record(summary, trigger=trigger)
     serialized = json.dumps(record, ensure_ascii=False, sort_keys=True)
     with path.open("a", encoding="utf-8") as fh:
         fh.write(serialized)

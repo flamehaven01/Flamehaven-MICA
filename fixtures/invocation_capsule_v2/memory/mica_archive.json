@@ -1,0 +1,23 @@
+{
+  "mica_spec": "0.2.8",
+  "project": {
+    "name": "invocation-capsule-v2",
+    "version": "1.0.0"
+  },
+  "operation_meta": {
+    "last_updated": "2026-09-03"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "capsule-evidence-is-not-comprehension",
+      "statement": "A recorded capsule proves which bytes were selected and hashed. It never proves the model read, understood, or obeyed them.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-CAP-1 (v3.0.0 P1): invocation traces recorded surface roles only, so a changed archive at the same path produced an identical trace.",
+        "violation_count": 0,
+        "last_triggered": ""
+      }
+    }
+  ]
+}

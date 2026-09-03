@@ -85,6 +85,81 @@ _INVOCATION_REQUIRED_FIELDS = (
     "last_updated",
 )
 
+INVOCATION_SCHEMA_V1 = "mica.invocation.v1"
+INVOCATION_SCHEMA_V2 = "mica.invocation.v2"
+_SUPPORTED_INVOCATION_SCHEMAS = frozenset({INVOCATION_SCHEMA_V1, INVOCATION_SCHEMA_V2})
+
+# Delivery states are monotonic within one invocation and deliberately stop short
+# of any claim about comprehension. "emitted" means a MICA adapter reported that
+# bytes were written to its output channel; it never means read, understood, or
+# obeyed. "acknowledged" requires an independently supplied host reference and is
+# not produced by this tool.
+DELIVERY_STATES = ("declared", "resolved", "emitted", "acknowledged")
+
+# Audience values reuse the existing invocation-protocol surface separation.
+SURFACE_AUDIENCES = ("agent_context", "operator_only", "deferred")
+
+_SURFACE_EVIDENCE_FIELDS = ("role", "path", "sha256", "bytes", "audience", "delivery_state")
+
+# project_root is an absolute, machine-specific path and is excluded so that the
+# same invocation hashes identically on every platform.
+_CAPSULE_HASH_FIELDS = (
+    "schema_version",
+    "invocation_id",
+    "timestamp_utc",
+    "session_id",
+    "trigger",
+    "surface_evidence",
+    "package_state",
+    "core_state",
+    "flow_state",
+    "mode",
+    "pattern",
+    "invocation_contract",
+    "loaded_surfaces",
+    "agent_context_surfaces",
+    "operator_only_surfaces",
+    "deferred_surfaces",
+    "missing_invoked_surfaces",
+    "active_critical_invariants",
+)
+
+
+def canonical_surface_path(project_root: Path, target: Path) -> str:
+    """Return a repository-relative, forward-slash path for invocation evidence.
+
+    Raises ValueError when the target escapes the project root, so that a
+    surface outside the package can never be recorded as invoked evidence.
+    """
+    root = Path(project_root).resolve()
+    resolved = Path(target).resolve()
+    try:
+        relative = resolved.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"surface path escapes project root: {resolved}") from exc
+    return relative.as_posix()
+
+
+def hash_surface_bytes(target: Path) -> tuple[str, int]:
+    """Hash the exact bytes selected for delivery. Returns (sha256, byte count)."""
+    data = Path(target).read_bytes()
+    return f"sha256:{hashlib.sha256(data).hexdigest()}", len(data)
+
+
+def _canonical_json(payload: Any) -> str:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def compute_capsule_hash(record: dict[str, Any]) -> str:
+    """Deterministic hash over the continuity-relevant fields of one record.
+
+    Field set, ordering, separators, and encoding are pinned so that two
+    implementations produce the same hash for the same capsule. The hash never
+    covers itself or the absolute project_root.
+    """
+    payload = {field: record.get(field) for field in _CAPSULE_HASH_FIELDS if field in record}
+    return f"sha256:{hashlib.sha256(_canonical_json(payload).encode('utf-8')).hexdigest()}"
+
 
 def format_tool_banner(tool_name: str) -> str:
     return f"{tool_name} v{MICA_TOOL_VERSION}"
@@ -450,6 +525,144 @@ def find_invocation_schema() -> Path:
     return Path(__file__).resolve().parent.parent / "mica.invocation.schema.json"
 
 
+def _check_capsule_schema(index: int, record: dict[str, Any]) -> list[str]:
+    """Structural checks for the v2 continuity fields."""
+    issues: list[str] = []
+
+    trigger = record.get("trigger")
+    if trigger is not None:
+        if not isinstance(trigger, dict):
+            issues.append(f"record {index}: trigger must be an object or null")
+        else:
+            if not _is_non_empty_string(trigger.get("kind")):
+                issues.append(f"record {index}: trigger.kind must be a non-empty string")
+            if trigger.get("ref") is not None and not _is_non_empty_string(trigger.get("ref")):
+                issues.append(f"record {index}: trigger.ref must be a non-empty string or null")
+
+    evidence = record.get("surface_evidence")
+    if not isinstance(evidence, list):
+        issues.append(f"record {index}: surface_evidence must be a list")
+        return issues
+
+    seen_roles: set[str] = set()
+    seen_paths: set[str] = set()
+    for position, entry in enumerate(evidence, start=1):
+        label = f"record {index} surface_evidence[{position}]"
+        if not isinstance(entry, dict):
+            issues.append(f"{label}: must be an object")
+            continue
+        missing = [field for field in _SURFACE_EVIDENCE_FIELDS if field not in entry]
+        if missing:
+            issues.append(f"{label}: missing fields {missing}")
+            continue
+
+        role = entry.get("role")
+        if not _is_non_empty_string(role):
+            issues.append(f"{label}: invalid role")
+        elif role in seen_roles:
+            issues.append(f"{label}: duplicate role {role!r}")
+        else:
+            seen_roles.add(str(role))
+
+        path = entry.get("path")
+        if not _is_non_empty_string(path):
+            issues.append(f"{label}: invalid path")
+        else:
+            path_text = str(path)
+            if "\\" in path_text:
+                issues.append(f"{label}: path must use forward slashes, got {path_text!r}")
+            elif path_text.startswith("/") or re.match(r"^[A-Za-z]:", path_text):
+                issues.append(f"{label}: path must be repository-relative, got {path_text!r}")
+            elif ".." in Path(path_text).parts:
+                issues.append(f"{label}: path must not escape the project root")
+            elif path_text in seen_paths:
+                issues.append(f"{label}: duplicate path {path_text!r}")
+            else:
+                seen_paths.add(path_text)
+
+        digest = entry.get("sha256")
+        if not isinstance(digest, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            issues.append(f"{label}: sha256 must match 'sha256:<64 hex>'")
+
+        size = entry.get("bytes")
+        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+            issues.append(f"{label}: bytes must be a non-negative integer")
+
+        if entry.get("audience") not in SURFACE_AUDIENCES:
+            issues.append(f"{label}: invalid audience {entry.get('audience')!r}")
+
+        if entry.get("delivery_state") not in DELIVERY_STATES:
+            issues.append(f"{label}: invalid delivery_state {entry.get('delivery_state')!r}")
+
+    capsule_hash = record.get("capsule_hash")
+    if not isinstance(capsule_hash, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", capsule_hash):
+        issues.append(f"record {index}: capsule_hash must match 'sha256:<64 hex>'")
+
+    return issues
+
+
+def _check_capsule_coherence(
+    index: int,
+    record: dict[str, Any],
+    loaded_surfaces: list[Any],
+    operator_surfaces: list[Any],
+) -> list[str]:
+    """Cross-field truthfulness checks for the v2 continuity fields."""
+    issues: list[str] = []
+    evidence = record.get("surface_evidence")
+    if not isinstance(evidence, list):
+        return issues
+
+    entries = [entry for entry in evidence if isinstance(entry, dict)]
+    context_surfaces = (
+        record.get("agent_context_surfaces")
+        if isinstance(record.get("agent_context_surfaces"), list)
+        else []
+    )
+
+    for entry in entries:
+        role = entry.get("role")
+        audience = entry.get("audience")
+        if role not in loaded_surfaces:
+            issues.append(
+                f"record {index}: surface_evidence role {role!r} is not in loaded_surfaces"
+            )
+        if audience == "agent_context":
+            if role in operator_surfaces:
+                issues.append(
+                    f"record {index}: operator_only surface {role!r} recorded as agent_context evidence"
+                )
+            elif role not in context_surfaces:
+                issues.append(
+                    f"record {index}: {role!r} labeled agent_context but absent from agent_context_surfaces"
+                )
+        elif audience == "operator_only" and role in context_surfaces:
+            issues.append(
+                f"record {index}: {role!r} labeled operator_only but present in agent_context_surfaces"
+            )
+
+    # A null session cannot carry evidence attributed to an identified AI session.
+    if record.get("session_id") is None:
+        overclaimed = [
+            entry.get("role")
+            for entry in entries
+            if entry.get("delivery_state") in {"emitted", "acknowledged"}
+        ]
+        if overclaimed:
+            issues.append(
+                f"record {index}: null session_id cannot claim delivery for {overclaimed}"
+            )
+
+    expected_hash = compute_capsule_hash(record)
+    if record.get("capsule_hash") != expected_hash:
+        issues.append(
+            f"record {index}: capsule_hash mismatch (recorded {record.get('capsule_hash')!r}, "
+            f"recomputed {expected_hash!r})"
+        )
+
+    return issues
+
+
 def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     trace_path = target
     schema_path = find_invocation_schema()
@@ -501,7 +714,7 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
         if missing:
             schema_issues.append(f"record {index}: missing required fields {missing}")
             continue
-        if record.get("schema_version") != "mica.invocation.v1":
+        if record.get("schema_version") not in _SUPPORTED_INVOCATION_SCHEMAS:
             schema_issues.append(
                 f"record {index}: unsupported schema_version {record.get('schema_version')}"
             )
@@ -592,6 +805,12 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
             coherence_issues.append(
                 f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}"
             )
+        if record.get("schema_version") == INVOCATION_SCHEMA_V2:
+            schema_issues.extend(_check_capsule_schema(index, record))
+            coherence_issues.extend(
+                _check_capsule_coherence(index, record, loaded_surfaces, operator_surfaces)
+            )
+
         overlapping_missing = [
             surface for surface in missing_invoked_surfaces if surface in loaded_surfaces
         ]
@@ -607,7 +826,12 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
         results.append(("IVC-003", "FAIL", preview))
     else:
         results.append(
-            ("IVC-003", "PASS", "invocation trace shape matches mica.invocation.v1 expectations")
+            (
+                "IVC-003",
+                "PASS",
+                "invocation trace shape matches supported schema expectations "
+                f"({', '.join(sorted(_SUPPORTED_INVOCATION_SCHEMAS))})",
+            )
         )
 
     if coherence_issues:

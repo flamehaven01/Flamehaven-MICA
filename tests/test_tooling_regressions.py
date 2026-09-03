@@ -85,10 +85,23 @@ def test_memory_first_record_schemas_exist_and_expose_expected_versions():
     for filename, (title_fragment, version_const) in expected.items():
         schema = json.loads((REPO_ROOT / filename).read_text(encoding="utf-8"))
         assert title_fragment in schema["title"]
-        if filename == "mica.slots.schema.json":
-            assert schema["properties"]["schema_version"]["const"] == version_const
+        declared = schema["properties"]["schema_version"]
+        if "enum" in declared:
+            # The invocation schema accepts v1 history alongside v2 capsules.
+            assert version_const in declared["enum"]
         else:
-            assert schema["properties"]["schema_version"]["const"] == version_const
+            assert declared["const"] == version_const
+
+
+def test_invocation_schema_accepts_v1_history_and_v2_capsules():
+    schema = json.loads((REPO_ROOT / "mica.invocation.schema.json").read_text(encoding="utf-8"))
+    versions = schema["properties"]["schema_version"]["enum"]
+
+    assert versions == ["mica.invocation.v1", "mica.invocation.v2"]
+    for field in ("trigger", "surface_evidence", "capsule_hash"):
+        assert field in schema["properties"]
+        # v2 continuity fields stay optional so v1 history remains valid.
+        assert field not in schema["required"]
 
 
 def test_invocation_trace_validator_reports_schema_presence():
@@ -391,7 +404,7 @@ def test_write_invocation_trace_persists_invoked_state(tmp_path: Path):
         if line.strip()
     ]
     assert len(records) == 1
-    assert records[0]["schema_version"] == "mica.invocation.v1"
+    assert records[0]["schema_version"] == "mica.invocation.v2"
     assert records[0]["session_id"] == "sess_20260707_0001"
     assert records[0]["loaded_surfaces"] == ["observations", "slots", "archive", "playbook"]
     assert records[0]["agent_context_surfaces"] == ["archive", "playbook", "slots"]

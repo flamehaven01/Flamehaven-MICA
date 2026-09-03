@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flamehaven/mica/mica.invocation.schema.json",
-  "title": "MICA v0.2.9 Invocation Trace Record",
-  "description": "Schema for one invocation provenance record in mica.invocation.jsonl. Each line in the stream must validate independently.",
+  "title": "MICA Invocation Trace Record (v1 and v2)",
+  "description": "Schema for one invocation provenance record in mica.invocation.jsonl. Each line must validate independently. v2 adds digest-bound continuity fields (trigger, surface_evidence, capsule_hash); v1 records remain valid historical artifacts and are never rewritten.",
   "type": "object",
   "required": [
     "schema_version",
@@ -28,7 +28,10 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "mica.invocation.v1"
+      "enum": [
+        "mica.invocation.v1",
+        "mica.invocation.v2"
+      ]
     },
     "invocation_id": {
       "type": "string",
@@ -190,6 +193,88 @@
         "null"
       ],
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "trigger": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Consumer-owned lifecycle event that occasioned this invocation. MICA records the reference; it does not execute or authorize the event.",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "surface_evidence": {
+      "type": "array",
+      "description": "Digest-bound record of the exact bytes resolved for each loaded surface. Evidence proves selection and recording, never comprehension.",
+      "items": {
+        "type": "object",
+        "required": [
+          "role",
+          "path",
+          "sha256",
+          "bytes",
+          "audience",
+          "delivery_state"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "description": "Repository-relative, forward-slash normalized.",
+            "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\)(?!.*(^|/)\\.\\.(/|$)).+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "agent_context",
+              "operator_only",
+              "deferred"
+            ]
+          },
+          "delivery_state": {
+            "type": "string",
+            "enum": [
+              "declared",
+              "resolved",
+              "emitted",
+              "acknowledged"
+            ],
+            "description": "emitted means an adapter reported bytes written to its channel; acknowledged requires an independently supplied host reference. Neither implies read, understood, or obeyed."
+          }
+        }
+      }
+    },
+    "capsule_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Deterministic hash over trigger, surface evidence, session binding, and invocation state. Excludes itself and the absolute project_root so the same capsule hashes identically across platforms."
     }
   }
 }
