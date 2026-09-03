@@ -72,6 +72,17 @@ profile, or a profile naming a surface that is not a declared layer, fails the
 invocation contract. Packages that declare no profiles fall back to the mode
 defaults and resolve exactly as before.
 
+A package that keeps several playbooks apart names them `playbook-eqa`,
+`playbook-bav`. Those are distinct surfaces when a profile selects one, and
+playbooks when MICA decides who may receive them: a qualifier after the first
+hyphen narrows a surface without moving it to another audience, so
+`sessions-2024` stays out of agent context exactly as `sessions` does.
+
+`agent_context_surfaces` is a ceiling -- what may reach the agent at all -- and
+the active profile decides what does. A permitted surface the profile did not
+select is deselected, not missing. Without profiles the two are the same thing,
+so an uninvoked permitted surface still fails the contract there.
+
 That separation is enforced, not just stated. Results report on three axes:
 
 | Axis | Question | Checks |
@@ -105,7 +116,8 @@ describes the current surfaces. A package that declares
 `agent_context_surfaces` should declare `primary_pattern` explicitly; an omitted pattern remains a
 compatibility WARN and defaults to `readme_protocol`. `invocation_protocol.operator_only_surfaces`
 separates human-review surfaces that must not overlap agent context. Agent-context surfaces must be
-session-start loaded, or `PCT-007` fails the package contract. When `operator_review` recall is joined
+session-start loaded by the active profile, or `PCT-007` fails the package
+contract. When `operator_review` recall is joined
 with session invocation trace, that trace should expose `operator_only_surfaces` as provenance rather than
 as memory content.
 

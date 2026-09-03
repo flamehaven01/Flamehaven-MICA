@@ -361,3 +361,144 @@ def test_selecting_sections_of_an_uninvoked_surface_fails_the_contract(tmp_path:
 
     assert status == "FAIL"
     assert "does not invoke" in msg
+
+
+# --- specialised surfaces ----------------------------------------------------
+
+
+def _declared_profiles(package: Path) -> list[str]:
+    import mica_primitives
+
+    yd = mica_primitives.load_yaml(package / "mica.yaml") or {}
+    inv = yd.get("invocation_protocol")
+    profiles = inv.get("profiles") if isinstance(inv, dict) else None
+    return sorted(profiles) if isinstance(profiles, dict) else []
+
+
+def test_a_specialised_playbook_may_reach_the_agent():
+    """A package that keeps several playbooks apart names them `playbook-eqa`,
+    `playbook-bav`. Those are playbooks; the closed six-role vocabulary had no
+    way to say so, so such a package could not deliver them at all."""
+    assert mica_core._surface_family("playbook-eqa") == "playbook"
+    assert mica_core._is_audience_eligible(
+        "playbook-eqa", mica_core._AGENT_CONTEXT_ALLOWED_SURFACES
+    )
+
+
+def test_a_qualifier_cannot_move_a_surface_to_another_audience():
+    """Narrowing a surface never changes who may receive it."""
+    for role in ("sessions-2024", "observations-raw", "candidates-pending"):
+        assert not mica_core._is_audience_eligible(role, mica_core._AGENT_CONTEXT_ALLOWED_SURFACES)
+        assert mica_core._is_audience_eligible(role, mica_core._OPERATOR_ONLY_ALLOWED_SURFACES)
+
+
+def test_an_unrelated_surface_is_still_rejected():
+    assert not mica_core._is_audience_eligible(
+        "credibility-architecture", mica_core._AGENT_CONTEXT_ALLOWED_SURFACES
+    )
+
+
+def test_a_specialised_playbook_reaches_agent_context_through_the_contract(
+    tmp_path: Path,
+):
+    """The unit rule, exercised end to end: declare a domain playbook, select it
+    with a profile, and it arrives in the agent context with the contract closed."""
+    import mica_primitives
+
+    root = tmp_path / "pkg"
+    shutil.copytree(FIXTURE, root)
+    (root / "memory" / "playbook-eqa.md").write_text(
+        "## Evidence Quality\n\nDomain rules.\n", encoding="utf-8"
+    )
+    yaml_path = root / "mica.yaml"
+    text = yaml_path.read_text(encoding="utf-8")
+    text = text.replace(
+        "invocation_protocol:",
+        "  - name: playbook-eqa\n"
+        "    path: memory/playbook-eqa.md\n"
+        "    format: markdown\n"
+        "    loading_hint: on_demand\n"
+        "\n"
+        "invocation_protocol:",
+        1,
+    )
+    text = text.replace(
+        "  profiles:",
+        "  agent_context_surfaces: [archive, playbook, playbook-eqa]\n"
+        "  profiles:\n"
+        "    eqa:\n"
+        "      surfaces: [archive, playbook, playbook-eqa]",
+        1,
+    )
+    yaml_path.write_text(text, encoding="utf-8")
+
+    status, _ = _pct007(root, "eqa")
+    contract = mica_core.resolve_invocation_contract(mica_primitives.load_yaml(yaml_path), "eqa")
+
+    assert status == "PASS"
+    assert "playbook-eqa" in contract["agent_context_surfaces"]
+
+
+# --- the ceiling is not a per-session manifest -------------------------------
+
+
+def test_a_permitted_surface_another_profile_uses_is_deselected_not_missing():
+    """`agent_context_surfaces` says what may reach the agent. The profile says
+    what does. Before this distinction, declaring a surface that only one
+    profile invoked failed the contract under every other profile."""
+    contract = mica_core.resolve_invocation_contract(
+        __import__("mica_primitives").load_yaml(FIXTURES_DIR / "handoff_surface" / "mica.yaml"),
+        "default",
+    )
+
+    assert "handoff" in contract["deselected_agent_context_surfaces"]
+    assert contract["non_invoked_agent_context_surfaces"] == []
+    assert "handoff" not in contract["agent_context_surfaces"]
+
+
+def test_without_profiles_an_uninvoked_permitted_surface_is_still_a_fault():
+    """Nothing explains the gap when no profile did the selecting."""
+    contract = mica_core.resolve_invocation_contract(
+        {
+            "mode": "archive_first",
+            "layers": [
+                {"name": "archive", "loading_hint": "always"},
+                {"name": "playbook", "loading_hint": "always"},
+                {"name": "handoff", "loading_hint": "on_demand"},
+            ],
+            "invocation_protocol": {
+                "primary_pattern": "readme_protocol",
+                "agent_context_surfaces": ["archive", "playbook", "handoff"],
+            },
+        }
+    )
+
+    assert contract["non_invoked_agent_context_surfaces"] == ["handoff"]
+    assert contract["deselected_agent_context_surfaces"] == []
+
+
+@pytest.mark.parametrize(
+    "package",
+    sorted(p for p in FIXTURES_DIR.iterdir() if (p / "mica.yaml").exists()),
+    ids=lambda p: p.name,
+)
+def test_a_package_closes_its_contract_under_all_profiles_or_none(package: Path):
+    """The guard that was missing.
+
+    The handoff fixture shipped closing its contract under `resume` and failing
+    under `default` and under no profile at all. No test looked: one asserted
+    `resume`, the rest went through `build_summary`, which never evaluates the
+    contract.
+
+    Checking that a closing package stays closed would not have caught it --
+    that fixture did not close without a profile, so it would have been skipped.
+    The invariant is that profiles do not decide whether the contract holds.
+    A negative fixture closes under nothing and passes here unremarked.
+    """
+    profiles = _declared_profiles(package)
+    verdicts = {
+        profile: mica_core.evaluate_axes(mica_core.run_pct_checks(package, profile))["contract"]
+        for profile in [None, *profiles]
+    }
+
+    assert len(set(verdicts.values())) == 1, f"{package.name}: {verdicts}"

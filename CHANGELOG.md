@@ -5,6 +5,66 @@ Full release notes and migration guides in `docs/`.
 
 ---
 
+## Specialised surfaces and the agent-context ceiling (2026-09-03)
+
+Found while measuring the first consumer against memory profiles. Post-release;
+the `v0.2.9` tag does not contain it.
+
+`flamehaven-audit-reports` declares eight surfaces and invokes three. Five of
+them are domain playbooks -- `playbook-eqa`, `playbook-bav`, `playbook-bsc`,
+`playbook-mf`, `playbook-common`, 33,326 bytes -- marked `on_demand` and
+therefore reaching no session at all. Profiles exist for exactly that case, and
+two defects stopped the adoption.
+
+### A closed role vocabulary rejected the consumer's own naming
+
+Agent-context eligibility tested a role against six literal names. A package
+that keeps several playbooks apart could not deliver any of them: declaring
+`playbook-eqa` produced `invalid agent_context surfaces` and an INCOMPLETE
+contract. Eligibility now accepts a role whose family -- the segment before the
+first hyphen -- is an allowed surface. The audience boundary is unchanged:
+`sessions-2024` is still refused agent context, because `sessions` is.
+
+### The ceiling was read as a per-session manifest
+
+`agent_context_surfaces` is global; `profiles` make invocation per-session. A
+surface declared once and invoked by one profile therefore failed the contract
+under every other profile. `agent_context_surfaces` is now the ceiling and the
+profile does the selecting; the difference is reported as
+`deselected_agent_context_surfaces` rather than as a broken promise. Packages
+without profiles are unaffected -- nothing there explains the gap.
+
+This was already shipped broken. The `handoff_surface` fixture closed its
+contract under `resume` and failed under `default` and under no profile at all.
+The suite asserted `resume` and reached the rest through `build_summary`, which
+never evaluates the contract. The guard added here asserts that profiles do not
+decide whether a package's contract holds, and it reproduces the defect when the
+fix is reverted.
+
+### Measured
+
+`flamehaven-audit-reports`, agent-context bytes, contract CLOSED throughout:
+
+| Session | Surfaces | Bytes | vs load-everything |
+|---|---|---|---|
+| load-everything control | 7 | 61,525 | -- |
+| `default` | 2 | 28,199 | -54.2% |
+| `eqa` | 4 | 50,321 | -18.2% |
+| `bav` | 4 | 44,773 | -27.2% |
+| `bsc` | 4 | 47,038 | -23.5% |
+| `mf` | 4 | 44,595 | -27.5% |
+
+Mean over the four task profiles is 46,682 bytes, 24.1% below the control. This
+is not a saving against today's 28,199: it is what makes 33,326 bytes of
+declared memory reachable at all, at a quarter less than loading it all every
+session. Measured on the package as declared; the consumer's `mica.yaml` is
+unchanged pending its owner.
+
+Golden PCT output across 22 fixtures x every declared profile is byte-identical
+except the two `handoff_surface` rows that were failing. Tests 224 -> 252.
+
+---
+
 ## Handoff surface implemented (2026-09-03)
 
 Closes the one item the v0.2.9 release notes listed as "architecture proposal

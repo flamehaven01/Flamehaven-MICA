@@ -211,6 +211,22 @@ def _mode_default_surfaces(mode: str) -> list[str]:
     return ["archive", "playbook"]
 
 
+def _surface_family(role: str) -> str:
+    """The canonical surface that a specialised role belongs to.
+
+    A package that keeps several playbooks apart names them `playbook-eqa`,
+    `playbook-bav`. Those are distinct surfaces when a profile selects one, but
+    for audience purposes they are playbooks. The qualifier after the first
+    hyphen narrows a surface; it never moves it to a different audience, so
+    `sessions-2024` stays out of agent context exactly as `sessions` does.
+    """
+    return role.split("-", 1)[0]
+
+
+def _is_audience_eligible(role: str, allowed: frozenset[str]) -> bool:
+    return role in allowed or _surface_family(role) in allowed
+
+
 def _classify_surface(
     role: str,
     allowed: frozenset[str],
@@ -222,7 +238,7 @@ def _classify_surface(
     Returning a reason instead of appending into one of several lists is what
     flattens the caller: the branching lives here, at depth 1.
     """
-    if role not in allowed:
+    if not _is_audience_eligible(role, allowed):
         return "invalid"
     if role not in declared_surfaces:
         return "undeclared"
@@ -264,7 +280,8 @@ def _resolve_agent_context_surfaces(
         "agent_context_surfaces": [
             role
             for role in configured
-            if role in _AGENT_CONTEXT_ALLOWED_SURFACES and role in invoked_surfaces
+            if _is_audience_eligible(role, _AGENT_CONTEXT_ALLOWED_SURFACES)
+            and role in invoked_surfaces
         ],
         "configured_agent_context_surfaces": configured,
         "invalid_agent_context_surfaces": faults["invalid"],
@@ -289,9 +306,13 @@ def _resolve_operator_only_surfaces(
         }
 
     configured = _declared_roles(raw_operator_only)
-    invalid = [r for r in configured if r not in _OPERATOR_ONLY_ALLOWED_SURFACES]
+    invalid = [
+        r for r in configured if not _is_audience_eligible(r, _OPERATOR_ONLY_ALLOWED_SURFACES)
+    ]
     undeclared = [
-        r for r in configured if r in _OPERATOR_ONLY_ALLOWED_SURFACES and r not in declared_surfaces
+        r
+        for r in configured
+        if _is_audience_eligible(r, _OPERATOR_ONLY_ALLOWED_SURFACES) and r not in declared_surfaces
     ]
     overlapping = [
         r
@@ -427,6 +448,15 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
     context = _resolve_agent_context_surfaces(
         raw_agent_context, declared_surfaces, invoked_surfaces
     )
+    # agent_context_surfaces is a ceiling -- what may reach the agent at all --
+    # not a manifest of what every session gets. Before profiles the two were
+    # the same thing, so a permitted surface that was not invoked meant a broken
+    # promise. Once a profile does the selecting, the same gap is just a surface
+    # this session did not ask for.
+    deselected_agent_context_surfaces: list[str] = []
+    if active_profile is not None and profile_surfaces:
+        deselected_agent_context_surfaces = context["non_invoked_agent_context_surfaces"]
+        context["non_invoked_agent_context_surfaces"] = []
     agent_context_surfaces = context["agent_context_surfaces"]
     operator = _resolve_operator_only_surfaces(
         raw_operator_only, declared_surfaces, agent_context_surfaces
@@ -445,6 +475,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         "declared_surfaces": declared_surfaces,
         "loaded_surfaces": invoked_surfaces,
         "agent_context_surfaces": agent_context_surfaces,
+        "deselected_agent_context_surfaces": deselected_agent_context_surfaces,
         "operator_only_surfaces": operator["operator_only_surfaces"],
         "deferred_surfaces": deferred_surfaces,
         "missing_invoked_surfaces": missing_invoked_surfaces,
