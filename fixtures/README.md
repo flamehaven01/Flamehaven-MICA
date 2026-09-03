@@ -150,7 +150,15 @@ IVC-001 [PASS] invocation trace present
 IVC-002 [PASS] parseable invocation trace (1 records)
 IVC-003 [PASS] invocation trace shape matches supported schema expectations
 IVC-004 [PASS] invocation surfaces are internally coherent
+IVC-005 [PASS] capsule inv_... digests match the current surface bytes
 ```
+
+`IVC-005` re-hashes the surfaces on disk and compares them to the newest
+capsule. It runs only when a project root is given, since a bare trace file
+provides no root to resolve relative paths against. Editing a surface without
+regenerating the trace turns it into a WARN and the verdict becomes
+`VALID INVOCATION TRACE (stale evidence)` -- stale, not invalid, because the
+record was true when it was written.
 
 Recorded evidence:
 

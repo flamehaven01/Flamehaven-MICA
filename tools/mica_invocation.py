@@ -29,15 +29,26 @@ __version__ = MICA_TOOL_VERSION
 
 def _report(results: list[tuple[str, str, str]]) -> bool:
     print()
-    valid = True
+    failed = False
+    warned = False
     for cid, status, message in results:
         print(f"{cid} [{status:<4}] {message}")
-        if status != "PASS":
-            valid = False
+        if status == "FAIL":
+            failed = True
+        elif status == "WARN":
+            warned = True
     print()
-    print("Overall:", "VALID INVOCATION TRACE" if valid else "INVALID INVOCATION TRACE")
+    if failed:
+        verdict = "INVALID INVOCATION TRACE"
+    elif warned:
+        # A stale capsule is a truthful record of a past invocation, not an
+        # invalid one. It is reported, and it does not fail the run.
+        verdict = "VALID INVOCATION TRACE (stale evidence)"
+    else:
+        verdict = "VALID INVOCATION TRACE"
+    print("Overall:", verdict)
     print()
-    return valid
+    return not failed
 
 
 def main() -> None:

@@ -620,6 +620,13 @@ def _check_capsule_coherence(
         else []
     )
 
+    # Evidence must account for every loaded surface. A subset would let a
+    # record claim a loaded surface while silently omitting its bytes.
+    evidence_roles = {entry.get("role") for entry in entries}
+    unaccounted = [role for role in loaded_surfaces if role not in evidence_roles]
+    if unaccounted:
+        issues.append(f"record {index}: loaded surfaces without surface_evidence {unaccounted}")
+
     for entry in entries:
         role = entry.get("role")
         audience = entry.get("audience")
@@ -665,6 +672,7 @@ def _check_capsule_coherence(
 
 def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     trace_path = target
+    project_root: Path | None = None
     schema_path = find_invocation_schema()
     schema_result = (
         "IVC-000",
@@ -672,6 +680,7 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
         f"invocation schema {'present' if schema_path.exists() else 'missing'} ({schema_path})",
     )
     if target.is_dir():
+        project_root = target
         resolved = find_flow_artifact(target, "mica.invocation.jsonl")
         if not resolved:
             return [schema_result, ("IVC-001", "FAIL", "mica.invocation.jsonl missing")]
@@ -842,7 +851,74 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     else:
         results.append(("IVC-004", "PASS", "invocation surfaces are internally coherent"))
 
+    results.append(_check_live_surface_bytes(project_root, records))
+
     return results
+
+
+def _check_live_surface_bytes(
+    project_root: Path | None, records: list[dict[str, Any]]
+) -> tuple[str, str, str]:
+    """IVC-005: compare the newest capsule's digests against the bytes on disk.
+
+    Drift is reported as WARN, not FAIL. An older record was true when written,
+    so a changed surface makes the capsule stale rather than invalid. The
+    operator re-invokes to record current bytes.
+    """
+    if project_root is None:
+        return (
+            "IVC-005",
+            "INFO",
+            "project root not supplied; recorded digests not compared against disk",
+        )
+
+    newest = None
+    for record in reversed(records):
+        if not isinstance(record, dict):
+            continue
+        if record.get("schema_version") != INVOCATION_SCHEMA_V2:
+            continue
+        evidence = record.get("surface_evidence")
+        if isinstance(evidence, list) and evidence:
+            newest = record
+            break
+
+    if newest is None:
+        return ("IVC-005", "INFO", "no v2 capsule with surface evidence; nothing to re-hash")
+
+    drifted: list[str] = []
+    for entry in newest.get("surface_evidence") or []:
+        if not isinstance(entry, dict):
+            continue
+        role = str(entry.get("role"))
+        rel = entry.get("path")
+        if not _is_non_empty_string(rel):
+            drifted.append(f"{role} (unusable path)")
+            continue
+        path = project_root / str(rel)
+        if not path.is_file():
+            drifted.append(f"{role} (missing)")
+            continue
+        try:
+            digest, size = hash_surface_bytes(path)
+        except OSError:
+            drifted.append(f"{role} (unreadable)")
+            continue
+        if digest != entry.get("sha256") or size != entry.get("bytes"):
+            drifted.append(f"{role} (bytes changed)")
+
+    if drifted:
+        return (
+            "IVC-005",
+            "WARN",
+            f"recorded capsule {newest.get('invocation_id')} no longer matches disk: "
+            f"{drifted} -- re-invoke to record current bytes",
+        )
+    return (
+        "IVC-005",
+        "PASS",
+        f"capsule {newest.get('invocation_id')} digests match the current surface bytes",
+    )
 
 
 def _flow_enabled(flow_policy: dict[str, Any]) -> bool:

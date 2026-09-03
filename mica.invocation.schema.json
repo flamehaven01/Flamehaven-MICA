@@ -35,7 +35,7 @@
     },
     "invocation_id": {
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9._:-]*$"
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
     },
     "timestamp_utc": {
       "type": "string",
@@ -240,7 +240,7 @@
           "path": {
             "type": "string",
             "description": "Repository-relative, forward-slash normalized.",
-            "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\)(?!.*(^|/)\\.\\.(/|$)).+$"
+            "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
           },
           "sha256": {
             "type": "string",
@@ -276,5 +276,26 @@
       "pattern": "^sha256:[0-9a-f]{64}$",
       "description": "Deterministic hash over trigger, surface evidence, session binding, and invocation state. Excludes itself and the absolute project_root so the same capsule hashes identically across platforms."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "mica.invocation.v2"
+          }
+        },
+        "required": [
+          "schema_version"
+        ]
+      },
+      "then": {
+        "required": [
+          "trigger",
+          "surface_evidence",
+          "capsule_hash"
+        ]
+      }
+    }
+  ]
 }

@@ -129,7 +129,9 @@ def test_invocation_trace_validator_passes_on_fixture_trace():
 
     results = mica_core.run_invocation_trace_checks(trace_path)
 
-    assert all(status == "PASS" for _, status, _ in results)
+    assert not any(status == "FAIL" for _, status, _ in results)
+    # IVC-005 cannot re-hash surfaces from a bare trace file: no project root.
+    assert [status for cid, status, _ in results if cid == "IVC-005"] == ["INFO"]
 
 
 def test_pct_validator_can_emit_invocation_trace_summary(tmp_path: Path):

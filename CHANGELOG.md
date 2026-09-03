@@ -23,7 +23,31 @@ Implements P1 of `docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md`.
 - `canonical_surface_path` rejects paths that escape the project root
 - v1 records remain valid and are never rewritten; v2 fields stay optional
 - new fixture `invocation_capsule_v2` with a byte-bound committed trace
-- new suite `tests/test_invocation_capsule_v2.py`; tests 62 -> 83
+- new suites `tests/test_invocation_capsule_v2.py` and
+  `tests/test_schema_metavalidation.py`; tests 62 -> 118
+
+Contract gaps found in review and closed before push:
+
+- the `surface_evidence.path` pattern was not a valid ECMA regex, so the whole
+  schema failed Draft 2020-12 metavalidation
+- `invocation_id` was lowercase-only while `session_id` in the same schema
+  allowed uppercase; every generated id (`inv_<ISO>Z`) and every committed
+  fixture trace was therefore invalid against the schema it ships with. This
+  predates v2 and was never detected because nothing validated records against
+  the schema. The pattern is now aligned; no recorded history was rewritten
+- v2 evidence had to be a subset of loaded surfaces but not a complete account,
+  so a record could claim a loaded surface while omitting its bytes. Evidence
+  must now cover every loaded surface
+- the schema left the v2 continuity fields globally optional; they are now
+  conditionally required when `schema_version` is `mica.invocation.v2`
+- `IVC-005` added: when validating a project root, the newest capsule's digests
+  are re-hashed against the bytes on disk. Drift is WARN, not FAIL -- a record
+  was true when written, so a later edit makes it stale rather than invalid.
+  `mica_invocation.py` now reports `VALID INVOCATION TRACE (stale evidence)`
+  and exits 0 for that case
+- `jsonschema` added to `requirements-dev.txt`; new suite metavalidates all ten
+  shipped schemas and validates real runtime output and every committed trace
+  against the invocation schema
 
 No new PCT was added. Per the plan, PCT promotion waits for a consumer pilot
 (P4) that demonstrates a recurring, machine-detectable contract failure.

@@ -339,3 +339,92 @@ def test_committed_capsule_fixture_still_matches_its_surfaces():
         digest, size = mica_core.hash_surface_bytes(fixture / entry["path"])
         assert digest == entry["sha256"]
         assert size == entry["bytes"]
+
+
+# --- P1 contract gaps found in review ---------------------------------------
+
+
+def test_empty_evidence_is_rejected_when_surfaces_were_loaded(tmp_path: Path):
+    """A v2 record must account for every loaded surface, not a subset."""
+    record = _base_record()
+    assert record["loaded_surfaces"], "fixture must load surfaces for this test"
+    record["surface_evidence"] = []
+    record["capsule_hash"] = mica_core.compute_capsule_hash(record)
+
+    results = _statuses(mica_core.run_invocation_trace_checks(_write_record(tmp_path, record)))
+
+    assert results["IVC-004"][0] == "FAIL"
+    assert "loaded surfaces without surface_evidence" in results["IVC-004"][1]
+
+
+def test_partial_evidence_is_rejected(tmp_path: Path):
+    record = _base_record()
+    dropped = record["surface_evidence"].pop()
+    record["capsule_hash"] = mica_core.compute_capsule_hash(record)
+
+    results = _statuses(mica_core.run_invocation_trace_checks(_write_record(tmp_path, record)))
+
+    assert results["IVC-004"][0] == "FAIL"
+    assert dropped["role"] in results["IVC-004"][1]
+
+
+def _seed_project(tmp_path: Path) -> Path:
+    """Copy the capsule fixture into a writable project root."""
+    source = REPO_ROOT / "fixtures" / "invocation_capsule_v2"
+    project_root = tmp_path / "pkg"
+    (project_root / "memory").mkdir(parents=True)
+    (project_root / "mica.yaml").write_text(
+        (source / "mica.yaml").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    for name in ("mica_archive.json", "mica_playbook.md"):
+        (project_root / "memory" / name).write_text(
+            (source / "memory" / name).read_text(encoding="utf-8"), encoding="utf-8"
+        )
+    summary = mica_runtime.build_summary(project_root)
+    mica_runtime.write_invocation_trace(
+        project_root, summary, project_root / "memory" / "mica.invocation.jsonl"
+    )
+    return project_root
+
+
+def test_live_bytes_match_after_recording(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+
+    results = _statuses(mica_core.run_invocation_trace_checks(project_root))
+
+    assert results["IVC-005"][0] == "PASS"
+
+
+def test_surface_drift_after_recording_is_detected(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+    (project_root / "memory" / "mica_archive.json").write_text(
+        '{"tampered": true}', encoding="utf-8"
+    )
+
+    results = _statuses(mica_core.run_invocation_trace_checks(project_root))
+
+    # Stale, not invalid: the record was true when written.
+    assert results["IVC-005"][0] == "WARN"
+    assert "no longer matches disk" in results["IVC-005"][1]
+    assert "archive" in results["IVC-005"][1]
+    assert results["IVC-004"][0] == "PASS", "internal coherence is unaffected by later edits"
+
+
+def test_missing_surface_after_recording_is_detected(tmp_path: Path):
+    project_root = _seed_project(tmp_path)
+    (project_root / "memory" / "mica_playbook.md").unlink()
+
+    results = _statuses(mica_core.run_invocation_trace_checks(project_root))
+
+    assert results["IVC-005"][0] == "WARN"
+    assert "missing" in results["IVC-005"][1]
+
+
+def test_live_byte_check_is_skipped_without_a_project_root(tmp_path: Path):
+    """A bare trace file gives no root to resolve relative paths against."""
+    record = _base_record()
+
+    results = _statuses(mica_core.run_invocation_trace_checks(_write_record(tmp_path, record)))
+
+    assert results["IVC-005"][0] == "INFO"
+    assert "project root not supplied" in results["IVC-005"][1]
