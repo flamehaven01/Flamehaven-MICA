@@ -1,0 +1,2411 @@
+{
+ "binding_required_fail|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.6"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.6"
+  ],
+  [
+   "PCT-006",
+   "WARN",
+   "mica_spec 0.2.6 is 3 patch version(s) behind canonical 0.2.9; the checks here are written against canonical"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "FAIL",
+   "critical DIs missing binding.origin_episode: ['DI-001'] -- di_policy.critical_binding_required is true"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "dead_lesson_ref|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "WARN",
+   "mica_spec 0.2.5 is 4 patch version(s) behind canonical 0.2.9; the checks here are written against canonical"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "WARN",
+   "binding.lesson_ref dead links: [('DI-001', 'memory/lessons/missing.md')]"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "doctrinal_binding|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 2 critical DIs have binding"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "doctrinal binding (no episode code, version ref, or date): ['DI-001', 'DI-002'] -- ground origin_episode in a real incident"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "domain_namespaced_di|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.7"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.7"
+  ],
+  [
+   "PCT-006",
+   "WARN",
+   "mica_spec 0.2.7 is 2 patch version(s) behind canonical 0.2.9; the checks here are written against canonical"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 2 critical DIs have binding"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "doctrinal binding (no episode code, version ref, or date): ['DI-EQA-001', 'DI-BIO-001'] -- ground origin_episode in a real incident"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_candidates_approved_lesson|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "recall trace inactive"
+  ],
+  [
+   "PCT-015",
+   "PASS",
+   "validated promotion provenance for 1 governed candidate(s)"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "recall trace absent; telemetry completeness not active"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "recall trace absent; runtime injection safety not active"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_candidates_broken_provenance|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "recall trace inactive"
+  ],
+  [
+   "PCT-015",
+   "FAIL",
+   "cand_00044: unknown source_event_ids ['obs_missing_999']"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "recall trace absent; telemetry completeness not active"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "recall trace absent; runtime injection safety not active"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_candidates_pending|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "recall trace inactive"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "memory/mica.candidates.json contains no approved or promoted artifacts requiring provenance validation"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "recall trace absent; telemetry completeness not active"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "recall trace absent; runtime injection safety not active"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_observation_valid|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "recall trace inactive"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "memory/mica.candidates.json contains no approved or promoted artifacts requiring provenance validation"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "recall trace absent; telemetry completeness not active"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "recall trace absent; runtime injection safety not active"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_recall_agent_context_violation|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "PASS",
+   "memory/mica.recall.jsonl provides recall trace coverage (1 records)"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "memory/mica.candidates.json contains no approved or promoted artifacts requiring provenance validation"
+  ],
+  [
+   "PCT-018",
+   "PASS",
+   "memory/mica.recall.jsonl joins cleanly with candidates, observations, and invocation trace"
+  ],
+  [
+   "PCT-017",
+   "FAIL",
+   "candidate cand_00042 entered agent_context while operator_review.state=pending"
+  ],
+  [
+   "PCT-009",
+   "FAIL",
+   "invocation contract incomplete: ['PCT-017']"
+  ]
+ ],
+ "flow_recall_enabled_missing_trace|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "WARN",
+   "recall enabled but mica.recall.jsonl missing"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "memory/mica.candidates.json contains no approved or promoted artifacts requiring provenance validation"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "recall trace absent; telemetry completeness not active"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "recall enabled but trace file absent; PCT-017 deferred until runtime trace exists"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_recall_incomplete_telemetry|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "PASS",
+   "memory/mica.recall.jsonl provides recall trace coverage (1 records)"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "memory/mica.candidates.json contains no approved or promoted artifacts requiring provenance validation"
+  ],
+  [
+   "PCT-018",
+   "WARN",
+   "record 1: session_id 'sess_unlinked_999' not linked to observation stream; record 1: missing source_event_ids for candidate cand_00042"
+  ],
+  [
+   "PCT-017",
+   "PASS",
+   "memory/mica.recall.jsonl enforces approved-only agent_context injection"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "flow_recall_operator_review_safe|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "INFO",
+   "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "PASS",
+   "memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)"
+  ],
+  [
+   "PCT-014",
+   "PASS",
+   "memory/mica.recall.jsonl provides recall trace coverage (1 records)"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "memory/mica.candidates.json contains no approved or promoted artifacts requiring provenance validation"
+  ],
+  [
+   "PCT-018",
+   "PASS",
+   "memory/mica.recall.jsonl joins cleanly with candidates, observations, and invocation trace"
+  ],
+  [
+   "PCT-017",
+   "PASS",
+   "memory/mica.recall.jsonl enforces approved-only agent_context injection"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "handoff_surface|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "handoff_surface|default": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "handoff_surface|resume": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook, handoff; context=archive, playbook, handoff; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "hook_output_violations_only|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "WARN",
+   "mica_spec 0.2.5 is 4 patch version(s) behind canonical 0.2.9; the checks here are written against canonical"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 3 critical DIs have binding"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "doctrinal binding (no episode code, version ref, or date): ['DI-001', 'DI-002', 'DI-003'] -- ground origin_episode in a real incident"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "violation_count > 0 but last_triggered empty: ['DI-001', 'DI-002']"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "implicit_primary_pattern|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "WARN",
+   "primary_pattern omitted; runtime default readme_protocol applies (invoked=archive, playbook; context=archive, playbook; operator=none)"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "invocation_capsule_v2|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "memory_first_minimal|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_first coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.9"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.9"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: explicit; invoked=observations, slots, archive, playbook; context=archive, playbook, slots; operator=memories, recall"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "memory_profiles|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "memory_profiles|default": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "memory_profiles|incident": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "memory_profiles|review": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook, lessons; context=archive, playbook, lessons; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "stale_archive|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "INFO",
+   "no critical DIs in archive"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "WARN",
+   "archive last_updated 2020-01-01 is 2437 days old (max_archive_age_days=90)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "unbound_critical_di|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "WARN",
+   "mica_spec 0.2.5 is 4 patch version(s) behind canonical 0.2.9; the checks here are written against canonical"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "critical DIs missing binding.origin_episode: ['DI-001'] -- set di_policy.critical_binding_required: true to escalate to FAIL"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "valid_bound_di|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.5"
+  ],
+  [
+   "PCT-006",
+   "WARN",
+   "mica_spec 0.2.5 is 4 patch version(s) behind canonical 0.2.9; the checks here are written against canonical"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 2 critical DIs have binding"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "doctrinal binding (no episode code, version ref, or date): ['DI-002'] -- ground origin_episode in a real incident"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ],
+ "violation_count_incoherent|None": [
+  [
+   "PCT-001",
+   "PASS",
+   "mica.yaml present (mica.yaml)"
+  ],
+  [
+   "PCT-002",
+   "PASS",
+   "required fields valid"
+  ],
+  [
+   "PCT-003",
+   "PASS",
+   "all required layer paths exist"
+  ],
+  [
+   "PCT-004",
+   "PASS",
+   "memory_injection coherence ok"
+  ],
+  [
+   "PCT-005",
+   "INFO",
+   "archive mica_spec = 0.2.8"
+  ],
+  [
+   "PCT-006",
+   "PASS",
+   "mica_spec aligned: 0.2.8"
+  ],
+  [
+   "PCT-007",
+   "PASS",
+   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+  ],
+  [
+   "PCT-008",
+   "INFO",
+   "no hook-specific coherence issues"
+  ],
+  [
+   "PCT-010",
+   "PASS",
+   "all 1 critical DIs have binding"
+  ],
+  [
+   "PCT-010",
+   "WARN",
+   "violation_count > 0 but last_triggered empty: ['DI-001']"
+  ],
+  [
+   "PCT-011",
+   "INFO",
+   "no lesson_ref fields declared; nothing to validate"
+  ],
+  [
+   "PCT-012",
+   "INFO",
+   "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
+  ],
+  [
+   "PCT-013",
+   "INFO",
+   "flow disabled; observation coherence not required"
+  ],
+  [
+   "PCT-014",
+   "INFO",
+   "flow disabled; recall trace coverage not required"
+  ],
+  [
+   "PCT-015",
+   "INFO",
+   "flow disabled; promotion provenance not required"
+  ],
+  [
+   "PCT-018",
+   "INFO",
+   "flow disabled; telemetry completeness not required"
+  ],
+  [
+   "PCT-017",
+   "INFO",
+   "flow disabled; recall injection safety not required"
+  ],
+  [
+   "PCT-009",
+   "PASS",
+   "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
+  ]
+ ]
+}

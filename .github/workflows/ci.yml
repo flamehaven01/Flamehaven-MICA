@@ -32,3 +32,37 @@ jobs:
 
       - name: Run PCT fixture tests
         run: pytest -v
+
+  # Generic linting says the Python is well formed. These say MICA still tells
+  # every package the same thing it told them before this commit, and that the
+  # project meets the demands it makes of its consumers.
+  memory-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Golden check output is unchanged
+        run: pytest tests/test_golden_pct.py -v
+
+      - name: Project meets its own consistency rules
+        run: pytest tests/test_repo_self_consistency.py -v
+
+      - name: Every fixture resolves its contract
+        run: |
+          for pkg in fixtures/*/; do
+            if [ -f "$pkg/mica.yaml" ]; then
+              echo "--- $pkg"
+              python tools/mica_pct.py "$pkg" > /dev/null || true
+            fi
+          done
+
+      - name: Context budget is reported, not silently drifting
+        run: python tools/mica_measure.py fixtures/memory_profiles

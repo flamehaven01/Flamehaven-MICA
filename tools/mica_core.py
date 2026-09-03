@@ -1175,7 +1175,11 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
     mica_yaml_path = find_mica_yaml(project_root)
     if mica_yaml_path:
         results.append(
-            ("PCT-001", "PASS", f"mica.yaml present ({mica_yaml_path.relative_to(project_root)})")
+            (
+                "PCT-001",
+                "PASS",
+                f"mica.yaml present ({mica_yaml_path.relative_to(project_root).as_posix()})",
+            )
         )
     else:
         results.append(("PCT-001", "FAIL", "mica.yaml missing (checked root + memory/)"))

@@ -134,12 +134,12 @@ def _run_pct013(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         return (
             "PCT-013",
             "WARN",
-            f"{observe_path.relative_to(project_root)} coherent but timestamps are not monotonic",
+            f"{observe_path.relative_to(project_root).as_posix()} coherent but timestamps are not monotonic",
         )
     return (
         "PCT-013",
         "PASS",
-        f"{observe_path.relative_to(project_root)} parseable and hash-chain coherent ({len(records)} records)",
+        f"{observe_path.relative_to(project_root).as_posix()} parseable and hash-chain coherent ({len(records)} records)",
     )
 
 
@@ -183,7 +183,7 @@ def _run_pct015(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         return (
             "PCT-015",
             "INFO",
-            f"{candidates_path.relative_to(project_root)} contains no approved or promoted artifacts requiring provenance validation",
+            f"{candidates_path.relative_to(project_root).as_posix()} contains no approved or promoted artifacts requiring provenance validation",
         )
 
     issues: list[str] = []
@@ -251,7 +251,7 @@ def _run_pct014(
         return (
             "PCT-014",
             "WARN",
-            f"{recall_path.relative_to(project_root)} empty while recall is active",
+            f"{recall_path.relative_to(project_root).as_posix()} empty while recall is active",
         )
 
     issues: list[str] = []
@@ -278,7 +278,7 @@ def _run_pct014(
     return (
         "PCT-014",
         "PASS",
-        f"{recall_path.relative_to(project_root)} provides recall trace coverage ({len(records)} records)",
+        f"{recall_path.relative_to(project_root).as_posix()} provides recall trace coverage ({len(records)} records)",
     )
 
 
@@ -445,12 +445,12 @@ def _run_pct018(project_root: Path, flow_policy: dict[str, Any]) -> tuple[str, s
         return (
             "PCT-018",
             "PASS",
-            f"{recall_path.relative_to(project_root)} joins cleanly with candidates, observations, and invocation trace",
+            f"{recall_path.relative_to(project_root).as_posix()} joins cleanly with candidates, observations, and invocation trace",
         )
     return (
         "PCT-018",
         "PASS",
-        f"{recall_path.relative_to(project_root)} joins cleanly with candidates and observations",
+        f"{recall_path.relative_to(project_root).as_posix()} joins cleanly with candidates and observations",
     )
 
 
@@ -492,7 +492,7 @@ def _run_pct017(
         return (
             "PCT-017",
             "INFO",
-            f"{recall_path.relative_to(project_root)} empty; no recall injection recorded",
+            f"{recall_path.relative_to(project_root).as_posix()} empty; no recall injection recorded",
         )
 
     inject_unapproved = bool(recall_policy.get("inject_unapproved_candidates", False))
@@ -540,7 +540,7 @@ def _run_pct017(
     return (
         "PCT-017",
         "PASS",
-        f"{recall_path.relative_to(project_root)} enforces approved-only agent_context injection",
+        f"{recall_path.relative_to(project_root).as_posix()} enforces approved-only agent_context injection",
     )
 
 
