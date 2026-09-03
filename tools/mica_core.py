@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import re
 import sys
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -209,6 +210,110 @@ def _mode_default_surfaces(mode: str) -> list[str]:
     return ["archive", "playbook"]
 
 
+def _classify_surface(
+    role: str,
+    allowed: frozenset[str],
+    declared_surfaces: list[str],
+    invoked_surfaces: list[str],
+) -> str | None:
+    """Why this surface cannot be honoured, or None if it can.
+
+    Returning a reason instead of appending into one of several lists is what
+    flattens the caller: the branching lives here, at depth 1.
+    """
+    if role not in allowed:
+        return "invalid"
+    if role not in declared_surfaces:
+        return "undeclared"
+    if role not in invoked_surfaces:
+        return "non_invoked"
+    return None
+
+
+def _declared_roles(raw: list[Any] | None) -> list[str]:
+    return [str(s) for s in (raw or []) if _is_non_empty_string(s)]
+
+
+def _resolve_agent_context_surfaces(
+    raw_agent_context: list[Any] | None,
+    declared_surfaces: list[str],
+    invoked_surfaces: list[str],
+) -> dict[str, list[str]]:
+    """Validate the declared agent_context surfaces against what was invoked."""
+    if raw_agent_context is None:
+        # No declaration: fall back to the canonical role order.
+        surfaces = [role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces]
+        return {
+            "agent_context_surfaces": surfaces or list(invoked_surfaces),
+            "configured_agent_context_surfaces": [],
+            "invalid_agent_context_surfaces": [],
+            "undeclared_agent_context_surfaces": [],
+            "non_invoked_agent_context_surfaces": [],
+        }
+
+    configured = _declared_roles(raw_agent_context)
+    faults: dict[str, list[str]] = {"invalid": [], "undeclared": [], "non_invoked": []}
+    for role in configured:
+        reason = _classify_surface(
+            role, _AGENT_CONTEXT_ALLOWED_SURFACES, declared_surfaces, invoked_surfaces
+        )
+        if reason:
+            faults[reason].append(role)
+    return {
+        "agent_context_surfaces": [
+            role
+            for role in configured
+            if role in _AGENT_CONTEXT_ALLOWED_SURFACES and role in invoked_surfaces
+        ],
+        "configured_agent_context_surfaces": configured,
+        "invalid_agent_context_surfaces": faults["invalid"],
+        "undeclared_agent_context_surfaces": faults["undeclared"],
+        "non_invoked_agent_context_surfaces": faults["non_invoked"],
+    }
+
+
+def _resolve_operator_only_surfaces(
+    raw_operator_only: list[Any] | None,
+    declared_surfaces: list[str],
+    agent_context_surfaces: list[str],
+) -> dict[str, list[str]]:
+    """Validate operator_only surfaces and keep them out of agent context."""
+    if raw_operator_only is None:
+        return {
+            "operator_only_surfaces": [],
+            "configured_operator_only_surfaces": [],
+            "invalid_operator_only_surfaces": [],
+            "undeclared_operator_only_surfaces": [],
+            "overlapping_operator_only_surfaces": [],
+        }
+
+    configured = _declared_roles(raw_operator_only)
+    invalid = [r for r in configured if r not in _OPERATOR_ONLY_ALLOWED_SURFACES]
+    undeclared = [
+        r for r in configured if r in _OPERATOR_ONLY_ALLOWED_SURFACES and r not in declared_surfaces
+    ]
+    overlapping = [
+        r
+        for r in configured
+        if r in _OPERATOR_ONLY_ALLOWED_SURFACES
+        and r in declared_surfaces
+        and r in agent_context_surfaces
+    ]
+    return {
+        "operator_only_surfaces": [
+            r
+            for r in configured
+            if r in _OPERATOR_ONLY_ALLOWED_SURFACES
+            and r in declared_surfaces
+            and r not in agent_context_surfaces
+        ],
+        "configured_operator_only_surfaces": configured,
+        "invalid_operator_only_surfaces": invalid,
+        "undeclared_operator_only_surfaces": undeclared,
+        "overlapping_operator_only_surfaces": overlapping,
+    }
+
+
 def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) -> dict[str, Any]:
     """Decide which memory surfaces this session receives.
 
@@ -307,59 +412,13 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         role for role in required_session_start if role not in invoked_surfaces
     ]
 
-    configured_agent_context_surfaces: list[str] = []
-    invalid_agent_context_surfaces: list[str] = []
-    undeclared_agent_context_surfaces: list[str] = []
-    non_invoked_agent_context_surfaces: list[str] = []
-    configured_operator_only_surfaces: list[str] = []
-    invalid_operator_only_surfaces: list[str] = []
-    undeclared_operator_only_surfaces: list[str] = []
-    overlapping_operator_only_surfaces: list[str] = []
-    if raw_agent_context is not None:
-        for surface in raw_agent_context:
-            if not _is_non_empty_string(surface):
-                continue
-            role = str(surface)
-            configured_agent_context_surfaces.append(role)
-            if role not in _AGENT_CONTEXT_ALLOWED_SURFACES:
-                invalid_agent_context_surfaces.append(role)
-            elif role not in declared_surfaces:
-                undeclared_agent_context_surfaces.append(role)
-            elif role not in invoked_surfaces:
-                non_invoked_agent_context_surfaces.append(role)
-        agent_context_surfaces = [
-            role
-            for role in configured_agent_context_surfaces
-            if role in _AGENT_CONTEXT_ALLOWED_SURFACES and role in invoked_surfaces
-        ]
-    else:
-        agent_context_surfaces = [
-            role for role in _AGENT_CONTEXT_ROLE_ORDER if role in invoked_surfaces
-        ]
-        if not agent_context_surfaces:
-            agent_context_surfaces = list(invoked_surfaces)
-
-    if raw_operator_only is not None:
-        for surface in raw_operator_only:
-            if not _is_non_empty_string(surface):
-                continue
-            role = str(surface)
-            configured_operator_only_surfaces.append(role)
-            if role not in _OPERATOR_ONLY_ALLOWED_SURFACES:
-                invalid_operator_only_surfaces.append(role)
-            elif role not in declared_surfaces:
-                undeclared_operator_only_surfaces.append(role)
-            elif role in agent_context_surfaces:
-                overlapping_operator_only_surfaces.append(role)
-        operator_only_surfaces = [
-            role
-            for role in configured_operator_only_surfaces
-            if role in _OPERATOR_ONLY_ALLOWED_SURFACES
-            and role in declared_surfaces
-            and role not in agent_context_surfaces
-        ]
-    else:
-        operator_only_surfaces = []
+    context = _resolve_agent_context_surfaces(
+        raw_agent_context, declared_surfaces, invoked_surfaces
+    )
+    agent_context_surfaces = context["agent_context_surfaces"]
+    operator = _resolve_operator_only_surfaces(
+        raw_operator_only, declared_surfaces, agent_context_surfaces
+    )
 
     return {
         "invocation_contract": "memory_first" if mode == "memory_first" else "archive_first",
@@ -373,17 +432,17 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         "declared_surfaces": declared_surfaces,
         "loaded_surfaces": invoked_surfaces,
         "agent_context_surfaces": agent_context_surfaces,
-        "operator_only_surfaces": operator_only_surfaces,
+        "operator_only_surfaces": operator["operator_only_surfaces"],
         "deferred_surfaces": deferred_surfaces,
         "missing_invoked_surfaces": missing_invoked_surfaces,
-        "configured_agent_context_surfaces": configured_agent_context_surfaces,
-        "invalid_agent_context_surfaces": invalid_agent_context_surfaces,
-        "undeclared_agent_context_surfaces": undeclared_agent_context_surfaces,
-        "non_invoked_agent_context_surfaces": non_invoked_agent_context_surfaces,
-        "configured_operator_only_surfaces": configured_operator_only_surfaces,
-        "invalid_operator_only_surfaces": invalid_operator_only_surfaces,
-        "undeclared_operator_only_surfaces": undeclared_operator_only_surfaces,
-        "overlapping_operator_only_surfaces": overlapping_operator_only_surfaces,
+        "configured_agent_context_surfaces": context["configured_agent_context_surfaces"],
+        "invalid_agent_context_surfaces": context["invalid_agent_context_surfaces"],
+        "undeclared_agent_context_surfaces": context["undeclared_agent_context_surfaces"],
+        "non_invoked_agent_context_surfaces": context["non_invoked_agent_context_surfaces"],
+        "configured_operator_only_surfaces": operator["configured_operator_only_surfaces"],
+        "invalid_operator_only_surfaces": operator["invalid_operator_only_surfaces"],
+        "undeclared_operator_only_surfaces": operator["undeclared_operator_only_surfaces"],
+        "overlapping_operator_only_surfaces": operator["overlapping_operator_only_surfaces"],
     }
 
 
@@ -423,100 +482,39 @@ def _legacy_archive_sort_key(path: Path) -> tuple[tuple[int, ...], int, int, str
     )
 
 
-def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple[str, str, str]]:
+@dataclass(frozen=True)
+class _PackageContext:
+    """Package state resolved once, then handed to each check.
+
+    run_pct_checks used to hold all of this as locals in a single 457-line body
+    with a cyclomatic complexity of 88. The flow checks had already been split
+    into _run_pct013..018; this applies the same shape to PCT-002..012.
     """
-    Run PCT-001 through PCT-018. Returns list of (id, status, message).
 
-    Only CONTRACT_CHECKS decide CLOSED CONTRACT; ARCHIVE_CHECKS and FLOW_CHECKS
-    report on their own axes. `profile` selects a memory profile declared under
-    `invocation_protocol.profiles`.
-    PCT-011, PCT-012, PCT-014, and PCT-018 remain WARN/INFO-only. PCT-013/014/015/017/018 are flow-gated.
-    """
-    results: list[tuple[str, str, str]] = []
+    project_root: Path
+    profile: str | None
+    mica_yaml_path: Path
+    yd: dict[str, Any]
+    layers: list[Any]
+    layer_roles: list[str | None]
+    layer_role_set: set[str | None]
+    mode: Any
+    valid_modes: set[str]
+    di_policy: dict[str, Any]
+    critical_binding_required: bool
+    flow_policy: dict[str, Any]
+    recall_policy: dict[str, Any]
+    archive: dict[str, Any]
+    inv: dict[str, Any]
+    pattern: str | None
 
-    mica_yaml_path = find_mica_yaml(project_root)
-    if mica_yaml_path:
-        results.append(
-            ("PCT-001", "PASS", f"mica.yaml present ({mica_yaml_path.relative_to(project_root)})")
-        )
-    else:
-        results.append(("PCT-001", "FAIL", "mica.yaml missing (checked root + memory/)"))
-        results.append(("PCT-009", "FAIL", "package incomplete. failing checks: ['PCT-001']"))
-        return results
 
-    try:
-        yd = load_yaml(mica_yaml_path)
-    except Exception as exc:
-        results.append(("PCT-002", "FAIL", f"mica.yaml parse error: {exc}"))
-        results.append(("PCT-009", "FAIL", "package incomplete. failing checks: ['PCT-002']"))
-        return results
-
+def _build_package_context(
+    project_root: Path, mica_yaml_path: Path, yd: dict[str, Any], profile: str | None
+) -> _PackageContext:
     layers = yd.get("layers", []) if isinstance(yd.get("layers"), list) else []
     layer_roles = [layer_role(lyr) for lyr in layers if isinstance(lyr, dict)]
-    valid_modes = {"memory_injection", "protocol_evolution", "memory_first"}
     di_policy = yd.get("di_policy", {}) if isinstance(yd.get("di_policy"), dict) else {}
-    critical_binding_required = bool(di_policy.get("critical_binding_required", False))
-    flow_policy = yd.get("flow_policy", {}) if isinstance(yd.get("flow_policy"), dict) else {}
-    recall_policy = yd.get("recall_policy", {}) if isinstance(yd.get("recall_policy"), dict) else {}
-
-    required_fields = {"mica_spec", "mode", "layers"}
-    missing = required_fields - set(yd.keys())
-    if missing:
-        results.append(("PCT-002", "FAIL", f"missing required fields: {sorted(missing)}"))
-    elif "archive" not in layer_roles:
-        results.append(("PCT-002", "FAIL", "archive layer missing"))
-    elif "playbook" not in layer_roles:
-        results.append(("PCT-002", "FAIL", "playbook layer missing"))
-    elif yd.get("mode") not in valid_modes:
-        results.append(("PCT-002", "FAIL", f"invalid mode: {yd.get('mode')}"))
-    else:
-        results.append(("PCT-002", "PASS", "required fields valid"))
-
-    missing_paths = [
-        lyr.get("path")
-        for lyr in layers
-        if isinstance(lyr, dict)
-        and lyr.get("required", True)
-        and isinstance(lyr.get("path"), str)
-        and not (project_root / lyr["path"]).exists()
-    ]
-    if missing_paths:
-        results.append(("PCT-003", "FAIL", f"missing layer paths: {missing_paths}"))
-    else:
-        results.append(("PCT-003", "PASS", "all required layer paths exist"))
-
-    mode = yd.get("mode", "")
-    layer_role_set = set(layer_roles)
-    if mode == "memory_injection" and {"archive", "playbook"} <= layer_role_set:
-        results.append(("PCT-004", "PASS", "memory_injection coherence ok"))
-    elif mode == "protocol_evolution" and {"archive", "playbook", "lessons"} <= layer_role_set:
-        results.append(("PCT-004", "PASS", "protocol_evolution coherence ok"))
-    elif mode == "protocol_evolution":
-        results.append(("PCT-004", "FAIL", "protocol_evolution requires lessons layer"))
-    elif (
-        mode == "memory_first"
-        and {
-            "archive",
-            "playbook",
-            "sessions",
-            "observations",
-            "memories",
-            "slots",
-        }
-        <= layer_role_set
-    ):
-        results.append(("PCT-004", "PASS", "memory_first coherence ok"))
-    elif mode == "memory_first":
-        results.append(
-            (
-                "PCT-004",
-                "FAIL",
-                "memory_first requires archive, playbook, sessions, observations, memories, and slots layers",
-            )
-        )
-    else:
-        results.append(("PCT-004", "FAIL", f"mode={mode} incompatible with layers={layer_roles}"))
-
     archive_rel = next(
         (
             lyr.get("path")
@@ -528,20 +526,122 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
     archive: dict[str, Any] = {}
     if isinstance(archive_rel, str):
         archive = load_json(project_root / archive_rel)
+    inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
+    return _PackageContext(
+        project_root=project_root,
+        profile=profile,
+        mica_yaml_path=mica_yaml_path,
+        yd=yd,
+        layers=layers,
+        layer_roles=layer_roles,
+        layer_role_set=set(layer_roles),
+        mode=yd.get("mode", ""),
+        valid_modes={"memory_injection", "protocol_evolution", "memory_first"},
+        di_policy=di_policy,
+        critical_binding_required=bool(di_policy.get("critical_binding_required", False)),
+        flow_policy=yd.get("flow_policy", {}) if isinstance(yd.get("flow_policy"), dict) else {},
+        recall_policy=(
+            yd.get("recall_policy", {}) if isinstance(yd.get("recall_policy"), dict) else {}
+        ),
+        archive=archive,
+        inv=inv,
+        pattern=(
+            inv.get("primary_pattern") if isinstance(inv.get("primary_pattern"), str) else None
+        ),
+    )
 
-    if "mica_spec" in archive:
-        results.append(("PCT-005", "INFO", f"archive mica_spec = {archive['mica_spec']}"))
+
+def _run_pct002(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """Required fields and the archive/playbook layers are declared."""
+    out: list[tuple[str, str, str]] = []
+    required_fields = {"mica_spec", "mode", "layers"}
+    missing = required_fields - set(ctx.yd.keys())
+    if missing:
+        out.append(("PCT-002", "FAIL", f"missing required fields: {sorted(missing)}"))
+    elif "archive" not in ctx.layer_roles:
+        out.append(("PCT-002", "FAIL", "archive layer missing"))
+    elif "playbook" not in ctx.layer_roles:
+        out.append(("PCT-002", "FAIL", "playbook layer missing"))
+    elif ctx.yd.get("mode") not in ctx.valid_modes:
+        out.append(("PCT-002", "FAIL", f"invalid mode: {ctx.yd.get('mode')}"))
     else:
-        results.append(("PCT-005", "INFO", "archive mica_spec absent (legacy-valid)"))
+        out.append(("PCT-002", "PASS", "required fields valid"))
+    return out
 
-    yaml_spec = str(yd.get("mica_spec", ""))
-    arch_spec = str(archive.get("mica_spec", ""))
+
+def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """Every required layer path resolves on disk."""
+    out: list[tuple[str, str, str]] = []
+    missing_paths = [
+        lyr.get("path")
+        for lyr in ctx.layers
+        if isinstance(lyr, dict)
+        and lyr.get("required", True)
+        and isinstance(lyr.get("path"), str)
+        and not (ctx.project_root / lyr["path"]).exists()
+    ]
+    if missing_paths:
+        out.append(("PCT-003", "FAIL", f"missing layer paths: {missing_paths}"))
+    else:
+        out.append(("PCT-003", "PASS", "all required layer paths exist"))
+    return out
+
+
+# Each mode declares the layer roles it cannot operate without. The table
+# replaces a six-branch elif chain that mixed mode dispatch with membership
+# testing at nesting depth 5.
+_MODE_REQUIRED_ROLES: dict[str, frozenset[str]] = {
+    "memory_injection": frozenset({"archive", "playbook"}),
+    "protocol_evolution": frozenset({"archive", "playbook", "lessons"}),
+    "memory_first": frozenset(
+        {"archive", "playbook", "sessions", "observations", "memories", "slots"}
+    ),
+}
+
+_MODE_INCOHERENCE_MESSAGE = {
+    "protocol_evolution": "protocol_evolution requires lessons layer",
+    "memory_first": (
+        "memory_first requires archive, playbook, sessions, observations, "
+        "memories, and slots layers"
+    ),
+}
+
+
+def _run_pct004(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """The declared mode and the declared layer roles agree."""
+    mode = ctx.yd.get("mode", "")
+    required = _MODE_REQUIRED_ROLES.get(mode)
+    if required is None:
+        return [("PCT-004", "FAIL", f"mode={mode} incompatible with layers={ctx.layer_roles}")]
+    if required <= set(ctx.layer_roles):
+        return [("PCT-004", "PASS", f"{mode} coherence ok")]
+    message = _MODE_INCOHERENCE_MESSAGE.get(
+        mode, f"mode={mode} incompatible with layers={ctx.layer_roles}"
+    )
+    return [("PCT-004", "FAIL", message)]
+
+
+def _run_pct005(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """Report the archive's own mica_spec."""
+    out: list[tuple[str, str, str]] = []
+    if "mica_spec" in ctx.archive:
+        out.append(("PCT-005", "INFO", f"archive mica_spec = {ctx.archive['mica_spec']}"))
+    else:
+        out.append(("PCT-005", "INFO", "archive mica_spec absent (legacy-valid)"))
+    return out
+
+
+def _run_pct006(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """mica.yaml and archive agree on mica_spec, and it is not far behind canonical."""
+    out: list[tuple[str, str, str]] = []
+    yaml_spec = str(ctx.yd.get("mica_spec", ""))
+    arch_spec = str(ctx.archive.get("mica_spec", ""))
     if yaml_spec and arch_spec and yaml_spec == arch_spec:
-        results.append(("PCT-006", "PASS", f"mica_spec aligned: {yaml_spec}"))
+        out.append(("PCT-006", "PASS", f"mica_spec aligned: {yaml_spec}"))
     elif yaml_spec and arch_spec:
-        results.append(("PCT-006", "WARN", f"drift: mica.yaml={yaml_spec} archive={arch_spec}"))
+        out.append(("PCT-006", "WARN", f"drift: mica.yaml={yaml_spec} archive={arch_spec}"))
     else:
-        results.append(("PCT-006", "INFO", "mica_spec absent in one or both files"))
+        out.append(("PCT-006", "INFO", "mica_spec absent in one or both files"))
 
     # v0.2.8: warn when declared spec is >= 2 patch versions behind canonical
     # MICA uses 0.MAJOR.PATCH increments; compare the full numeric value.
@@ -554,7 +654,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
             dec_n = dec[0] * 10000 + dec[1] * 100 + dec[2]
             lag = can_n - dec_n
             if lag >= 2:
-                results.append(
+                out.append(
                     (
                         "PCT-006",
                         "WARN",
@@ -562,10 +662,19 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                         f"canonical {MICA_CANONICAL_VERSION} -- consider upgrading",
                     )
                 )
+    return out
 
-    inv = yd.get("invocation_protocol") if isinstance(yd.get("invocation_protocol"), dict) else {}
+
+def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """The invocation protocol resolves: pattern, profile, surfaces, audiences."""
+    out: list[tuple[str, str, str]] = []
+    inv = (
+        ctx.yd.get("invocation_protocol")
+        if isinstance(ctx.yd.get("invocation_protocol"), dict)
+        else {}
+    )
     pattern = inv.get("primary_pattern") if isinstance(inv.get("primary_pattern"), str) else None
-    contract = resolve_invocation_contract(yd, profile)
+    contract = resolve_invocation_contract(ctx.yd, ctx.profile)
     invoked_surfaces = contract["loaded_surfaces"]
     context_surfaces = contract["agent_context_surfaces"]
     missing_invoked_surfaces = contract["missing_invoked_surfaces"]
@@ -631,14 +740,14 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
         rel = next(
             (
                 lyr.get("path")
-                for lyr in layers
+                for lyr in ctx.layers
                 if isinstance(lyr, dict) and layer_role(lyr) == role
             ),
             None,
         )
         if not isinstance(rel, str):
             continue
-        target = project_root / rel
+        target = ctx.project_root / rel
         if not target.is_file():
             continue
         try:
@@ -658,7 +767,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
 
     if pattern is None:
         if missing_invoked_surfaces:
-            results.append(
+            out.append(
                 (
                     "PCT-007",
                     "FAIL",
@@ -667,15 +776,15 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
             )
         elif invocation_config_issues:
             details = "; ".join(invocation_config_issues)
-            results.append(
+            out.append(
                 (
                     "PCT-007",
                     "FAIL",
                     f"invocation_protocol surface contract invalid: {details} (invoked={invoked_label}; context={context_label}; operator={operator_label})",
                 )
             )
-        elif isinstance(yd.get("invocation_protocol"), dict):
-            results.append(
+        elif isinstance(ctx.yd.get("invocation_protocol"), dict):
+            out.append(
                 (
                     "PCT-007",
                     "WARN",
@@ -683,7 +792,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                 )
             )
         else:
-            results.append(
+            out.append(
                 (
                     "PCT-007",
                     "INFO",
@@ -691,9 +800,9 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                 )
             )
     elif pattern not in valid_patterns:
-        results.append(("PCT-007", "FAIL", f"invalid primary_pattern: {pattern}"))
+        out.append(("PCT-007", "FAIL", f"invalid primary_pattern: {pattern}"))
     elif missing_invoked_surfaces:
-        results.append(
+        out.append(
             (
                 "PCT-007",
                 "FAIL",
@@ -702,7 +811,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
         )
     elif invocation_config_issues:
         details = "; ".join(invocation_config_issues)
-        results.append(
+        out.append(
             (
                 "PCT-007",
                 "FAIL",
@@ -710,29 +819,36 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
             )
         )
     else:
-        results.append(
+        out.append(
             (
                 "PCT-007",
                 "PASS",
                 f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}; operator={operator_label}",
             )
         )
+    return out
 
+
+def _run_pct008(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """A declared hook carrier exists."""
+    out: list[tuple[str, str, str]] = []
     hook_hint_layers = [
         layer_label(lyr)
-        for lyr in layers
+        for lyr in ctx.layers
         if isinstance(lyr, dict) and lyr.get("loading_hint") == "hook"
     ]
-    hook_script = inv.get("hook_script") if isinstance(inv.get("hook_script"), str) else None
-    if pattern == "hook_trigger":
+    hook_script = (
+        ctx.inv.get("hook_script") if isinstance(ctx.inv.get("hook_script"), str) else None
+    )
+    if ctx.pattern == "hook_trigger":
         if not hook_script:
-            results.append(("PCT-008", "FAIL", "hook_trigger declared without hook_script"))
-        elif not (project_root / hook_script).exists():
-            results.append(("PCT-008", "FAIL", f"hook_script missing: {hook_script}"))
+            out.append(("PCT-008", "FAIL", "hook_trigger declared without hook_script"))
+        elif not (ctx.project_root / hook_script).exists():
+            out.append(("PCT-008", "FAIL", f"hook_script missing: {hook_script}"))
         else:
-            results.append(("PCT-008", "PASS", f"hook_script present: {hook_script}"))
+            out.append(("PCT-008", "PASS", f"hook_script present: {hook_script}"))
     elif hook_hint_layers:
-        results.append(
+        out.append(
             (
                 "PCT-008",
                 "WARN",
@@ -740,116 +856,125 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
             )
         )
     else:
-        results.append(("PCT-008", "INFO", "no hook-specific coherence issues"))
+        out.append(("PCT-008", "INFO", "no hook-specific coherence issues"))
+    return out
 
-    if archive:
-        dis = [d for d in archive.get("design_invariants", []) if isinstance(d, dict)]
-        critical_dis = [d for d in dis if d.get("severity") == "critical"]
-        unbound = [
-            d.get("id", "?")
-            for d in critical_dis
-            if not isinstance(d.get("binding"), dict) or not d["binding"].get("origin_episode")
-        ]
-        if not critical_dis:
-            results.append(("PCT-010", "INFO", "no critical DIs in archive"))
-        elif unbound:
-            if critical_binding_required:
-                results.append(
-                    (
-                        "PCT-010",
-                        "FAIL",
-                        f"critical DIs missing binding.origin_episode: {unbound}"
-                        f" -- di_policy.critical_binding_required is true",
-                    )
-                )
-            else:
-                results.append(
-                    (
-                        "PCT-010",
-                        "WARN",
-                        f"critical DIs missing binding.origin_episode: {unbound}"
-                        f" -- set di_policy.critical_binding_required: true to escalate to FAIL",
-                    )
-                )
-        else:
-            results.append(
-                ("PCT-010", "PASS", f"all {len(critical_dis)} critical DIs have binding")
+
+def _critical_dis(ctx: _PackageContext) -> list[dict[str, Any]]:
+    dis = [d for d in ctx.archive.get("design_invariants", []) if isinstance(d, dict)]
+    return [d for d in dis if d.get("severity") == "critical"]
+
+
+def _run_pct010(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """Critical DI binding: present, incident-grounded, and internally coherent."""
+    if not ctx.archive:
+        return [("PCT-010", "INFO", "archive not loaded; binding check skipped")]
+
+    out: list[tuple[str, str, str]] = []
+    critical_dis = _critical_dis(ctx)
+    unbound = [
+        d.get("id", "?")
+        for d in critical_dis
+        if not isinstance(d.get("binding"), dict) or not d["binding"].get("origin_episode")
+    ]
+    if not critical_dis:
+        out.append(("PCT-010", "INFO", "no critical DIs in archive"))
+    elif unbound and ctx.critical_binding_required:
+        out.append(
+            (
+                "PCT-010",
+                "FAIL",
+                f"critical DIs missing binding.origin_episode: {unbound}"
+                f" -- di_policy.critical_binding_required is true",
             )
-
-        # v0.2.8: doctrinal binding quality check (applies to all bound critical DIs)
-        doctrinal_ids = [
-            d.get("id", "?")
-            for d in critical_dis
-            if isinstance(d.get("binding"), dict)
-            and d["binding"].get("origin_episode")
-            and not any(p.search(d["binding"]["origin_episode"]) for p in _EPISODE_PATTERNS)
-        ]
-        if doctrinal_ids:
-            results.append(
-                (
-                    "PCT-010",
-                    "WARN",
-                    f"doctrinal binding (no episode code, version ref, or date): "
-                    f"{doctrinal_ids} -- ground origin_episode in a real incident",
-                )
+        )
+    elif unbound:
+        out.append(
+            (
+                "PCT-010",
+                "WARN",
+                f"critical DIs missing binding.origin_episode: {unbound}"
+                f" -- set di_policy.critical_binding_required: true to escalate to FAIL",
             )
-
-        # v0.2.8: violation_count / last_triggered coherence
-        incoherent_ids = [
-            d.get("id", "?")
-            for d in critical_dis
-            if isinstance(d.get("binding"), dict)
-            and d["binding"].get("violation_count", 0)
-            and not d["binding"].get("last_triggered")
-        ]
-        if incoherent_ids:
-            results.append(
-                (
-                    "PCT-010",
-                    "WARN",
-                    f"violation_count > 0 but last_triggered empty: {incoherent_ids}",
-                )
-            )
-
-        broken_refs = [
-            (d.get("id", "?"), d["binding"]["lesson_ref"])
-            for d in critical_dis
-            if isinstance(d.get("binding"), dict)
-            and isinstance(d["binding"].get("lesson_ref"), str)
-            and d["binding"]["lesson_ref"]
-            and not (project_root / d["binding"]["lesson_ref"]).exists()
-        ]
-        if broken_refs:
-            results.append(("PCT-011", "WARN", f"binding.lesson_ref dead links: {broken_refs}"))
-        else:
-            bound_with_ref = [
-                d
-                for d in critical_dis
-                if isinstance(d.get("binding"), dict) and d["binding"].get("lesson_ref")
-            ]
-            if bound_with_ref:
-                results.append(
-                    ("PCT-011", "PASS", f"all {len(bound_with_ref)} lesson_ref paths exist")
-                )
-            else:
-                results.append(
-                    ("PCT-011", "INFO", "no lesson_ref fields declared; nothing to validate")
-                )
+        )
     else:
-        results.append(("PCT-010", "INFO", "archive not loaded; binding check skipped"))
-        results.append(("PCT-011", "INFO", "archive not loaded; lesson_ref check skipped"))
+        out.append(("PCT-010", "PASS", f"all {len(critical_dis)} critical DIs have binding"))
 
+    # v0.2.8: an origin_episode with no episode code, version ref, or date
+    # restates the label instead of recording what happened.
+    doctrinal_ids = [
+        d.get("id", "?")
+        for d in critical_dis
+        if isinstance(d.get("binding"), dict)
+        and d["binding"].get("origin_episode")
+        and not any(p.search(d["binding"]["origin_episode"]) for p in _EPISODE_PATTERNS)
+    ]
+    if doctrinal_ids:
+        out.append(
+            (
+                "PCT-010",
+                "WARN",
+                f"doctrinal binding (no episode code, version ref, or date): "
+                f"{doctrinal_ids} -- ground origin_episode in a real incident",
+            )
+        )
+
+    # v0.2.8: a violation count with no timestamp is an incoherent record.
+    incoherent_ids = [
+        d.get("id", "?")
+        for d in critical_dis
+        if isinstance(d.get("binding"), dict)
+        and d["binding"].get("violation_count", 0)
+        and not d["binding"].get("last_triggered")
+    ]
+    if incoherent_ids:
+        out.append(
+            ("PCT-010", "WARN", f"violation_count > 0 but last_triggered empty: {incoherent_ids}")
+        )
+    return out
+
+
+def _run_pct011(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """Every declared binding.lesson_ref resolves on disk."""
+    if not ctx.archive:
+        return [("PCT-011", "INFO", "archive not loaded; lesson_ref check skipped")]
+
+    critical_dis = _critical_dis(ctx)
+    broken_refs = [
+        (d.get("id", "?"), d["binding"]["lesson_ref"])
+        for d in critical_dis
+        if isinstance(d.get("binding"), dict)
+        and isinstance(d["binding"].get("lesson_ref"), str)
+        and d["binding"]["lesson_ref"]
+        and not (ctx.project_root / d["binding"]["lesson_ref"]).exists()
+    ]
+    if broken_refs:
+        return [("PCT-011", "WARN", f"binding.lesson_ref dead links: {broken_refs}")]
+
+    bound_with_ref = [
+        d
+        for d in critical_dis
+        if isinstance(d.get("binding"), dict) and d["binding"].get("lesson_ref")
+    ]
+    if bound_with_ref:
+        return [("PCT-011", "PASS", f"all {len(bound_with_ref)} lesson_ref paths exist")]
+    return [("PCT-011", "INFO", "no lesson_ref fields declared; nothing to validate")]
+
+
+def _run_pct012(ctx: _PackageContext) -> list[tuple[str, str, str]]:
+    """Archive freshness, when di_policy.max_archive_age_days opts in."""
+    out: list[tuple[str, str, str]] = []
     # PCT-012: archive freshness (v0.2.8, opt-in via di_policy.max_archive_age_days)
-    max_age_days = di_policy.get("max_archive_age_days")
-    if isinstance(max_age_days, int) and max_age_days > 0 and archive:
-        op_meta = archive.get("operation_meta") or {}
+    max_age_days = ctx.di_policy.get("max_archive_age_days")
+    if isinstance(max_age_days, int) and max_age_days > 0 and ctx.archive:
+        op_meta = ctx.archive.get("operation_meta") or {}
         last_updated = op_meta.get("last_updated", "")
         if last_updated:
             try:
                 lu = date.fromisoformat(str(last_updated))
                 age = (date.today() - lu).days
                 if age > max_age_days:
-                    results.append(
+                    out.append(
                         (
                             "PCT-012",
                             "WARN",
@@ -858,7 +983,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                         )
                     )
                 else:
-                    results.append(
+                    out.append(
                         (
                             "PCT-012",
                             "PASS",
@@ -867,7 +992,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                         )
                     )
             except ValueError:
-                results.append(
+                out.append(
                     (
                         "PCT-012",
                         "WARN",
@@ -875,7 +1000,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                     )
                 )
         else:
-            results.append(
+            out.append(
                 (
                     "PCT-012",
                     "WARN",
@@ -883,7 +1008,7 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                 )
             )
     else:
-        results.append(
+        out.append(
             (
                 "PCT-012",
                 "INFO",
@@ -891,6 +1016,52 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
                 "(set di_policy.max_archive_age_days to enable)",
             )
         )
+    return out
+
+
+def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple[str, str, str]]:
+    """
+    Run PCT-001 through PCT-018. Returns list of (id, status, message).
+
+    Only CONTRACT_CHECKS decide CLOSED CONTRACT; ARCHIVE_CHECKS and FLOW_CHECKS
+    report on their own axes. `profile` selects a memory profile declared under
+    `invocation_protocol.profiles`.
+    PCT-011, PCT-012, PCT-014, and PCT-018 remain WARN/INFO-only. PCT-013/014/015/017/018 are flow-gated.
+    """
+    results: list[tuple[str, str, str]] = []
+
+    mica_yaml_path = find_mica_yaml(project_root)
+    if mica_yaml_path:
+        results.append(
+            ("PCT-001", "PASS", f"mica.yaml present ({mica_yaml_path.relative_to(project_root)})")
+        )
+    else:
+        results.append(("PCT-001", "FAIL", "mica.yaml missing (checked root + memory/)"))
+        results.append(("PCT-009", "FAIL", "package incomplete. failing checks: ['PCT-001']"))
+        return results
+
+    try:
+        yd = load_yaml(mica_yaml_path)
+    except Exception as exc:
+        results.append(("PCT-002", "FAIL", f"mica.yaml parse error: {exc}"))
+        results.append(("PCT-009", "FAIL", "package incomplete. failing checks: ['PCT-002']"))
+        return results
+
+    ctx = _build_package_context(project_root, mica_yaml_path, yd, profile)
+
+    for check in (
+        _run_pct002,
+        _run_pct003,
+        _run_pct004,
+        _run_pct005,
+        _run_pct006,
+        _run_pct007,
+        _run_pct008,
+        _run_pct010,
+        _run_pct011,
+        _run_pct012,
+    ):
+        results.extend(check(ctx))
 
     from mica_flow import (
         _run_pct013,
@@ -900,11 +1071,11 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
         _run_pct018,
     )
 
-    results.append(_run_pct013(project_root, flow_policy))
-    results.append(_run_pct014(project_root, flow_policy, recall_policy))
-    results.append(_run_pct015(project_root, flow_policy))
-    results.append(_run_pct018(project_root, flow_policy))
-    results.append(_run_pct017(project_root, flow_policy, recall_policy))
+    results.append(_run_pct013(project_root, ctx.flow_policy))
+    results.append(_run_pct014(project_root, ctx.flow_policy, ctx.recall_policy))
+    results.append(_run_pct015(project_root, ctx.flow_policy))
+    results.append(_run_pct018(project_root, ctx.flow_policy))
+    results.append(_run_pct017(project_root, ctx.flow_policy, ctx.recall_policy))
 
     fails = [r[0] for r in results if r[1] == "FAIL" and r[0] in CONTRACT_CHECKS]
     if fails:
