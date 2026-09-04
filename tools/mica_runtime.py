@@ -378,6 +378,7 @@ def _build_invocation_summary(
         "agent_context_surfaces": agent_context_surfaces,
         "operator_only_surfaces": operator_only_surfaces,
         "deferred_surfaces": deferred,
+        "deferred_surfaces_basis": contract.get("deferred_surfaces_basis") or {},
         "missing_invoked_surfaces": missing,
         "surface_evidence": _build_surface_evidence(
             project_root,

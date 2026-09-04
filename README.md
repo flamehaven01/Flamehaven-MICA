@@ -1,12 +1,12 @@
-<h1 align="center">MICA</h1>
-
-<p align="center"><b>Memory Invocation &amp; Context Archive</b></p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/flamehaven01/Flamehaven-MICA/main/docs/assets/mica-logo.png" alt="MICA -- Memory Invocation &amp; Context Archive" width="520"/>
+</p>
 
 <p align="center">
   <a href="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml"><img src="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"/></a>
-  <img src="https://img.shields.io/badge/stable-v0.2.10-green.svg" alt="v0.2.10"/>
+  <img src="https://img.shields.io/badge/release-v3.0.0-green.svg" alt="v3.0.0"/>
 </p>
 
 <p align="center"><b>Decide which memory a session receives, then prove it received it.</b></p>
@@ -16,13 +16,11 @@ A portable contract for loading project memory at session start and declaring, i
 <b>No service &middot; no API key &middot; plain YAML, JSON, and Markdown your team already reads.</b>
 </p>
 
-**Release track**
+**Release**
 
-- Stable tag: `v0.2.10` (`Adoption Edition`) — first consumer declaring memory profiles
-- Previous stable: `v0.2.9` (`Selection Edition`)
-- Milestone checkpoints, not releases: `v3.0.0-declaration`, `v3.0.0-invocation-truth`, `v3.0.0-origin`
-- Intended reset: `v3.0.0`, an invocation-first MICA
-- The preferred next step is not more MICA-internal expansion. It is helping other repositories consume the invocation contract cleanly.
+- `v3.0.0` — the first public release. Everything before it was internal development.
+- Adoption is 1 of 6 live consumer packages. Whether better context produces better work is not measured.
+- The next step is not more MICA-internal expansion. It is helping other repositories consume the invocation contract cleanly.
 
 ---
 
@@ -75,7 +73,7 @@ A package that resolves cleanly ends with:
 python tools/mica_pct.py fixtures/flow_observation_valid
 
 Contract : CLOSED
-Archive  : OK
+Archive  : ISSUES
 Flow     : OK
 
 Overall: CLOSED CONTRACT
@@ -83,8 +81,9 @@ Overall: CLOSED CONTRACT
 
 `Contract` is the verdict that matters: the declared memory reached the session
 and nothing reached it that should not have. The other two axes report without
-deciding it, so a package can close its contract while its archive shows
-`ISSUES`. See what a session actually costs:
+deciding it, which is what this fixture shows -- its archive declares an older
+`mica_spec` than canonical, so the archive axis has something to say and the
+contract closes anyway. See what a session actually costs:
 
 ```text
 python tools/mica_measure.py fixtures/memory_profiles
@@ -363,9 +362,9 @@ By task, not by version.
 
 **Current release**
 
-- [CHANGELOG.md](CHANGELOG.md) — all versions, most recent first
-- [docs/MICA_v0.2.9_RELEASE_NOTES.md](docs/MICA_v0.2.9_RELEASE_NOTES.md) — what v0.2.9 is, and its known limits
-- [docs/MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md) — v0.2.8 to v0.2.9, including the one breaking change
+- [docs/MICA_v3.0.0_RELEASE_NOTES.md](docs/MICA_v3.0.0_RELEASE_NOTES.md) — what v3.0.0 is, what an audit found, and its known limits
+- [CHANGELOG.md](CHANGELOG.md) — v3.0.0, then the internal history it came from
+- [docs/MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md) — the last internal migration guide, for packages still on v0.2.8
 
 **Direction and architecture**
 

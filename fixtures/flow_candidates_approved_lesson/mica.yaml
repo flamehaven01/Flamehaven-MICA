@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: flow_candidates_approved_lesson
+name: flow-candidates-approved-lesson
 mode: memory_injection
 layers:
   - name: archive

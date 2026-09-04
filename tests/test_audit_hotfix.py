@@ -277,3 +277,62 @@ def test_a_generated_handoff_id_still_matches_the_shipped_schema():
     pattern = schema["properties"]["handoff_id"]["pattern"]
 
     assert re.fullmatch(pattern, mica_handoff.build_handoff("scope", "inv_1")["handoff_id"])
+
+
+# --- P1-7: handoff validation weaker than its own schema ---------------------
+
+
+def test_a_handoff_field_the_schema_forbids_is_rejected(tmp_path: Path):
+    """The schema declares additionalProperties false. The validator did not,
+    so a handoff could carry anything as long as the hash covered it."""
+    root = _handoff(tmp_path, lambda r: r.__setitem__("smuggled", "payload"))
+
+    results = {check: status for check, status, _ in mica_handoff.run_handoff_checks(root)}
+
+    assert results["HND-002"] == "FAIL"
+
+
+def test_an_expiry_without_a_timezone_is_reported_not_a_crash(tmp_path: Path):
+    """Comparing a naive timestamp to an aware one raised TypeError and took the
+    whole validation down."""
+    root = _handoff(tmp_path, lambda r: r.__setitem__("expires_at_utc", "2027-01-01T00:00:00"))
+
+    results = {check: status for check, status, _ in mica_handoff.run_handoff_checks(root)}
+
+    assert results["HND-003"] == "WARN"
+
+
+def test_an_unparseable_expiry_is_not_treated_as_no_expiry(tmp_path: Path):
+    """Falling back to "no expiry declared" let a handoff with a broken date be
+    delivered as current."""
+    root = _handoff(tmp_path, lambda r: r.__setitem__("expires_at_utc", "next tuesday"))
+
+    status = next(s for c, s, _ in mica_handoff.run_handoff_checks(root) if c == "HND-003")
+
+    assert status == "WARN"
+
+
+# --- P2-9: reporting that does not quietly succeed ---------------------------
+
+
+def test_measure_json_exits_nonzero_when_a_root_was_skipped(tmp_path: Path):
+    """The skipped-root exit lived only on the human path, so a fleet reading
+    that dropped packages still reported success to whatever parsed it."""
+    import subprocess
+
+    proc = subprocess.run(
+        [sys.executable, "tools/mica_measure.py", str(tmp_path / "missing"), "--json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+    assert proc.returncode == 1
+
+
+def test_the_selection_basis_reaches_the_runtime_summary():
+    """It existed only inside the contract, so nothing consuming runtime JSON
+    could see why a surface was left out."""
+    summary = mica_runtime.build_summary(FIXTURES_DIR / "memory_profiles")
+
+    assert set(summary["deferred_surfaces"]) == set(summary["deferred_surfaces_basis"])

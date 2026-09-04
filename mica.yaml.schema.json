@@ -37,7 +37,7 @@
     },
     "description": {
       "type": "string",
-      "maxLength": 300
+      "maxLength": 1000
     },
     "layers": {
       "type": "array",
@@ -285,13 +285,8 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": [
-              "archive",
-              "playbook",
-              "slots",
-              "lessons",
-              "memories"
-            ]
+            "pattern": "^(archive|handoff|lessons|memories|playbook|slots)(-[a-z0-9]+(-[a-z0-9]+)*)?$",
+            "description": "A canonical agent-context surface, or one narrowed with a hyphen qualifier such as playbook-eqa. Mirrors _AGENT_CONTEXT_ALLOWED_SURFACES."
           }
         },
         "operator_only_surfaces": {
@@ -299,18 +294,8 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": [
-              "archive",
-              "playbook",
-              "lessons",
-              "sessions",
-              "observations",
-              "memories",
-              "recall",
-              "candidates",
-              "slots",
-              "graph"
-            ]
+            "pattern": "^(archive|candidates|graph|handoff|lessons|memories|observations|playbook|recall|sessions|slots)(-[a-z0-9]+(-[a-z0-9]+)*)?$",
+            "description": "An operator-only surface, or a hyphen-qualified narrowing of one. Mirrors _OPERATOR_ONLY_ALLOWED_SURFACES."
           }
         },
         "profiles": {
@@ -619,18 +604,35 @@
               {
                 "contains": {
                   "required": [
-                    "name",
-                    "path",
-                    "format"
+                    "path"
                   ],
-                  "properties": {
-                    "name": {
-                      "const": "archive"
+                  "anyOf": [
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "archive"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
                     },
-                    "format": {
-                      "const": "json"
+                    {
+                      "properties": {
+                        "name": {
+                          "const": "archive"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "not": {
+                        "required": [
+                          "kind"
+                        ]
+                      }
                     }
-                  }
+                  ]
                 },
                 "minContains": 1,
                 "maxContains": 1
@@ -638,18 +640,35 @@
               {
                 "contains": {
                   "required": [
-                    "name",
-                    "path",
-                    "format"
+                    "path"
                   ],
-                  "properties": {
-                    "name": {
-                      "const": "playbook"
+                  "anyOf": [
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "playbook"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
                     },
-                    "format": {
-                      "const": "markdown"
+                    {
+                      "properties": {
+                        "name": {
+                          "const": "playbook"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "not": {
+                        "required": [
+                          "kind"
+                        ]
+                      }
                     }
-                  }
+                  ]
                 },
                 "minContains": 1,
                 "maxContains": 1

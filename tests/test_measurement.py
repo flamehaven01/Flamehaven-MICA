@@ -9,6 +9,7 @@ consumer packages declares 0.1.9, so the false number was being shipped.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import subprocess
 import sys
@@ -28,18 +29,32 @@ import mica_measure  # noqa: E402
 # --- PCT-006 must not invent a count -----------------------------------------
 
 
-# Derived from the canonical constant rather than hardcoded, so a release bump
-# does not require editing every expectation in this file.
-_CANON = mica_core._parse_version(mica_core.MICA_CANONICAL_VERSION)
+# A fixed canonical, injected rather than read from the live constant. Deriving
+# the expectations from the real version made the file depend on that version
+# having a patch number to subtract from: the 3.0.0 release produced specs like
+# "3.0.-2" and six tests failed on a release that changed no logic.
+_TEST_CANONICAL = "1.4.6"
+
+
+@contextlib.contextmanager
+def _canonical(version: str):
+    original = mica_core.MICA_CANONICAL_VERSION
+    mica_core.MICA_CANONICAL_VERSION = version
+    try:
+        yield
+    finally:
+        mica_core.MICA_CANONICAL_VERSION = original
 
 
 def _spec_behind_by(patches: int) -> str:
     """A spec in the canonical minor, `patches` releases behind."""
-    return f"{_CANON[0]}.{_CANON[1]}.{_CANON[2] - patches}"
+    major, minor, patch = mica_core._parse_version(_TEST_CANONICAL)[:3]
+    return f"{major}.{minor}.{patch - patches}"
 
 
-def _lag_message(spec: str) -> str | None:
-    results = mica_core._spec_lag_result(spec)
+def _lag_message(spec: str, canonical: str = _TEST_CANONICAL) -> str | None:
+    with _canonical(canonical):
+        results = mica_core._spec_lag_result(spec)
     return results[0][2] if results else None
 
 
@@ -57,9 +72,9 @@ def test_same_minor_reports_a_true_patch_count(patches: int):
     assert f"{patches} patch version(s) behind" in message
 
 
-@pytest.mark.parametrize("spec", ["0.1.9", "0.1.8", "0.0.1"])
+@pytest.mark.parametrize("spec", ["1.3.9", "1.2.8", "1.0.1"])
 def test_crossing_a_minor_boundary_states_no_count(spec: str):
-    """0.1.9 was previously reported as 99 versions behind canonical."""
+    """0.1.9 was once reported as 99 versions behind canonical."""
     message = _lag_message(spec)
 
     assert message is not None
@@ -68,11 +83,22 @@ def test_crossing_a_minor_boundary_states_no_count(spec: str):
         assert fabricated not in message
 
 
+@pytest.mark.parametrize("spec", ["0.2.8", "0.1.9"])
+def test_crossing_a_major_boundary_says_major(spec: str):
+    """The 3.0.0 release made every consumer a major version behind. Calling
+    that "at least one minor version" understated a gap it was describing."""
+    message = _lag_message(spec)
+
+    assert message is not None
+    assert "at least one major version" in message
+
+
 def test_a_spec_ahead_of_canonical_is_flagged():
     """A consumer declaring a spec beyond canonical has no schema to match."""
+    major, minor, patch = mica_core._parse_version(_TEST_CANONICAL)[:3]
     for spec in (
-        f"{_CANON[0]}.{_CANON[1]}.{_CANON[2] + 1}",
-        f"{_CANON[0] + 1}.0.0",
+        f"{major}.{minor}.{patch + 1}",
+        f"{major + 1}.0.0",
     ):
         message = _lag_message(spec)
 

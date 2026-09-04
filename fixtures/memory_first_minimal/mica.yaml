@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: memory_first_minimal
+name: memory-first-minimal
 mode: memory_first
 memory_policy:
   primary_store: memory/

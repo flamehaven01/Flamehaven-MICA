@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: flow_recall_agent_context_violation
+name: flow-recall-agent-context-violation
 mode: memory_injection
 layers:
   - name: archive

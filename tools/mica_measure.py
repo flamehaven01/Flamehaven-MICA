@@ -186,6 +186,11 @@ def main() -> None:
 
     if args.json:
         print(json.dumps(rows, indent=2))
+        # The skipped-root exit lived only on the human path, so a fleet reading
+        # that dropped packages still reported success to whatever parsed it.
+        if skipped:
+            print(f"[SKIP] {len(skipped)} root(s) unreadable: {skipped}", file=sys.stderr)
+            sys.exit(1)
         return
 
     print(format_tool_banner("MICA Measurement"))

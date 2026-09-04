@@ -164,6 +164,13 @@ def _check_shape(record: dict[str, Any]) -> list[str]:
         if ref.get("trust_tier") not in ARTIFACT_TRUST_TIERS:
             issues.append(f"{label}: invalid trust_tier {ref.get('trust_tier')!r}")
 
+    known = set(_HASH_FIELDS) | {"handoff_hash"}
+    unknown = sorted(set(record) - known)
+    if unknown:
+        # The schema declares additionalProperties false. The validator did not,
+        # so a handoff could carry anything as long as the hash covered it.
+        issues.append(f"unknown fields not permitted by the schema: {unknown}")
+
     expected = compute_handoff_hash(record)
     if record.get("handoff_hash") != expected:
         issues.append(
@@ -181,9 +188,21 @@ def _check_freshness(record: dict[str, Any]) -> tuple[str, str]:
     if state == "closed":
         return ("INFO", "handoff is closed; nothing carries forward")
 
-    expires = _parse_iso(record.get("expires_at_utc"))
+    raw_expiry = record.get("expires_at_utc")
+    expires = _parse_iso(raw_expiry)
     if expires is None:
+        if raw_expiry is not None:
+            # A malformed expiry is not "no expiry". Treating it as absent let a
+            # handoff with an unparseable date be delivered as current.
+            return ("WARN", f"expires_at_utc {raw_expiry!r} is not a valid timestamp")
         return ("PASS", "handoff is active with no expiry declared")
+    if expires.tzinfo is None:
+        # A naive timestamp used to reach the comparison below and raise
+        # TypeError, taking the whole validation down with it.
+        return (
+            "WARN",
+            f"expires_at_utc {raw_expiry!r} declares no timezone; it cannot be compared to now",
+        )
     if datetime.now(timezone.utc) > expires:
         return (
             "WARN",

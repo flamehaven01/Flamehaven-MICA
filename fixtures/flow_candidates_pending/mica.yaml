@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: flow_candidates_pending
+name: flow-candidates-pending
 mode: memory_injection
 layers:
   - name: archive

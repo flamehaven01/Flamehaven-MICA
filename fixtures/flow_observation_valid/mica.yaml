@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: flow_observation_valid
+name: flow-observation-valid
 mode: memory_injection
 layers:
   - name: archive

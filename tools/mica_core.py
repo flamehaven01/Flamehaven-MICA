@@ -789,6 +789,16 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
                 f"{MICA_CANONICAL_VERSION}; no canonical schema exists for it",
             )
         ]
+    if dec[0] != can[0]:
+        return [
+            (
+                "PCT-006",
+                "WARN",
+                f"mica_spec {declared_spec} is behind canonical "
+                f"{MICA_CANONICAL_VERSION} by at least one major version; "
+                f"the checks here are written against canonical",
+            )
+        ]
     if dec[:2] != can[:2]:
         return [
             (

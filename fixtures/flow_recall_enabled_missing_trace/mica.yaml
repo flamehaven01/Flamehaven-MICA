@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: flow_recall_enabled_missing_trace
+name: flow-recall-enabled-missing-trace
 mode: memory_injection
 layers:
   - name: archive

@@ -1,5 +1,5 @@
 mica_spec: 0.2.9
-name: flow_recall_operator_review_safe
+name: flow-recall-operator-review-safe
 mode: memory_injection
 layers:
   - name: archive

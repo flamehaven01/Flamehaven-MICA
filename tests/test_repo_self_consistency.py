@@ -148,3 +148,66 @@ def test_the_project_carries_a_license():
 
     assert license_path.exists(), "LICENSE is missing"
     assert "MIT License" in license_path.read_text(encoding="utf-8")
+
+
+# --- the shipped schema and the runtime describe the same contract -----------
+
+
+def _composition_validator():
+    import json
+
+    import jsonschema
+
+    schema = json.loads((REPO_ROOT / "mica.yaml.schema.json").read_text(encoding="utf-8"))
+    return jsonschema.validators.validator_for(schema)(schema)
+
+
+def test_every_fixture_validates_against_the_shipped_schema():
+    """Nothing checked this, and 12 of 22 fixtures had drifted out of the
+    published contract -- including `handoff_surface`, added the same week the
+    schema was left untouched. A consumer validating against the shipped schema
+    would have been rejected for a package this repository calls correct."""
+    validator = _composition_validator()
+    invalid = []
+    for package in sorted((REPO_ROOT / "fixtures").iterdir()):
+        yaml_path = package / "mica.yaml"
+        if not yaml_path.exists():
+            continue
+        errors = sorted(validator.iter_errors(mica_primitives.load_yaml(yaml_path)), key=str)
+        if errors:
+            invalid.append(f"{package.name}: {errors[0].message[:90]}")
+
+    assert not invalid, "fixtures rejected by the shipped schema:\n  " + "\n  ".join(invalid)
+
+
+def test_the_schema_permits_every_surface_the_code_permits():
+    """The enum listed five agent-context surfaces while the code allowed six
+    plus hyphen-qualified narrowings, so `handoff` and `playbook-eqa` were both
+    rejected by the schema and accepted by the runtime."""
+    import re
+
+    validator = _composition_validator()
+    proto = validator.schema["$defs"]["invocationProtocol"]["properties"]
+    pattern = proto["agent_context_surfaces"]["items"]["pattern"]
+
+    for role in mica_core._AGENT_CONTEXT_ALLOWED_SURFACES:
+        assert re.fullmatch(pattern, role), f"schema rejects allowed surface {role}"
+    assert re.fullmatch(pattern, "playbook-eqa"), "schema rejects a specialised playbook"
+    assert not re.fullmatch(pattern, "sessions"), "schema must not widen the audience boundary"
+
+
+def test_the_schema_accepts_a_layer_declared_by_kind():
+    """layer_role() reads `kind` before `name`, but the non-memory-first branch
+    demanded `name` plus a fixed `format`."""
+    validator = _composition_validator()
+    document = {
+        "name": "kind-declared",
+        "mica_spec": mica_primitives.MICA_CANONICAL_VERSION,
+        "mode": "memory_injection",
+        "layers": [
+            {"kind": "archive", "path": "memory/a.json"},
+            {"kind": "playbook", "path": "memory/p.md"},
+        ],
+    }
+
+    assert not list(validator.iter_errors(document))

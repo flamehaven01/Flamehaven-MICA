@@ -19,3 +19,27 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Agent worktrees and session state -- local to one machine, never shared
+.claude/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+
+# Coverage and profiling
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Editors
+.idea/
+.vscode/
+*.swp
