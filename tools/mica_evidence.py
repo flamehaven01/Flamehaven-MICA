@@ -32,6 +32,7 @@ from mica_primitives import (
     hash_surface_bytes,
     load_jsonl,
     select_markdown_sections,
+    validate_against_schema,
 )
 
 _SURFACE_EVIDENCE_FIELDS = ("role", "path", "sha256", "bytes", "audience", "delivery_state")
@@ -288,6 +289,54 @@ def _check_capsule_coherence(
     return issues
 
 
+def invocation_surface_coherence_issues(index: int, record: dict[str, Any]) -> list[str]:
+    """Cross-field surface-set rules shared by readers and writers."""
+    issues: list[str] = []
+    loaded = (
+        record.get("loaded_surfaces") if isinstance(record.get("loaded_surfaces"), list) else []
+    )
+    context = (
+        record.get("agent_context_surfaces")
+        if isinstance(record.get("agent_context_surfaces"), list)
+        else []
+    )
+    operator = (
+        record.get("operator_only_surfaces")
+        if isinstance(record.get("operator_only_surfaces"), list)
+        else []
+    )
+    deferred = (
+        record.get("deferred_surfaces") if isinstance(record.get("deferred_surfaces"), list) else []
+    )
+    missing = (
+        record.get("missing_invoked_surfaces")
+        if isinstance(record.get("missing_invoked_surfaces"), list)
+        else []
+    )
+
+    extra_context = [surface for surface in context if surface not in loaded]
+    if extra_context:
+        issues.append(f"record {index}: agent_context_surfaces not loaded {extra_context}")
+    overlapping_operator = [surface for surface in operator if surface in context]
+    if overlapping_operator:
+        issues.append(
+            f"record {index}: operator_only_surfaces overlap agent_context_surfaces "
+            f"{overlapping_operator}"
+        )
+    overlapping_deferred = [surface for surface in deferred if surface in loaded]
+    if overlapping_deferred:
+        issues.append(
+            f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}"
+        )
+    overlapping_missing = [surface for surface in missing if surface in loaded]
+    if overlapping_missing:
+        issues.append(
+            f"record {index}: missing_invoked_surfaces overlap loaded_surfaces "
+            f"{overlapping_missing}"
+        )
+    return issues
+
+
 def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     trace_path = target
     project_root: Path | None = None
@@ -317,6 +366,21 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
     if not records:
         return results + [("IVC-002", "FAIL", "invocation trace empty")]
     results.append(("IVC-002", "PASS", f"parseable invocation trace ({len(records)} records)"))
+
+    # IVC-000 only confirmed the schema file was on disk. Nothing applied it, so
+    # a trace carrying a field the schema forbids was reported VALID.
+    schema_failures = []
+    for position, record in enumerate(records, start=1):
+        status, message = validate_against_schema(record, schema_path)
+        if status == "FAIL":
+            schema_failures.append(f"record {position}: {message}")
+    if schema_failures:
+        preview = "; ".join(schema_failures[:2])
+        if len(schema_failures) > 2:
+            preview += f"; ... (+{len(schema_failures) - 2} more)"
+        results.append(("IVC-006", "FAIL", preview))
+    else:
+        results.append(("IVC-006", "PASS", f"all {len(records)} records valid against the schema"))
 
     schema_issues: list[str] = []
     coherence_issues: list[str] = []
@@ -392,58 +456,16 @@ def run_invocation_trace_checks(target: Path) -> list[tuple[str, str, str]]:
         loaded_surfaces = (
             record.get("loaded_surfaces") if isinstance(record.get("loaded_surfaces"), list) else []
         )
-        context_surfaces = (
-            record.get("agent_context_surfaces")
-            if isinstance(record.get("agent_context_surfaces"), list)
-            else []
-        )
         operator_surfaces = (
             record.get("operator_only_surfaces")
             if isinstance(record.get("operator_only_surfaces"), list)
             else []
         )
-        deferred_surfaces = (
-            record.get("deferred_surfaces")
-            if isinstance(record.get("deferred_surfaces"), list)
-            else []
-        )
-        missing_invoked_surfaces = (
-            record.get("missing_invoked_surfaces")
-            if isinstance(record.get("missing_invoked_surfaces"), list)
-            else []
-        )
-
-        extra_context = [surface for surface in context_surfaces if surface not in loaded_surfaces]
-        if extra_context:
-            coherence_issues.append(
-                f"record {index}: agent_context_surfaces not loaded {extra_context}"
-            )
-        overlapping_operator = [
-            surface for surface in operator_surfaces if surface in context_surfaces
-        ]
-        if overlapping_operator:
-            coherence_issues.append(
-                f"record {index}: operator_only_surfaces overlap agent_context_surfaces {overlapping_operator}"
-            )
-        overlapping_deferred = [
-            surface for surface in deferred_surfaces if surface in loaded_surfaces
-        ]
-        if overlapping_deferred:
-            coherence_issues.append(
-                f"record {index}: deferred_surfaces overlap loaded_surfaces {overlapping_deferred}"
-            )
+        coherence_issues.extend(invocation_surface_coherence_issues(index, record))
         if record.get("schema_version") == INVOCATION_SCHEMA_V2:
             schema_issues.extend(_check_capsule_schema(index, record))
             coherence_issues.extend(
                 _check_capsule_coherence(index, record, loaded_surfaces, operator_surfaces)
-            )
-
-        overlapping_missing = [
-            surface for surface in missing_invoked_surfaces if surface in loaded_surfaces
-        ]
-        if overlapping_missing:
-            coherence_issues.append(
-                f"record {index}: missing_invoked_surfaces overlap loaded_surfaces {overlapping_missing}"
             )
 
     if schema_issues:

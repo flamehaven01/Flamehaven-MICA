@@ -7,7 +7,11 @@ contract for an AI maintainer, not a general project description.
 ## Session Start
 
 1. Find `mica.yaml` at repository root; otherwise use `memory/mica.yaml`.
-2. Read every layer declared with `loading_hint: always`.
+2. Resolve the active memory profile. If `invocation_protocol.profiles` exists,
+   the requested profile -- or `default` when none is requested -- names exactly
+   the surfaces to read, and a layer marked `loading_hint: always` that the
+   profile does not name is deselected. Only when the package declares no
+   profiles, read every layer declared with `loading_hint: always`.
 3. Read an `on_demand` layer only when the task requires that domain.
 4. State the declared and resolved archive and playbook surfaces before editing.
 5. Call invocation `recorded` only after a valid trace exists; otherwise report declared or resolved state.

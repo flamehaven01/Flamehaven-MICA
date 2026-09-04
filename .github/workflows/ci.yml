@@ -58,12 +58,22 @@ jobs:
       - name: README examples produce the output they claim
         run: pytest tests/test_readme_examples.py -v
 
-      - name: Every fixture resolves its contract
+      # Negative fixtures exist on purpose, so this cannot require exit 0 from
+      # every package. It requires the tool to run without crashing, which the
+      # previous `|| true` also swallowed: a traceback and a clean INCOMPLETE
+      # were indistinguishable to it.
+      - name: Every fixture runs the validator without crashing
         run: |
+          set -e
           for pkg in fixtures/*/; do
             if [ -f "$pkg/mica.yaml" ]; then
-              echo "--- $pkg"
-              python tools/mica_pct.py "$pkg" > /dev/null || true
+              status=0
+              output="$(python tools/mica_pct.py "$pkg" 2>&1)" || status=$?
+              if [ "$status" -gt 1 ] || grep -q "Traceback" <<< "$output"; then
+                echo "::error::$pkg crashed the validator"
+                printf '%s\n' "$output"
+                exit 1
+              fi
             fi
           done
 

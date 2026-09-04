@@ -27,11 +27,21 @@ Raw files without a contract are legacy assets, not a portable MICA package.
 ## What the loader should do
 
 1. Find `mica.yaml` in repo root, else `memory/mica.yaml`.
-2. Parse `mica_spec`, `mode`, and `layers`.
-3. Load every layer marked `loading_hint: always`.
-4. Load `on_demand` layers only when task scope requires them.
-5. Respect `mode`.
-6. Treat flow-plane files as optional unless `flow_policy.enabled=true`.
+2. Parse `mica_spec`, `mode`, `layers`, and `invocation_protocol`.
+3. **If a profile applies, the profile decides.** A requested profile, or
+   `profiles.default` when none is requested, names exactly the surfaces this
+   session receives. `loading_hint` does not override it: a layer marked
+   `always` that the active profile does not name is deselected, not loaded.
+4. Only when the package declares no profiles: load every layer marked
+   `loading_hint: always`, and `on_demand` layers when task scope requires them.
+5. Deliver to the agent only what `agent_context_surfaces` permits, and never a
+   surface listed in `operator_only_surfaces`.
+6. Respect `mode`.
+7. Treat flow-plane files as optional unless `flow_policy.enabled=true`.
+
+Loading every `always` layer regardless of the active profile is the most
+likely way to get this wrong, because it looks correct and quietly delivers
+more context than the package asked for.
 
 ## Recommended packaging profiles
 
@@ -198,6 +208,7 @@ Consumer entrypoint:
 
 A target repo is ready only if:
 
+- the environment running MICA validators provides `pyyaml` and `jsonschema`
 - `mica.yaml` exists
 - every declared `always` layer exists
 - `python tools/mica_pct.py <target_repo>` can resolve the package honestly

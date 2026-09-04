@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -209,6 +210,69 @@ def _resolve_within_root(project_root: Path, relative: str) -> Path | None:
     except (ValueError, OSError):
         return None
     return candidate
+
+
+def validate_against_schema(document: Any, schema_path: Path) -> tuple[str, str]:
+    """Apply a shipped JSON Schema to a document, and say so when it cannot.
+
+    The validators used to check that a schema file existed and then hand-check
+    a few fields, so anything the schema forbade but the hand-check did not
+    mention passed: a trace carrying an unknown field, a handoff with an empty
+    project_scope. Publishing a schema and not applying it is worse than not
+    publishing one, because the schema reads as the contract.
+
+    Consumers may vendor tools/, but a validator cannot report a document as
+    valid when the validation dependency is unavailable. The affected artifact
+    therefore fails closed and explains which dependency is missing.
+    """
+    try:
+        import jsonschema
+    except ImportError:
+        return ("FAIL", "jsonschema is not installed; the shipped schema cannot be applied")
+
+    if not schema_path.exists():
+        return ("FAIL", f"schema missing: {schema_path}")
+
+    schema = load_json(schema_path)
+    if not schema:
+        return ("FAIL", f"schema unreadable: {schema_path}")
+
+    validator_class = jsonschema.validators.validator_for(schema)
+    validator_class.check_schema(schema)
+
+    # `format` is annotation-only unless a checker is supplied. The base
+    # jsonschema install does not guarantee a date-time checker, so register a
+    # small RFC 3339 subset explicitly instead of silently accepting any text.
+    format_checker = jsonschema.FormatChecker()
+    format_checker.checkers = dict(format_checker.checkers)
+    format_checker.checkers["date-time"] = (_is_rfc3339_datetime, ())
+    validator = validator_class(schema, format_checker=format_checker)
+    errors = sorted(validator.iter_errors(document), key=lambda e: tuple(map(str, e.path)))
+    if not errors:
+        return ("PASS", f"valid against {schema_path.name}")
+
+    preview = "; ".join(
+        f"{'/'.join(str(part) for part in error.path) or '<root>'}: {error.message}"
+        for error in errors[:3]
+    )
+    if len(errors) > 3:
+        preview += f"; ... (+{len(errors) - 3} more)"
+    return ("FAIL", f"{schema_path.name}: {preview}")
+
+
+def _is_rfc3339_datetime(value: Any) -> bool:
+    if not isinstance(value, str):
+        return True  # JSON Schema's type keyword reports the type error.
+    if not re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})",
+        value,
+    ):
+        return False
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        return datetime.fromisoformat(normalized).tzinfo is not None
+    except ValueError:
+        return False
 
 
 def hash_bytes(payload: bytes) -> tuple[str, int]:

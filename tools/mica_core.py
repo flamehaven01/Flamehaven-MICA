@@ -100,6 +100,9 @@ from mica_primitives import (
 from mica_primitives import (
     select_markdown_sections as select_markdown_sections,
 )
+from mica_primitives import (
+    validate_against_schema as validate_against_schema,
+)
 
 # MICA is a memory and playbook package, not a governance engine. The contract
 # it makes is about invocation: did the declared memory surfaces actually reach
@@ -651,8 +654,16 @@ def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
     """
     out: list[tuple[str, str, str]] = []
     unusable: list[str] = []
+    # `required: false` exempts a layer from being verified by default. It does
+    # not exempt one this session actually asked for: a profile naming a surface
+    # is a request, and an unreadable file is a broken request whatever the
+    # layer's default says. Without this, an optional surface selected by a
+    # profile was skipped here while the runtime reported it missing.
+    selected = set(resolve_invocation_contract(ctx.yd, ctx.profile)["loaded_surfaces"])
     for lyr in ctx.layers:
-        if not isinstance(lyr, dict) or not lyr.get("required", True):
+        if not isinstance(lyr, dict):
+            continue
+        if not lyr.get("required", True) and layer_role(lyr) not in selected:
             continue
         rel = lyr.get("path")
         if not isinstance(rel, str) or not rel.strip():
@@ -673,7 +684,7 @@ def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
         lyr.get("path")
         for lyr in ctx.layers
         if isinstance(lyr, dict)
-        and lyr.get("required", True)
+        and (lyr.get("required", True) or layer_role(lyr) in selected)
         and isinstance(lyr.get("path"), str)
         and not (ctx.project_root / lyr["path"]).exists()
     ]
@@ -823,15 +834,15 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
     return []
 
 
-def _handoff_is_deliverable(project_root: Path) -> tuple[bool, str]:
+def handoff_is_deliverable(project_root: Path) -> tuple[bool, str]:
     """Whether a handoff document may enter agent context.
 
     mica_handoff imports only mica_primitives, so reading it here adds no cycle.
     """
     try:
         import mica_handoff
-    except ImportError:  # pragma: no cover - tools/ is always on the path
-        return (True, "handoff validator unavailable")
+    except ImportError as exc:  # a partial vendored toolset must fail closed
+        return (False, f"handoff validator unavailable: {exc}")
 
     statuses: dict[str, str] = {}
     messages: dict[str, str] = {}
@@ -841,7 +852,9 @@ def _handoff_is_deliverable(project_root: Path) -> tuple[bool, str]:
 
     if statuses.get("HND-001") == "INFO":
         return (False, "no handoff document present")
-    for check in ("HND-001", "HND-002", "HND-004"):
+    # HND-000 was excluded, so a package whose handoff schema was missing
+    # delivered the surface anyway with nothing having validated it.
+    for check in ("HND-000", "HND-001", "HND-002", "HND-004", "HND-005"):
         if statuses.get(check) == "FAIL":
             return (False, messages.get(check, f"{check} failed"))
     if statuses.get("HND-003") in {"WARN", "INFO"}:
@@ -905,7 +918,7 @@ def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
     # closed contract, and reporting CLOSED here while the runtime withholds it
     # would make the two disagree about the same session.
     if "handoff" in context_surfaces:
-        deliverable, reason = _handoff_is_deliverable(ctx.project_root)
+        deliverable, reason = handoff_is_deliverable(ctx.project_root)
         if not deliverable:
             context_config_issues.append(f"handoff named for agent_context but withheld: {reason}")
     operator_config_issues: list[str] = []

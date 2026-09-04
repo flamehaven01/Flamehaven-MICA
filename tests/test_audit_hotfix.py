@@ -10,9 +10,11 @@ declared surfaces resolved. It did not, three separate ways.
 
 from __future__ import annotations
 
+import builtins
 import contextlib
 import io
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -337,3 +339,237 @@ def test_the_selection_basis_reaches_the_runtime_summary():
     summary = mica_runtime.build_summary(FIXTURES_DIR / "memory_profiles")
 
     assert set(summary["deferred_surfaces"]) == set(summary["deferred_surfaces_basis"])
+
+
+# =============================================================================
+# Second audit, against v3.0.0
+# =============================================================================
+
+
+# --- selection is a request, whatever `required` says ------------------------
+
+
+def test_an_optional_surface_a_profile_selected_must_resolve(tmp_path: Path):
+    """`required: false` exempts a layer from being verified by default. It was
+    also exempting one the active profile had named, so PCT-003 passed while the
+    runtime reported the surface missing."""
+    root = _copy(tmp_path)
+    yaml_path = root / "mica.yaml"
+    text = yaml_path.read_text(encoding="utf-8")
+    text = text.replace(
+        "  - id: lessons\n    kind: lessons\n    path: memory/lessons.md\n",
+        "  - id: lessons\n    kind: lessons\n    path: memory/lessons.md\n    required: false\n",
+        1,
+    )
+    yaml_path.write_text(text, encoding="utf-8")
+    (root / "memory" / "lessons.md").unlink()
+
+    status, _ = _check(root, "PCT-003", "review")  # the review profile names lessons
+
+    assert status == "FAIL"
+    assert _axes(root, "review")["contract"] == "INCOMPLETE"
+
+
+def test_an_optional_surface_no_profile_selected_stays_exempt(tmp_path: Path):
+    """The tightening must not make every optional layer mandatory."""
+    root = _copy(tmp_path)
+    yaml_path = root / "mica.yaml"
+    text = yaml_path.read_text(encoding="utf-8")
+    text = text.replace(
+        "  - id: lessons\n    kind: lessons\n    path: memory/lessons.md\n",
+        "  - id: lessons\n    kind: lessons\n    path: memory/lessons.md\n    required: false\n",
+        1,
+    )
+    yaml_path.write_text(text, encoding="utf-8")
+    (root / "memory" / "lessons.md").unlink()
+
+    # `default` does not name lessons
+    assert _check(root, "PCT-003", "default")[0] == "PASS"
+    assert _axes(root, "default")["contract"] == "CLOSED"
+
+
+# --- the shipped schemas are actually applied --------------------------------
+
+
+def test_a_trace_field_the_schema_forbids_is_rejected(tmp_path: Path):
+    """IVC-000 confirmed the schema file was on disk; nothing applied it."""
+    import mica_evidence
+
+    root = _copy(tmp_path, "invocation_capsule_v2")
+    trace = root / "memory" / "mica.invocation.jsonl"
+    records = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
+    records[0]["field_the_schema_forbids"] = "smuggled"
+    records[0]["capsule_hash"] = mica_evidence.compute_capsule_hash(records[0])
+    trace.write_text(
+        "\n".join(json.dumps(r, separators=(",", ":"), sort_keys=True) for r in records) + "\n",
+        encoding="utf-8",
+    )
+
+    results = {c: s for c, s, _ in mica_evidence.run_invocation_trace_checks(trace)}
+
+    assert results["IVC-006"] == "FAIL"
+
+
+def test_a_handoff_the_schema_rejects_does_not_reach_the_agent(tmp_path: Path):
+    """An empty project_scope is invalid per the shipped schema, and every
+    hand-written HND check passed it through to agent context."""
+    root = _handoff(tmp_path, lambda r: r.__setitem__("project_scope", ""))
+
+    results = {c: s for c, s, _ in mica_handoff.run_handoff_checks(root)}
+    summary = mica_runtime.build_summary(root, "resume")
+
+    assert results["HND-005"] == "FAIL"
+    assert "handoff" not in summary["agent_context_surfaces"]
+
+
+def test_one_function_decides_handoff_delivery():
+    """This logic existed twice -- once for the contract verdict, once for
+    delivery -- and fixing one left the other wrong."""
+    assert mica_runtime.handoff_is_deliverable is mica_core.handoff_is_deliverable
+
+
+# --- a trace is provenance, so it is validated before it is written ----------
+
+
+def test_the_runtime_refuses_to_write_an_incoherent_trace(tmp_path: Path):
+    """Two roles pointing at one file produced a capsule the standalone
+    validator rejected -- after the runtime had already appended it and exited
+    zero, leaving a false account of the session on disk."""
+    root = _copy(tmp_path)
+    yaml_path = root / "mica.yaml"
+    yaml_path.write_text(
+        yaml_path.read_text(encoding="utf-8").replace(
+            "  - id: playbook\n    kind: playbook\n    path: memory/mica_playbook.md\n",
+            "  - id: playbook\n    kind: playbook\n    path: memory/mica_archive.json\n",
+            1,
+        ),
+        encoding="utf-8",
+    )
+    summary = mica_runtime.build_summary(root)
+
+    with pytest.raises(RuntimeError, match="incoherent invocation trace"):
+        mica_runtime.write_invocation_trace(root, summary)
+
+    assert not (root / "memory" / "mica.invocation.jsonl").exists()
+
+
+def test_a_coherent_trace_is_still_written(tmp_path: Path):
+    root = _copy(tmp_path)
+
+    path = mica_runtime.write_invocation_trace(root, mica_runtime.build_summary(root))
+
+    assert path.exists()
+
+
+def test_schema_validation_dependency_failure_is_not_a_valid_verdict(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """A vendored validator without jsonschema must fail closed, not print
+    SKIP followed by an overall VALID verdict or deliver a handoff."""
+    import mica_evidence
+
+    real_import = builtins.__import__
+
+    def import_without_jsonschema(name, *args, **kwargs):
+        if name == "jsonschema" or name.startswith("jsonschema."):
+            raise ImportError("blocked for regression test")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", import_without_jsonschema)
+    trace = FIXTURES_DIR / "invocation_capsule_v2" / "memory" / "mica.invocation.jsonl"
+
+    trace_results = {c: s for c, s, _ in mica_evidence.run_invocation_trace_checks(trace)}
+    deliverable, _ = mica_core.handoff_is_deliverable(FIXTURES_DIR / "handoff_surface")
+
+    assert trace_results["IVC-006"] == "FAIL"
+    assert not deliverable
+
+
+def test_missing_handoff_validator_fails_closed(monkeypatch: pytest.MonkeyPatch):
+    real_import = builtins.__import__
+
+    def import_without_handoff(name, *args, **kwargs):
+        if name == "mica_handoff":
+            raise ImportError("blocked for regression test")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", import_without_handoff)
+
+    deliverable, reason = mica_core.handoff_is_deliverable(FIXTURES_DIR / "handoff_surface")
+
+    assert not deliverable
+    assert "validator unavailable" in reason
+
+
+def test_handoff_json_mode_preserves_invalid_exit_status(tmp_path: Path):
+    import subprocess
+
+    root = _handoff(tmp_path, lambda record: record.__setitem__("project_scope", ""))
+
+    proc = subprocess.run(
+        [sys.executable, "tools/mica_handoff.py", str(root), "--json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+    assert proc.returncode == 1
+    assert json.loads(proc.stdout)["project_scope"] == ""
+
+
+def test_invocation_timestamp_format_is_enforced(tmp_path: Path):
+    """JSON Schema `format` is annotation-only without a FormatChecker."""
+    import mica_evidence
+
+    source = FIXTURES_DIR / "invocation_capsule_v2" / "memory" / "mica.invocation.jsonl"
+    record = json.loads(source.read_text(encoding="utf-8").splitlines()[0])
+    record["timestamp_utc"] = "not-a-date"
+    record["capsule_hash"] = mica_evidence.compute_capsule_hash(record)
+    trace = tmp_path / "mica.invocation.jsonl"
+    trace.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    results = {c: s for c, s, _ in mica_evidence.run_invocation_trace_checks(trace)}
+
+    assert results["IVC-006"] == "FAIL"
+
+
+def test_writer_uses_the_standalone_surface_set_rules(tmp_path: Path):
+    """The first pre-write gate called only the capsule helpers and omitted
+    the outer validator's loaded/deferred and loaded/missing overlap rules."""
+    root = _copy(tmp_path)
+    summary = mica_runtime.build_summary(root)
+    summary["deferred_surfaces"] = [summary["loaded_surfaces"][0]]
+    output = root / "audit-trace.jsonl"
+
+    with pytest.raises(RuntimeError, match="incoherent invocation trace"):
+        mica_runtime.write_invocation_trace(root, summary, output)
+
+    assert not output.exists()
+
+
+# --- the guides describe the contract the code implements --------------------
+
+
+@pytest.mark.parametrize(
+    "document,section_heading",
+    [
+        ("docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md", "## What the loader should do"),
+        ("docs/MICA_CONSUMER_AUTHORING_GUIDE.md", "## AI Maintainer Contract"),
+        ("templates/MICA_AGENT_GUIDE.md", "## Session Start"),
+    ],
+)
+def test_a_loader_guide_puts_the_profile_before_loading_hint(document: str, section_heading: str):
+    """All three told an external loader to take every `always` layer without
+    mentioning profiles at all. A consumer AI following them loads more context
+    than the package intends, and it looks correct while doing it."""
+    text = (REPO_ROOT / document).read_text(encoding="utf-8")
+    section = text.split(section_heading, 1)[1].split("\n## ", 1)[0]
+    profile_position = section.lower().index("profile")
+    always_match = re.search(r"(?:loading_hint:\s*)?`?always`?", section, re.IGNORECASE)
+
+    assert always_match is not None, f"{document} never explains the no-profile fallback"
+    always_position = always_match.start()
+    assert profile_position < always_position, (
+        f"{document} instructs loading `always` layers before it explains that "
+        "the active profile decides"
+    )

@@ -57,7 +57,10 @@ Replace every placeholder and remove instructions that do not apply to the targe
 An AI operating a MICA-enabled repository must:
 
 1. Resolve `mica.yaml` before relying on memory files.
-2. Load all `always` layers and only task-relevant on-demand layers.
+2. Resolve the active memory profile first: a requested one, or `default` if
+   the package declares profiles. What it names is what this session loads.
+   Fall back to `always` layers plus task-relevant on-demand layers only when
+   the package declares no profiles at all.
 3. Name the invoked surfaces in its session report.
 4. Follow archive invariants and playbook procedures before local preference.
 5. Stop and report a missing, conflicting, or unverifiable required surface.

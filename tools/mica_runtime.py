@@ -38,8 +38,10 @@ from mica_core import (
     canonical_surface_path,
     compute_capsule_hash,
     find_flow_artifact,
+    find_invocation_schema,
     find_legacy_archive,
     find_mica_yaml,
+    handoff_is_deliverable,
     hash_bytes,
     hash_surface_bytes,
     is_closed_contract,
@@ -52,6 +54,12 @@ from mica_core import (
     run_invocation_trace_checks,
     run_pct_checks,
     select_markdown_sections,
+    validate_against_schema,
+)
+from mica_evidence import (  # noqa: E402
+    _check_capsule_coherence,
+    _check_capsule_schema,
+    invocation_surface_coherence_issues,
 )
 
 __version__ = MICA_TOOL_VERSION
@@ -152,31 +160,6 @@ def _resolve_declared_layer_paths(project_root: Path, yd: dict[str, Any]) -> dic
             continue
         result[role] = project_root / rel
     return result
-
-
-def handoff_delivery_state(project_root: Path) -> tuple[bool, str]:
-    """Whether a handoff document may enter agent context, and why not.
-
-    HND-* existed only as a standalone command, so an expired handoff and one
-    whose hash had been rewritten were both delivered exactly like a valid one.
-    A record that fails its own integrity check is not memory this session
-    should be given, and the documented rule for an expired handoff is to
-    exclude it unless an operator reactivates it.
-    """
-    import mica_handoff
-
-    results = mica_handoff.run_handoff_checks(project_root)
-    statuses = {check: status for check, status, _ in results}
-    messages = {check: message for check, _, message in results}
-
-    if statuses.get("HND-001") == "INFO":
-        return (False, "no handoff surface present")
-    for check in ("HND-001", "HND-002", "HND-004"):
-        if statuses.get(check) == "FAIL":
-            return (False, f"{check}: {messages.get(check, 'invalid handoff')}")
-    if statuses.get("HND-003") in {"WARN", "INFO"}:
-        return (False, f"HND-003: {messages.get('HND-003', 'handoff is not current')}")
-    return (True, "handoff is valid and current")
 
 
 def _build_surface_evidence(
@@ -361,7 +344,7 @@ def _build_invocation_summary(
 
     handoff_withheld_reason = ""
     if "handoff" in agent_context_surfaces:
-        deliverable, reason = handoff_delivery_state(project_root)
+        deliverable, reason = handoff_is_deliverable(project_root)
         if not deliverable:
             agent_context_surfaces = [r for r in agent_context_surfaces if r != "handoff"]
             loaded = [r for r in loaded if r != "handoff"]
@@ -650,8 +633,32 @@ def write_invocation_trace(
             f"surface bytes changed between resolution and emission: {drifted}; "
             "re-resolve before recording an invocation capsule"
         )
-    path.parent.mkdir(parents=True, exist_ok=True)
     record = build_invocation_trace_record(summary, trigger=trigger)
+
+    # The record used to be appended first and validated afterwards, so a run
+    # could print "Trace: invalid", leave that record in the file, and exit 0.
+    # A trace is provenance: writing one already known to be invalid puts a
+    # false account of a session into the permanent record.
+    schema_status, schema_message = validate_against_schema(record, find_invocation_schema())
+    if schema_status != "PASS":
+        raise RuntimeError(
+            f"refusing to record an invocation trace that fails its own schema: {schema_message}"
+        )
+
+    # The schema does not express everything the capsule must satisfy -- two
+    # roles pointing at one file is coherent JSON and an incoherent capsule --
+    # so the same checks the standalone validator runs are applied here.
+    issues = invocation_surface_coherence_issues(1, record)
+    issues += _check_capsule_schema(1, record)
+    issues += _check_capsule_coherence(
+        1, record, record.get("loaded_surfaces") or [], record.get("operator_only_surfaces") or []
+    )
+    if issues:
+        raise RuntimeError(
+            "refusing to record an incoherent invocation trace: " + "; ".join(issues[:3])
+        )
+
+    path.parent.mkdir(parents=True, exist_ok=True)
     serialized = json.dumps(record, ensure_ascii=False, sort_keys=True)
     with path.open("a", encoding="utf-8") as fh:
         fh.write(serialized)

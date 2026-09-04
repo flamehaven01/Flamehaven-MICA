@@ -4,6 +4,18 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ---
 
+## Unreleased
+
+- Close the second invocation-truth audit: selected optional surfaces now have
+  to resolve, handoff and invocation validators apply their shipped schemas,
+  and invocation traces are validated before append.
+- Make profile selection precedence explicit in consumer guidance and make the
+  fixture CLI smoke gate distinguish expected contract failures from crashes.
+- Correct v3.0.0's recorded test count and filename guidance without moving the
+  published tag.
+
+---
+
 ## v3.0.0 — First public release (2026-09-04)
 
 MICA is an invocation and context-loading contract: it decides which memory
@@ -134,7 +146,7 @@ it every session.
   and evolves on its own track. `PCT-006` reports the gap and does not prescribe
   convergence.
 
-330 tests. Python 3.9, 3.11, 3.12, 3.13.
+333 tests at the v3.0.0 tag. Python 3.9, 3.11, 3.12, 3.13.
 
 ---
 

@@ -40,6 +40,7 @@ from mica_primitives import (  # noqa: E402
     format_tool_banner,
     hash_bytes,
     load_json,
+    validate_against_schema,
 )
 
 __version__ = MICA_TOOL_VERSION
@@ -249,6 +250,12 @@ def run_handoff_checks(target: Path) -> list[tuple[str, str, str]]:
         return results
     results.append(("HND-002", "PASS", f"handoff shape valid ({record['handoff_id']})"))
 
+    # The hand-written checks above are a subset of what the schema states. Only
+    # applying the schema catches what they never mentioned, such as an empty
+    # project_scope.
+    schema_status, schema_message = validate_against_schema(record, schema_path)
+    results.append(("HND-005", schema_status, schema_message))
+
     status, message = _check_freshness(record)
     results.append(("HND-003", status, message))
 
@@ -305,7 +312,8 @@ def main() -> None:
     if args.json:
         path = find_flow_artifact(target, HANDOFF_FILENAME) if target.is_dir() else target
         print(json.dumps(load_json(path) if path else {}, indent=2))
-        return
+        results = run_handoff_checks(target)
+        sys.exit(1 if any(status == "FAIL" for _, status, _ in results) else 0)
 
     print(format_tool_banner("MICA Handoff Validator"))
     print(f"Target: {target}")

@@ -217,8 +217,8 @@ Three assets form the minimal package:
 | Asset | Format | Role |
 |---|---|---|
 | `mica.yaml` | YAML | Composition contract: what files exist and how the package is invoked |
-| `*.mica.*.json` | JSON | Archive: institutional memory, design invariants, provenance |
-| `*-playbook.*.md` | Markdown | Playbook: human and AI operating guide |
+| the archive file | JSON | Institutional memory, design invariants, provenance. `mica.yaml` names the path, so any filename works; `memory/mica_archive.json` is the recommended default and older packages use a versioned `*.mica.*.json` form |
+| the playbook file | Markdown | Human and AI operating guide. Same rule: `memory/mica_playbook.md` is the recommended default |
 
 Tools:
 
