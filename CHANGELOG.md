@@ -4,7 +4,18 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ---
 
-## Unreleased
+## v3.0.2 — Contract versions separated from tool versions (2026-09-04)
+
+`PCT-006` measured how far a package's `mica_spec` sat from the tool's own
+release number and recommended closing the gap. Both halves were wrong.
+
+The tool release and the contract a package declares are different axes. When
+the tools reached 3.x, every consumer read as "at least one major version
+behind" while nothing about their packages had changed: six permanent warnings
+carrying no information about whether the tools understand those packages. And
+MICA does not push consumers toward one version, so a check that reported a gap
+and recommended closing it contradicted the project's own position.
+
 
 **`PCT-006` answers whether the tools define a contract, not how old it is.**
 
