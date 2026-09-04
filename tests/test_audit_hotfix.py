@@ -65,7 +65,8 @@ def test_a_required_layer_without_a_path_fails_the_contract(tmp_path: Path):
             and "archive" in "".join(lines[max(0, index - 2) : index])
         )
     ]
-    yaml_path.write_text("".join(kept), encoding="utf-8", newline="\n")
+    # Path.write_text(newline=...) landed in 3.10, and this project supports 3.9.
+    yaml_path.write_text("".join(kept), encoding="utf-8")
 
     status, message = _check(root, "PCT-003")
 
