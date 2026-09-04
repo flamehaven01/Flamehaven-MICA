@@ -1,0 +1,23 @@
+{
+  "mica_spec": "0.2.9",
+  "mica_schema_version": "0.2.9",
+  "project": {
+    "name": "consumer-profile-multi-playbook",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "profile-selects-playbook",
+      "statement": "A task receives the domain playbook selected by its active profile, not every domain playbook.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "ARCH-002: multi-playbook consumer fixture added, 2026-09-04"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-09-04"
+  }
+}

@@ -69,6 +69,11 @@ the target. Agent hosts that support skills can use
 [`skills/mica-context/SKILL.md`](../skills/mica-context/SKILL.md) instead of
 copying generic instructions into every repository.
 
+When a host requires `CLAUDE.md` or `AGENTS.md`, use the corresponding
+[one-line adapter](../templates/adapters/). Keep it as a pointer to the
+`mica-context` skill and runtime fallback. Repository-specific policy belongs
+in the emitted playbook, not in a second host-specific copy.
+
 ## AI Maintainer Contract
 
 An AI operating a MICA-enabled repository must:

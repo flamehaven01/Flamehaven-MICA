@@ -70,7 +70,7 @@ jobs:
         run: |
           set -e
           for pkg in fixtures/*/; do
-            if [ -f "$pkg/mica.yaml" ]; then
+            if [ -f "$pkg/mica.yaml" ] || [ -f "$pkg/memory/mica.yaml" ]; then
               status=0
               output="$(python tools/mica_pct.py "$pkg" 2>&1)" || status=$?
               if [ "$status" -gt 1 ] || grep -q "Traceback" <<< "$output"; then

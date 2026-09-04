@@ -106,6 +106,10 @@ The skill does not impose one archive schema or playbook layout. Existing MICA
 packages evolved with their repositories; their manifest remains the authority
 for paths, profiles, and composition.
 
+For hosts that discover only repository-level instruction files, copy the
+one-line [Claude or Codex adapter](templates/adapters/). The adapter points to
+the skill/runtime; it does not copy MICA policy into `CLAUDE.md` or `AGENTS.md`.
+
 ## Adopt MICA
 
 For a repository that does not yet use MICA, start with
@@ -251,6 +255,7 @@ must regenerate `tests/golden/pct_output.json` with
 
 - [Consumer authoring guide](docs/MICA_CONSUMER_AUTHORING_GUIDE.md)
 - [Cross-repository adoption guide](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md)
+- [Thin Claude/Codex adapters](templates/adapters/)
 - [v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md)
 - [v3.0.0 declaration](docs/MICA_v3.0.0_DECLARATION.md)
 - [v3.1.0 release notes](docs/MICA_v3.1.0_RELEASE_NOTES.md)

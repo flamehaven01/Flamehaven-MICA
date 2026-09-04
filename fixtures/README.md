@@ -29,6 +29,9 @@ cat fixtures/flow_recall_operator_review_safe/memory/mica.recall.jsonl
 cat fixtures/flow_recall_agent_context_violation/memory/mica.recall.jsonl
 python tools/mica_pct.py fixtures/memory_first_minimal
 python tools/mica_runtime.py fixtures/memory_first_minimal --format context
+python tools/mica_runtime.py fixtures/consumer_legacy_root --format context
+python tools/mica_runtime.py fixtures/consumer_profile_multi_playbook --profile review --format context
+MICA_ROOT=. python fixtures/consumer_nested_launcher/tools/invoke_mica.py --format context
 # missing-trace fixture intentionally has no mica.recall.jsonl
 ```
 
@@ -85,6 +88,9 @@ to receive its memory, so they no longer break the contract.
 | `handoff_surface/` | v0.2.9 | PASS | INFO | INFO | CLOSED | Handoff surface with `default`/`resume` profiles; `resume` delivers it, `default` does not |
 | `memory_profiles/` | v3.0.0 Origin P1/P2 | PASS | INFO | INFO | CLOSED | `default`/`review`/`incident` profiles select different surfaces, and slice the playbook |
 | `contract_floor/` | v3.0.2 | PASS | PASS | N/A | CLOSED | Declares `0.2.4`, the lowest fully supported contract. Pins the floor of `SUPPORTED_CONTRACT_VERSIONS` in-repo |
+| `consumer_legacy_root/` | post-v3.2.0 | PASS | INFO | N/A | CLOSED | Root manifest preserves versioned archive/playbook filenames |
+| `consumer_profile_multi_playbook/` | post-v3.2.0 | PASS | INFO | N/A | CLOSED | `review` and `incident` profiles select different physical playbooks |
+| `consumer_nested_launcher/` | post-v3.2.0 | PASS | INFO | N/A | CLOSED | `memory/mica.yaml` resolves through a thin existing launcher |
 
 
 ## Expected Outputs

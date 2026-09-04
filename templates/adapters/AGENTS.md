@@ -1,0 +1,1 @@
+Use the MICA `mica-context` skill before changing this repository; if it is unavailable, run `python <MICA_ROOT>/tools/mica_runtime.py <TARGET_REPO> --format context` and use the emitted archive and playbook.

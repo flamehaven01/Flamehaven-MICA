@@ -1,0 +1,39 @@
+mica_spec: "0.2.9"
+name: consumer-profile-multi-playbook
+mode: memory_injection
+
+layers:
+  - name: archive
+    path: memory/archive.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/common.md
+    format: markdown
+    loading_hint: always
+  - name: playbook-review
+    path: memory/review.md
+    format: markdown
+    loading_hint: on_demand
+  - name: playbook-incident
+    path: memory/incident.md
+    format: markdown
+    loading_hint: on_demand
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  agent_context_surfaces:
+    - archive
+    - playbook
+    - playbook-review
+    - playbook-incident
+  profiles:
+    default:
+      surfaces: [archive, playbook]
+    review:
+      surfaces: [archive, playbook, playbook-review]
+    incident:
+      surfaces: [archive, playbook, playbook-incident]
+
+update_triggers:
+  - on_explicit_save

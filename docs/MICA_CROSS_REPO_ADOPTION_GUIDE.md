@@ -193,6 +193,16 @@ as references when no usable organization exists:
 Other explicit, resolvable shapes are valid. A repository-specific layout is
 not legacy merely because it differs from these examples.
 
+The executable consumer fixtures cover three shapes without declaring one of
+them canonical:
+
+- [`consumer_legacy_root`](../fixtures/consumer_legacy_root/): root manifest
+  with versioned archive and playbook paths
+- [`consumer_profile_multi_playbook`](../fixtures/consumer_profile_multi_playbook/):
+  profiles select distinct domain playbooks
+- [`consumer_nested_launcher`](../fixtures/consumer_nested_launcher/): nested
+  `memory/mica.yaml` used through an existing thin launcher
+
 ## Pre-materialized compatibility
 
 The runtime can still read a package that declares the historical

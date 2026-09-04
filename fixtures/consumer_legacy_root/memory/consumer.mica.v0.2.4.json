@@ -1,0 +1,23 @@
+{
+  "mica_spec": "0.2.4",
+  "mica_schema_version": "0.2.4",
+  "project": {
+    "name": "consumer-legacy-root",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "preserve-declared-memory-paths",
+      "statement": "A legacy consumer keeps its versioned memory paths until that repository changes them.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "ARCH-001: legacy root-manifest compatibility fixture added, 2026-09-04"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-09-04"
+  }
+}

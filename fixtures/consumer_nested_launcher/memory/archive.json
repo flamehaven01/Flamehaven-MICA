@@ -1,0 +1,23 @@
+{
+  "mica_spec": "0.2.9",
+  "mica_schema_version": "0.2.9",
+  "project": {
+    "name": "consumer-nested-launcher",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "launcher-delegates",
+      "statement": "The repository launcher delegates invocation to a released MICA runtime instead of copying its policy.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "ARCH-003: nested-manifest launcher fixture added, 2026-09-04"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-09-04"
+  }
+}

@@ -1,0 +1,19 @@
+mica_spec: "0.2.4"
+name: consumer-legacy-root
+mode: memory_injection
+
+layers:
+  - name: archive
+    path: memory/consumer.mica.v0.2.4.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/consumer-playbook.v1.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+
+update_triggers:
+  - on_explicit_save

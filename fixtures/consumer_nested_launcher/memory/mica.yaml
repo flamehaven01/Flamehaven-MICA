@@ -1,0 +1,19 @@
+mica_spec: "0.2.9"
+name: consumer-nested-launcher
+mode: memory_injection
+
+layers:
+  - name: archive
+    path: memory/archive.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/playbook.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+
+update_triggers:
+  - on_explicit_save

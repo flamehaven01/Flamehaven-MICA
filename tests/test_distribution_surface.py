@@ -74,6 +74,23 @@ def test_repository_and_consumer_workflows_use_the_same_action_generation():
         assert expected <= uses, f"{relative} action generation drifted: {sorted(uses)}"
 
 
+def test_repository_ci_includes_nested_manifest_fixtures():
+    workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+    assert '[ -f "$pkg/memory/mica.yaml" ]' in workflow
+
+
+def test_host_adapters_are_one_line_pointers_not_policy_copies():
+    expected_terms = ("mica-context", "mica_runtime.py", "--format context")
+
+    for name in ("CLAUDE.md", "AGENTS.md"):
+        lines = (
+            (REPO_ROOT / "templates" / "adapters" / name).read_text(encoding="utf-8").splitlines()
+        )
+        assert len(lines) == 1, f"{name} must remain a thin one-line adapter"
+        assert all(term in lines[0] for term in expected_terms)
+
+
 def test_active_guides_do_not_call_the_removed_memory_authoring_cli():
     active_guides = (
         REPO_ROOT / "README.md",

@@ -10,6 +10,11 @@ Documentation correction: the v3.2.0 tree collects 378 tests. Windows ran 377
 and skipped one symbolic-link case; the remote Linux matrix ran all 378. The
 published `v3.2.0` tag remains unchanged.
 
+Added one-line `CLAUDE.md` and `AGENTS.md` adapters that point to the canonical
+`mica-context` skill/runtime without copying policy. Added executable consumer
+fixtures for a legacy root manifest, profile-selected physical playbooks, and a
+nested `memory/mica.yaml` used through an existing launcher.
+
 ---
 
 ## v3.2.0 — consistent AI use, adaptive repository memory (2026-09-04)
