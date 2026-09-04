@@ -69,6 +69,11 @@ the target. Agent hosts that support skills can use
 [`skills/mica-context/SKILL.md`](../skills/mica-context/SKILL.md) instead of
 copying generic instructions into every repository.
 
+Use [`skills/mica-author/SKILL.md`](../skills/mica-author/SKILL.md) only when a
+user explicitly asks to create or change a MICA package. The context skill
+consumes repository memory; the author skill changes what later sessions will
+receive.
+
 When a host requires `CLAUDE.md` or `AGENTS.md`, use the corresponding
 [one-line adapter](../templates/adapters/). Keep it as a pointer to the
 `mica-context` skill and runtime fallback. Repository-specific policy belongs
@@ -134,6 +139,44 @@ The stable cross-repository behavior is:
 
 The stable behavior is not a demand for one directory tree, archive schema,
 playbook vocabulary, or amount of memory. Those remain local design choices.
+
+## Artifact Lifecycle
+
+An existing MICA package is an independent, repository-owned object. Invoke it
+before editing it, preserve its established paths and vocabulary, and do not
+retrofit it to the current starter layout merely for consistency.
+
+For a new package, create the four roles from current repository evidence and
+then prove that the declared archive and playbook emit as context. Maintain the
+archive when a durable decision, invariant, or incident changes retained project
+truth. Maintain the playbook when the actual operating or verification method
+changes. A transient session summary is not sufficient evidence for either.
+
+When retiring memory, retain the repository's supersession or replacement
+record. Remove a declared surface only after profiles, launchers, and runtime
+consumers no longer reference it. MICA does not require one universal tombstone
+format; the target repository owns that representation.
+
+## Optimize Useful Context
+
+Choose representative tasks and profiles before changing package composition.
+Record which roles and bytes each profile emits, remove stale paths and
+duplication, and place domain-only procedure behind the profile that needs it.
+Required invariants must remain available wherever they apply.
+
+Compare emitted roles and byte counts before and after the change, then run the
+target repository's task-specific validation. A smaller context is cheaper, not
+necessarily better. Do not claim improved work quality without outcome evidence.
+
+## Keep Version Axes Separate
+
+- The MICA tool release versions the validator and runtime distribution.
+- `mica_spec` versions the invocation contract understood by those tools.
+- The consumer repository owns its project or artifact version.
+
+Do not label a consumer archive or playbook with the MICA tool release merely
+because that tool created or validated it. This avoids turning independently
+evolved repository memory into centrally versioned MICA output.
 
 ## Acceptance Check
 

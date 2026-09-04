@@ -106,6 +106,12 @@ The skill does not impose one archive schema or playbook layout. Existing MICA
 packages evolved with their repositories; their manifest remains the authority
 for paths, profiles, and composition.
 
+Use [the `mica-author` skill](skills/mica-author/SKILL.md) only when explicitly
+creating or changing a package. It invokes an existing package before editing,
+preserves repository-owned structure, and verifies that the resulting archive
+and playbook still emit as session context. It does not generate project memory
+from source-code summaries.
+
 For hosts that discover only repository-level instruction files, copy the
 one-line [Claude or Codex adapter](templates/adapters/). The adapter points to
 the skill/runtime; it does not copy MICA policy into `CLAUDE.md` or `AGENTS.md`.
@@ -127,6 +133,8 @@ Replace every example decision and instruction with evidence from the target
 repository. Do not rename an existing archive or playbook merely to match this
 example; declare its real path in the manifest. The detailed README block is in
 [templates/MICA_README_INVOCATION.md](templates/MICA_README_INVOCATION.md).
+Lifecycle and evidence guidance is in the
+[consumer authoring guide](docs/MICA_CONSUMER_AUTHORING_GUIDE.md).
 
 A minimal manifest is deliberately small:
 

@@ -15,6 +15,11 @@ Added one-line `CLAUDE.md` and `AGENTS.md` adapters that point to the canonical
 fixtures for a legacy root manifest, profile-selected physical playbooks, and a
 nested `memory/mica.yaml` used through an existing launcher.
 
+Added a separate `mica-author` skill and lifecycle guidance for explicitly
+creating, maintaining, optimizing, or retiring future repository-owned MICA
+packages. Existing consumer packages remain independent and unchanged. This
+adds no runtime, schema, PCT, or automatic memory-generation machinery.
+
 ---
 
 ## v3.2.0 — consistent AI use, adaptive repository memory (2026-09-04)

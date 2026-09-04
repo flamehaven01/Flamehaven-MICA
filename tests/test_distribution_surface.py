@@ -16,10 +16,10 @@ if str(TOOLS_DIR) not in sys.path:
 from mica_primitives import MICA_TOOL_VERSION  # noqa: E402
 
 
-def _skill_frontmatter() -> dict[str, str]:
-    text = (REPO_ROOT / "skills" / "mica-context" / "SKILL.md").read_text(encoding="utf-8")
+def _skill_frontmatter(skill_name: str) -> dict[str, str]:
+    text = (REPO_ROOT / "skills" / skill_name / "SKILL.md").read_text(encoding="utf-8")
     match = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
-    assert match, "mica-context skill needs YAML frontmatter"
+    assert match, f"{skill_name} skill needs YAML frontmatter"
     return yaml.safe_load(match.group(1))
 
 
@@ -29,7 +29,7 @@ def _consumer_workflow() -> dict:
 
 
 def test_mica_context_skill_has_a_discoverable_identity():
-    frontmatter = _skill_frontmatter()
+    frontmatter = _skill_frontmatter("mica-context")
 
     assert frontmatter == {
         "name": "mica-context",
@@ -37,6 +37,33 @@ def test_mica_context_skill_has_a_discoverable_identity():
     }
     assert "repository" in frontmatter["description"].lower()
     assert "mica" in frontmatter["description"].lower()
+
+
+def test_mica_author_skill_has_a_discoverable_identity():
+    frontmatter = _skill_frontmatter("mica-author")
+
+    assert frontmatter == {
+        "name": "mica-author",
+        "description": frontmatter["description"],
+    }
+    description = frontmatter["description"].lower()
+    assert "repository" in description
+    assert "create" in description
+    assert "maintain" in description
+
+
+def test_authoring_surfaces_use_existing_invocation_tools_not_a_generator():
+    paths = (
+        REPO_ROOT / "README.md",
+        REPO_ROOT / "docs" / "MICA_CONSUMER_AUTHORING_GUIDE.md",
+        REPO_ROOT / "skills" / "mica-author" / "SKILL.md",
+    )
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in paths)
+
+    assert "tools/mica_author.py" not in combined
+    assert "mica_pct.py" in combined
+    assert "mica_runtime.py" in combined
+    assert "project or artifact version" in combined
 
 
 def test_consumer_workflow_invokes_the_same_release_it_documents():
