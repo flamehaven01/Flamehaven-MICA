@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 # The tool's own release version, bumped when the tools change.
-MICA_TOOL_VERSION = "3.1.0"
+MICA_TOOL_VERSION = "3.2.0"
 
 # The contract version this release implements. A package declares its contract
 # in `mica_spec`, which is a different axis from the tool release. Conflating the

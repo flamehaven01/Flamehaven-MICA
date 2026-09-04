@@ -167,6 +167,31 @@ def test_context_format_emits_archive_and_playbook_bytes():
     assert "When memory and reality disagree" in context
 
 
+def test_context_cli_preserves_crlf_surface_bytes(tmp_path: Path):
+    root = _explicit_readme_package(tmp_path)
+    archive = root / "memory" / "mica_archive.json"
+    playbook = root / "memory" / "mica_playbook.md"
+    archive_bytes = archive.read_bytes().replace(b"\n", b"\r\n")
+    playbook_bytes = playbook.read_bytes().replace(b"\n", b"\r\n")
+    archive.write_bytes(archive_bytes)
+    playbook.write_bytes(playbook_bytes)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(TOOLS_DIR / "mica_runtime.py"),
+            str(root),
+            "--format",
+            "context",
+        ],
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr.decode()
+    assert archive_bytes in result.stdout
+    assert playbook_bytes in result.stdout
+
+
 def test_context_format_emits_only_the_selected_playbook_sections():
     root = REPO_ROOT / "fixtures" / "memory_profiles"
     summary = mica_runtime.build_summary(root, "incident")

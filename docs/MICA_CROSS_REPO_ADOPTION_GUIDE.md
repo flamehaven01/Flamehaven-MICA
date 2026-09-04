@@ -6,13 +6,14 @@ If another repository is expected to use MICA, do not hand it only a raw archive
 The target repository must receive a loadable MICA package contract.
 
 The entry point is the target repository's README. Its `MICA:INVOKE` directive
-resolves `mica.yaml`; the manifest then selects the archive and playbook through
-`layers`.
+resolves the repository's selected manifest; the manifest then selects the
+archive and playbook through `layers`.
 
 For the actual authoring and AI session behavior, use the
 [MICA Consumer Authoring Guide](MICA_CONSUMER_AUTHORING_GUIDE.md) and its
-[complete minimal package](../templates/minimal-package/). This guide selects a package
-shape; the authoring guide defines how the consumer writes and invokes it.
+[complete minimal package](../templates/minimal-package/). This guide shows
+known package shapes; the authoring guide defines the common invocation
+behavior. The examples are not a normalization mandate.
 
 ## Minimal rule
 
@@ -46,7 +47,7 @@ Loading every `always` layer regardless of the active profile is the most
 likely way to get this wrong, because it looks correct and quietly delivers
 more context than the package asked for.
 
-## Recommended packaging profiles
+## Observed packaging profiles
 
 ### 1. Minimal portable package
 
@@ -65,7 +66,7 @@ Shape:
 - `memory/mica_archive.json`
 - `memory/mica_playbook.md`
 
-This should be the default profile for new target repos.
+This is the simplest scaffold for a new target repo.
 
 ### 2. Historical versioned package
 
@@ -110,16 +111,17 @@ Use this when:
 
 This is the best profile for large target repos.
 
-## Best recommendation by target type
+## Selection guidance by target type
 
 - Small or single-domain repo: use the minimal portable profile (1).
 - Large multi-domain repo: use the flamehaven-audit-reports profile.
 - Distributed read-only deployed copies: use the STEM-BIO-AI profile.
 - Legacy packages with filename rotation: tolerate the historical versioned profile (2), but do not treat it as the default future shape.
 
-## Canonical cross-repo package
+## Portable cross-repo package
 
-When handing MICA to another repo, give it this bundle:
+When handing MICA to another repo, provide these roles, using paths appropriate
+to that repository:
 
 - `README.md` with the invocation directive
 - `mica.yaml`
@@ -135,9 +137,9 @@ Do not hand over only:
 - playbook markdown alone
 - prose descriptions of memory layout
 
-## Preferred target-repo install pattern
+## Example target-repo layouts
 
-For new repos, prefer this shape:
+For a small new repo, this is a useful scaffold:
 
 ```text
 repo/
@@ -148,7 +150,7 @@ repo/
     mica_playbook.md
 ```
 
-For large repos, prefer this shape:
+For a large repo, a routed shape may be more useful:
 
 ```text
 repo/
@@ -169,29 +171,33 @@ Old model:
 - playbook markdown
 - human explains how they relate
 
-New model:
+Portable model:
 
 - archive JSON
 - playbook markdown
 - `mica.yaml` declares relationship explicitly
 - loader resolves package without human interpretation
 
-That is the key portability step.
+That explicit relationship, not uniform filenames, is the key portability
+step.
 
 ## Practical rule for Flamehaven packages
 
-If the goal is "show this MICA to another repo and let that repo use it," the package should be normalized into one of these two defaults:
+If the goal is "show this MICA to another repo and let that repo use it," first
+preserve the target repository's own memory organization. Use these two shapes
+as references when no usable organization exists:
 
 - Default minimal: CAS-style stable-path package
 - Default scalable: audit-reports-style router package
 
-Everything else should be treated as compatibility mode, not the preferred forward shape.
+Other explicit, resolvable shapes are valid. A repository-specific layout is
+not legacy merely because it differs from these examples.
 
-## Optional structured-memory tooling
+## Pre-materialized compatibility
 
-Some consumers capture sessions or maintain structured memory records. The
-`mica_memory.py` utility remains available for those repositories, but it is not
-part of the minimum MICA contract. Do not install it merely because it exists.
+The runtime can still read a package that declares the historical
+`memory_first` mode when that package already contains its exported archive and
+playbook. MICA no longer ships the separate structured-memory authoring CLI.
 The stable adoption target is README, `mica.yaml`, archive, and playbook.
 
 ## Acceptance checklist for a target repo
@@ -199,8 +205,9 @@ The stable adoption target is README, `mica.yaml`, archive, and playbook.
 A target repo is ready only if:
 
 - the environment running MICA validators provides `pyyaml` and `jsonschema`
-- `mica.yaml` exists
+- the README-declared manifest exists
 - every declared `always` layer exists
-- `python tools/mica_pct.py <target_repo>` can resolve the package honestly
+- `python <MICA_ROOT>/tools/mica_pct.py <target_repo>` can resolve the package honestly
 - the repo does not require filename guessing
-- package shape is either minimal stable-path or router-plus-islands unless there is a strong reason otherwise
+- the AI can identify and apply the relevant archive memory and playbook procedure
+- no filename or schema is inferred merely from another repository's example

@@ -197,9 +197,8 @@ def _build_surface_evidence(
         wanted = sections_by_role.get(role)
         try:
             if wanted:
-                delivered, _missing = select_markdown_sections(
-                    path.read_text(encoding="utf-8"), wanted
-                )
+                source = path.read_bytes().decode("utf-8")
+                delivered, _missing = select_markdown_sections(source, wanted)
                 payload = delivered.encode("utf-8")
                 digest, size = hash_bytes(payload)
             else:
@@ -745,7 +744,7 @@ def emit_text(summary: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def emit_context(project_root: Path, summary: dict[str, Any]) -> str:
+def emit_context_bytes(project_root: Path, summary: dict[str, Any]) -> bytes:
     """Emit the exact agent-context payload selected for this session.
 
     The summary format says which surfaces resolve. This format is the loading
@@ -769,9 +768,9 @@ def emit_context(project_root: Path, summary: dict[str, Any]) -> str:
             "cannot emit context: agent-context surfaces and byte evidence do not match"
         )
 
-    lines = [
-        f"[MICA CONTEXT] {summary.get('name') or 'unknown'}",
-        f"Profile: {summary.get('active_profile') or 'default (mode)'}",
+    chunks = [
+        f"[MICA CONTEXT] {summary.get('name') or 'unknown'}\n".encode(),
+        f"Profile: {summary.get('active_profile') or 'default (mode)'}\n".encode(),
     ]
     for role in roles:
         entry = evidence_by_role[role]
@@ -782,7 +781,8 @@ def emit_context(project_root: Path, summary: dict[str, Any]) -> str:
         if path is None or not path.is_file():
             raise RuntimeError(f"cannot emit context: {role} path is unavailable: {relative}")
         try:
-            payload = path.read_text(encoding="utf-8")
+            payload_bytes = path.read_bytes()
+            payload = payload_bytes.decode("utf-8")
         except (OSError, UnicodeDecodeError) as exc:
             raise RuntimeError(f"cannot emit context: {role} is not readable UTF-8: {exc}") from exc
 
@@ -791,21 +791,25 @@ def emit_context(project_root: Path, summary: dict[str, Any]) -> str:
             payload, missing = select_markdown_sections(payload, [str(value) for value in sections])
             if missing:
                 raise RuntimeError(f"cannot emit context: {role} sections disappeared: {missing}")
+            payload_bytes = payload.encode("utf-8")
 
-        payload_bytes = payload.encode("utf-8")
         digest, size = hash_bytes(payload_bytes)
         if digest != entry.get("sha256") or size != entry.get("bytes"):
             raise RuntimeError(f"cannot emit context: {role} bytes changed after resolution")
 
-        lines.extend(
-            [
-                "",
-                f"--- MICA SURFACE BEGIN role={role} path={relative} sha256={digest} ---",
-                payload.rstrip("\n"),
-                f"--- MICA SURFACE END role={role} ---",
-            ]
+        chunks.append(
+            f"\n--- MICA SURFACE BEGIN role={role} path={relative} sha256={digest} ---\n".encode()
         )
-    return "\n".join(lines)
+        chunks.append(payload_bytes)
+        if not payload_bytes.endswith(b"\n"):
+            chunks.append(b"\n")
+        chunks.append(f"--- MICA SURFACE END role={role} ---\n".encode())
+    return b"".join(chunks)
+
+
+def emit_context(project_root: Path, summary: dict[str, Any]) -> str:
+    """Text API for callers that need the assembled context as a string."""
+    return emit_context_bytes(project_root, summary).decode("utf-8")
 
 
 def emit_hook(summary: dict[str, Any]) -> str:
@@ -884,7 +888,8 @@ def main() -> None:
 
     if args.format == "context":
         try:
-            print(emit_context(project_root, summary))
+            sys.stdout.buffer.write(emit_context_bytes(project_root, summary))
+            sys.stdout.buffer.flush()
         except RuntimeError as exc:
             print(f"[ERROR] {exc}", file=sys.stderr)
             sys.exit(1)

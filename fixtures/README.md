@@ -28,7 +28,7 @@ cat fixtures/flow_candidates_approved_lesson/memory/mica.candidates.json
 cat fixtures/flow_recall_operator_review_safe/memory/mica.recall.jsonl
 cat fixtures/flow_recall_agent_context_violation/memory/mica.recall.jsonl
 python tools/mica_pct.py fixtures/memory_first_minimal
-python tools/mica_memory.py fixtures/memory_first_minimal materialize
+python tools/mica_runtime.py fixtures/memory_first_minimal --format context
 # missing-trace fixture intentionally has no mica.recall.jsonl
 ```
 

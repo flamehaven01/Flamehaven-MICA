@@ -1,5 +1,9 @@
 # v0.2.8 -> v0.2.9 Migration Guide
 
+> Historical scope: this file describes the v0.2.9 tool set. The separate
+> `mica_memory.py` authoring CLI was removed in tool release v3.2.0;
+> pre-materialized `memory_first` packages remain readable by the runtime.
+
 ## Overview
 
 Replace `tools/` and re-run the validator. That is the whole required migration.
@@ -21,7 +25,7 @@ tools/mica_core.py         <- replace
 tools/mica_pct.py          <- replace
 tools/mica_runtime.py      <- replace
 tools/mica_invocation.py   <- replace
-tools/mica_memory.py       <- replace
+tools/mica_memory.py       <- replace (v0.2.9 tool set; removed in v3.2.0)
 tools/mica_primitives.py   <- new
 tools/mica_evidence.py     <- new
 tools/mica_flow.py         <- new

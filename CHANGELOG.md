@@ -10,6 +10,36 @@ No changes yet.
 
 ---
 
+## v3.2.0 — consistent AI use, adaptive repository memory (2026-09-04)
+
+MICA now ships a `mica-context` skill that teaches an AI one consistent use
+protocol: enter through README, resolve the named manifest, emit the selected
+archive and playbook, apply relevant repository memory to the task, and report
+what was actually loaded and verified. It explicitly preserves repository-owned
+paths, profiles, archive schemas, and playbook organization rather than
+normalizing independently evolved packages into one file layout.
+
+A reusable `mica-consumer.yml` workflow provides an optional deterministic
+check that the declared package validates and the selected context can be
+emitted. It reports only the context byte count and does not upload memory
+content. CI supports invocation; it does not prove that an AI understood or
+followed the emitted context.
+
+Context emission now preserves the exact bytes of full surfaces on platforms
+where text-mode reads would normalize CRLF to LF. The emitted bytes are checked
+against the same digest used during resolution, and a regression test exercises
+the command-line boundary.
+
+The unused `mica_memory.py` structured-memory authoring CLI and its isolated
+test suite were removed. The runtime still supports pre-materialized
+`memory_first` packages, so existing exported archive and playbook surfaces
+remain invocable. This removes an unconsumed authoring subsystem without
+turning repository-specific memory into a single mandatory schema.
+
+See [the v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md).
+
+---
+
 ## v3.1.0 — README invokes, runtime emits context (2026-09-04)
 
 **The README, archive, and playbook are the product path again.** v3.0.0 made

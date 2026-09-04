@@ -1,5 +1,9 @@
 # MICA Agent Guide Template
 
+When the agent host supports repository skills, prefer
+`skills/mica-context/SKILL.md` from the MICA release. This file remains a
+copyable fallback for hosts that cannot load a skill.
+
 Copy this guide into a target repository only after replacing the placeholders with
 repository-specific paths, invariants, and verification commands. It is an operating
 contract for an AI maintainer, not a general project description.

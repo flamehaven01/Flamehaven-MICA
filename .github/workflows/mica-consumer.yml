@@ -1,0 +1,57 @@
+name: MICA consumer check
+
+on:
+  workflow_call:
+    inputs:
+      project-root:
+        description: Repository-relative root containing the MICA entrypoint
+        required: false
+        default: .
+        type: string
+      profile:
+        description: Optional invocation profile
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  invoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out consumer
+        uses: actions/checkout@v4
+
+      - name: Check out MICA runtime
+        uses: actions/checkout@v4
+        with:
+          repository: flamehaven01/Flamehaven-MICA
+          ref: v3.2.0
+          path: .mica-tooling
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime dependencies
+        run: python -m pip install pyyaml jsonschema
+
+      - name: Validate and emit selected context
+        shell: bash
+        env:
+          MICA_PROJECT_ROOT: ${{ inputs.project-root }}
+          MICA_PROFILE: ${{ inputs.profile }}
+        run: |
+          set -euo pipefail
+          args=("$MICA_PROJECT_ROOT")
+          if [ -n "$MICA_PROFILE" ]; then
+            args+=(--profile "$MICA_PROFILE")
+          fi
+          python .mica-tooling/tools/mica_pct.py "${args[@]}"
+          python .mica-tooling/tools/mica_runtime.py "${args[@]}" --format context \
+            > "$RUNNER_TEMP/mica-context.bin"
+          bytes="$(wc -c < "$RUNNER_TEMP/mica-context.bin")"
+          printf 'MICA emitted context bytes: %s\n' "$bytes" >> "$GITHUB_STEP_SUMMARY"
