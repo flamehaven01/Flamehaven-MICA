@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flamehaven01/Flamehaven-MICA/experiments/profile-outcome-pilot-v1/allocation.schema.json",
+  "title": "Profile Outcome Pilot v1 — execution order allocation",
+  "description": "Which condition runs first for each task, derived from one recorded seed after the task set is frozen. This file is a schema; no allocation has been generated. An allocation that exists before the tasks are frozen would let the tasks be chosen with the order already visible.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pilot", "tasks_sha256", "seed", "generated_at_utc", "allocation"],
+  "properties": {
+    "pilot": { "const": "profile-outcome-pilot-v1" },
+    "tasks_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the frozen tasks.json this allocation was drawn against. If tasks.json changes, this allocation no longer describes it and the pilot is void rather than re-derived."
+    },
+    "seed": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Recorded so the allocation can be re-derived and checked. Generated once, after the task set is frozen. Re-rolling it after seeing any result invalidates the pilot."
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Must be later than the task set's frozen_at_utc."
+    },
+    "allocation": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/entry" },
+      "description": "One entry per task. Both orders must appear across the six; an allocation that runs the same condition first every time controls for nothing."
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "first"],
+      "properties": {
+        "task_id": { "type": "string", "pattern": "^t[1-6]$" },
+        "first": {
+          "enum": ["load_everything", "profile"],
+          "description": "Which condition executes first for this task. The other runs second. Both conditions always run."
+        }
+      }
+    }
+  }
+}

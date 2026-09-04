@@ -14,7 +14,17 @@ import jsonschema
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_FILES = sorted(REPO_ROOT.glob("*.schema.json"))
+# Root-level schemas are the shipped package contract. The rglob also reaches
+# schemas under experiments/, because a schema that does not parse is broken
+# wherever it lives, and the metavalidation costs nothing per file.
+SHIPPED_SCHEMA_FILES = sorted(REPO_ROOT.glob("*.schema.json"))
+# `.claude` holds agent worktrees and `Legacy` holds untracked history; both are
+# gitignored and absent on CI, so including them would make the collected test
+# count differ between a developer machine and the runner.
+_UNTRACKED_TREES = {".git", ".claude", "Legacy"}
+SCHEMA_FILES = sorted(
+    path for path in REPO_ROOT.rglob("*.schema.json") if _UNTRACKED_TREES.isdisjoint(path.parts)
+)
 
 
 def _load(path: Path) -> dict:
@@ -22,7 +32,8 @@ def _load(path: Path) -> dict:
 
 
 def test_schema_files_are_discovered():
-    assert SCHEMA_FILES, "expected shipped *.schema.json files"
+    assert SHIPPED_SCHEMA_FILES, "expected shipped *.schema.json files at the repository root"
+    assert len(SCHEMA_FILES) >= len(SHIPPED_SCHEMA_FILES)
 
 
 @pytest.mark.parametrize("schema_path", SCHEMA_FILES, ids=lambda p: p.name)

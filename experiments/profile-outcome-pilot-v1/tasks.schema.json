@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flamehaven01/Flamehaven-MICA/experiments/profile-outcome-pilot-v1/tasks.schema.json",
+  "title": "Profile Outcome Pilot v1 — frozen task set",
+  "description": "The tasks a pilot run executes, frozen before any session runs and before the randomisation seed exists. This file is a schema; the task set it describes has not been written.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pilot", "consumer", "base_commit", "frozen_at_utc", "tasks"],
+  "properties": {
+    "pilot": {
+      "const": "profile-outcome-pilot-v1",
+      "description": "Ties the task set to one protocol version. A changed protocol is a new pilot directory, not an edit to this one."
+    },
+    "consumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Full SHA. The consumer package must be at this commit for every session; a change aborts the pilot."
+        }
+      }
+    },
+    "base_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "The MICA commit every worktree is created from."
+    },
+    "frozen_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this task set was frozen. Must precede the allocation's seed generation."
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "description": "Exactly six. A different count is a different pilot.",
+      "items": { "$ref": "#/$defs/task" }
+    }
+  },
+  "$defs": {
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "prompt",
+        "prompt_sha256",
+        "profile",
+        "acceptance_command",
+        "allowed_change_paths",
+        "context_sensitivity_reason",
+        "time_limit_seconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^t[1-6]$"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The exact text both conditions receive. Identical across conditions; the condition changes what memory reaches the session, never what it is asked to do."
+        },
+        "prompt_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Digest of `prompt`, so a later edit is visible rather than silent."
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The profile condition B invokes. Declared here, not chosen during the run."
+        },
+        "acceptance_command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exits 0 or non-zero and decides the primary outcome. Written before the task runs, identical across conditions, never edited after a session has run against it."
+        },
+        "allowed_change_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Paths the task may modify. A file touched outside these counts as an unnecessary change; a change outside them that acceptance requires means the task was specified wrong and the pair is excluded."
+        },
+        "context_sensitivity_reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One line on why which memory the session receives could plausibly matter here. A task no context could help tests nothing."
+        },
+        "time_limit_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Same limit for both conditions."
+        }
+      }
+    }
+  }
+}

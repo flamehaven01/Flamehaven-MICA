@@ -6,6 +6,29 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ## Unreleased
 
+**Profile outcome pilot, protocol only.** Every release note says whether
+better context produces better work is not measured. `experiments/
+profile-outcome-pilot-v1/` is the first attempt to measure it: paired replay of
+six tasks inside one consumer, load-everything against profile-selected context,
+twelve sessions.
+
+Nothing is selected and nothing has run. The directory holds `PROTOCOL.md` and
+two schemas, in that order deliberately -- the task set is frozen before the
+randomisation seed exists, because generating the seed first would allow
+choosing tasks with the allocation already visible. No empty `allocation.json`
+was created: a schema and a record of what was actually drawn are different
+things, and an empty one blurs them.
+
+The protocol fixes in advance what would make the pilot wrong, including
+re-running a session whose result was unwelcome and reading a six-pair
+difference as an effect size. It states plainly that six pairs can indicate a
+direction inside one package and nothing more.
+
+Schema metavalidation reached only the repository root, so these two would not
+have been checked. It now covers every `*.schema.json` outside the gitignored
+trees -- `.claude` and `Legacy` are excluded so the collected test count is the
+same on a developer machine and on CI.
+
 **The measurement tool disagreed with the check it reports on.** `_spec_note`
 read `PCT-006`'s own output rather than recomputing a second opinion, then
 filtered that output on the substring `canonical`. v3.0.2 rewrote `PCT-006`
