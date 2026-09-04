@@ -45,7 +45,7 @@ from mica_runtime import build_summary  # noqa: E402
 __version__ = MICA_TOOL_VERSION
 
 
-def _spec_note(results: list[tuple[str, str, str]]) -> str | None:
+def _spec_notes(results: list[tuple[str, str, str]]) -> list[str]:
     """Whatever PCT-006 warned about the declared contract, verbatim.
 
     An earlier draft recomputed the version gap itself. Two implementations of
@@ -58,11 +58,13 @@ def _spec_note(results: list[tuple[str, str, str]]) -> str | None:
     about reported `spec_note: null` here. Matching on wording means every
     rewording silently drops a warning. There is no filter now -- if PCT-006
     warns, the measurement carries what it said.
+
+    Plural, because PCT-006 can warn twice in one run: a yaml/archive drift and
+    an unknown contract are separate findings about the same package. Returning
+    the first dropped whichever came second, so a package with both recorded
+    only the drift.
     """
-    for pid, status, message in results:
-        if pid == "PCT-006" and status == "WARN":
-            return message
-    return None
+    return [message for pid, status, message in results if pid == "PCT-006" and status == "WARN"]
 
 
 def _context_bytes(summary: dict[str, Any]) -> tuple[int, int, int]:
@@ -88,7 +90,7 @@ def measure(project_root: Path, profile: str | None = None) -> dict[str, Any]:
 
     yaml_path = find_mica_yaml(project_root)
     declared_spec = str((load_yaml(yaml_path) or {}).get("mica_spec", "")) if yaml_path else ""
-    spec_note = _spec_note(results)
+    spec_notes = _spec_notes(results)
 
     agent_bytes, operator_bytes, total_bytes = _context_bytes(summary)
     evidence = summary.get("surface_evidence") or []
@@ -97,7 +99,10 @@ def measure(project_root: Path, profile: str | None = None) -> dict[str, Any]:
         "package": summary.get("name") or project_root.name,
         "project_root": str(project_root),
         "mica_spec": declared_spec or None,
-        "spec_note": spec_note,
+        "spec_notes": spec_notes,
+        # Retained for readers written against the singular field. It is the
+        # first note, so it can hide a second one; `spec_notes` is canonical.
+        "spec_note": spec_notes[0] if spec_notes else None,
         "mode": summary.get("mode"),
         "profile": summary.get("active_profile"),
         "declared_profiles": summary.get("declared_profiles") or [],
@@ -149,7 +154,7 @@ def _print_report(rows: list[dict[str, Any]]) -> None:
             f"{profiles:>10}"
         )
 
-    notes = [(r["package"], r["spec_note"]) for r in rows if r["spec_note"]]
+    notes = [(r["package"], note) for r in rows for note in r["spec_notes"]]
     if notes:
         print()
         for pkg, note in notes:

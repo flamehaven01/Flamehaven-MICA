@@ -162,18 +162,22 @@ def test_measure_does_not_recompute_the_version_comparison():
     source = (TOOLS_DIR / "mica_measure.py").read_text(encoding="utf-8")
 
     assert "_parse_version" not in source
-    assert "_spec_note" in source
+    assert "_spec_notes" in source
 
 
 def test_measure_surfaces_the_pct006_message_verbatim():
-    row = mica_measure.measure(FIXTURES_DIR / "valid_bound_di")
-    pct006 = [
-        msg
-        for pid, status, msg in mica_core.run_pct_checks(FIXTURES_DIR / "valid_bound_di")
-        if pid == "PCT-006" and status == "WARN" and "canonical" in msg
-    ]
+    """This used to filter the check's output on the substring "canonical", the
+    same filter the tool carried. Once v3.0.2 reworded PCT-006 both sides went
+    empty and the test asserted nothing while still passing."""
+    import contextlib
+    import io
 
-    assert row["spec_note"] == (pct006[0] if pct006 else None)
+    package = FIXTURES_DIR / "valid_bound_di"
+    with contextlib.redirect_stdout(io.StringIO()):
+        results = mica_core.run_pct_checks(package)
+    warnings = [msg for pid, status, msg in results if pid == "PCT-006" and status == "WARN"]
+
+    assert mica_measure.measure(package)["spec_notes"] == warnings
 
 
 def test_cli_emits_json():
@@ -218,7 +222,7 @@ def test_the_supported_floor_is_pinned_by_a_fixture():
 # --- the instrument agrees with the check it reports on ----------------------
 
 
-def _measured_spec_note(tmp_path: Path, spec: str) -> str | None:
+def _measured_spec_notes(tmp_path: Path, spec: str) -> list[str]:
     """Build a package at `spec` and read what mica_measure records for it."""
     import shutil
 
@@ -229,26 +233,26 @@ def _measured_spec_note(tmp_path: Path, spec: str) -> str | None:
     for relative in ("mica.yaml", "memory/mica_archive.json"):
         path = root / relative
         path.write_text(path.read_text(encoding="utf-8").replace("0.2.4", spec), encoding="utf-8")
-    return mica_measure.measure(root, None)["spec_note"]
+    return mica_measure.measure(root, None)["spec_notes"]
 
 
-def _pct006_warning(tmp_path_root: Path) -> str | None:
+def _pct006_warnings(tmp_path_root: Path) -> list[str]:
     import contextlib
     import io
 
     with contextlib.redirect_stdout(io.StringIO()):
         results = mica_core.run_pct_checks(tmp_path_root)
-    return next((m for c, s, m in results if c == "PCT-006" and s == "WARN"), None)
+    return [m for c, s, m in results if c == "PCT-006" and s == "WARN"]
 
 
 @pytest.mark.parametrize("spec", ["0.2.4", "0.2.9"])
 def test_a_supported_contract_records_no_note(tmp_path: Path, spec: str):
-    assert _measured_spec_note(tmp_path, spec) is None
+    assert _measured_spec_notes(tmp_path, spec) == []
 
 
 def test_a_legacy_contract_records_no_warning_because_it_is_informational(tmp_path: Path):
     """0.1.9 is reported as INFO, not WARN. The measurement carries warnings."""
-    assert _measured_spec_note(tmp_path, "0.1.9") is None
+    assert _measured_spec_notes(tmp_path, "0.1.9") == []
 
 
 def test_an_unknown_contract_is_carried_into_the_measurement(tmp_path: Path):
@@ -256,10 +260,10 @@ def test_an_unknown_contract_is_carried_into_the_measurement(tmp_path: Path):
     PCT-006 around supported contracts the word vanished and a package the check
     warned about recorded `spec_note: null`. The instrument disagreed with the
     check it reports on."""
-    note = _measured_spec_note(tmp_path, "0.2.10")
+    notes = _measured_spec_notes(tmp_path, "0.2.10")
 
-    assert note is not None
-    assert "not a contract version these tools define" in note
+    assert len(notes) == 1
+    assert "not a contract version these tools define" in notes[0]
 
 
 def test_a_yaml_archive_mismatch_is_carried_too(tmp_path: Path):
@@ -298,4 +302,59 @@ def test_the_measurement_note_is_exactly_what_the_check_said(tmp_path: Path):
             path.read_text(encoding="utf-8").replace("0.2.4", "9.9.9"), encoding="utf-8"
         )
 
-    assert mica_measure.measure(root, None)["spec_note"] == _pct006_warning(root)
+    assert mica_measure.measure(root, None)["spec_notes"] == _pct006_warnings(root)
+
+
+def test_two_warnings_in_one_run_are_both_recorded(tmp_path: Path):
+    """PCT-006 warns twice when a package both disagrees with its own archive
+    and declares a contract these tools do not define. Returning the first note
+    dropped the second, so a package with both recorded only the drift and the
+    unknown contract vanished from the measurement."""
+    import shutil
+
+    import mica_measure
+
+    root = tmp_path / "pkg"
+    shutil.copytree(FIXTURES_DIR / "contract_floor", root)
+    yaml_path = root / "mica.yaml"
+    yaml_path.write_text(
+        yaml_path.read_text(encoding="utf-8").replace('mica_spec: "0.2.4"', 'mica_spec: "0.2.10"'),
+        encoding="utf-8",
+    )
+    archive = root / "memory" / "mica_archive.json"
+    archive.write_text(
+        archive.read_text(encoding="utf-8").replace('"0.2.4"', '"0.2.9"'), encoding="utf-8"
+    )
+
+    notes = mica_measure.measure(root, None)["spec_notes"]
+
+    assert len(notes) == 2
+    assert notes == _pct006_warnings(root), "character and order must match the check"
+    assert any("drift" in note for note in notes)
+    assert any("not a contract version" in note for note in notes)
+
+
+def test_the_singular_field_is_the_first_note_and_can_hide_one(tmp_path: Path):
+    """`spec_note` is kept for readers written against it. This records what it
+    costs: with two warnings it shows one, which is why `spec_notes` is the
+    canonical field."""
+    import shutil
+
+    import mica_measure
+
+    root = tmp_path / "pkg"
+    shutil.copytree(FIXTURES_DIR / "contract_floor", root)
+    yaml_path = root / "mica.yaml"
+    yaml_path.write_text(
+        yaml_path.read_text(encoding="utf-8").replace('mica_spec: "0.2.4"', 'mica_spec: "0.2.10"'),
+        encoding="utf-8",
+    )
+    archive = root / "memory" / "mica_archive.json"
+    archive.write_text(
+        archive.read_text(encoding="utf-8").replace('"0.2.4"', '"0.2.9"'), encoding="utf-8"
+    )
+
+    row = mica_measure.measure(root, None)
+
+    assert row["spec_note"] == row["spec_notes"][0]
+    assert len(row["spec_notes"]) > 1

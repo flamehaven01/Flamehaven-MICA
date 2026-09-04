@@ -17,9 +17,19 @@ Matching on wording is a second opinion in a smaller place: every rewording
 silently drops a warning. There is no filter now. The tool also described itself
 as measuring `mica_spec lag`, which stopped being what `PCT-006` does.
 
-Four regression cases cover the axis the filter was blind to -- supported,
-legacy, unknown and yaml/archive mismatch -- plus one asserting the recorded
-note is character-for-character what the check said.
+The first fix was still not "every warning". `PCT-006` can warn twice in one
+run -- a yaml/archive drift and an unknown contract are separate findings about
+the same package -- and the function returned on the first, so a package with
+both recorded only the drift. `_spec_notes()` returns all of them in order, JSON
+gains `spec_notes`, and the human report prints each. `spec_note` remains as the
+first element for readers written against it, with a test recording that it can
+hide a second warning.
+
+Regression cases cover supported, legacy, unknown, mismatch, and both at once,
+asserting the recorded notes are character-for-character and in the same order
+as the check's own. One existing test carried the same `canonical` filter the
+tool did: once the wording changed both sides went empty and it asserted
+nothing while still passing. It reads the check's warnings directly now.
 
 **Published version tags are immutable.** A tag ruleset on `refs/tags/v*` blocks
 updates and deletions, with no bypass actor; creating a new version tag is
