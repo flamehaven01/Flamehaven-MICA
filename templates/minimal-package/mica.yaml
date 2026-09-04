@@ -1,0 +1,35 @@
+# Copy this directory into <target-repo>/, then replace the placeholder values.
+# Keep paths stable: the loader must never infer archive or playbook filenames.
+#
+# The README block in ../MICA_README_INVOCATION.md is the other half of this.
+# Without it the package has memory and no way in.
+mica_spec: "0.2.9"
+name: example-project
+mode: memory_injection
+description: "Memory package for example-project: what it has decided, and how work is done here."
+
+layers:
+  - name: archive
+    path: memory/mica_archive.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/mica_playbook.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  agent_context_surfaces:
+    - archive
+    - playbook
+  profiles:
+    default:
+      description: Routine work. Both surfaces, whole files.
+      surfaces: [archive, playbook]
+
+update_triggers:
+  - on_explicit_save
+
+di_policy:
+  critical_binding_required: false

@@ -1,0 +1,23 @@
+{
+  "mica_spec": "0.2.9",
+  "mica_schema_version": "0.2.9",
+  "project": {
+    "name": "example-project",
+    "version": "0.1.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "replace-with-a-real-decision",
+      "statement": "State a decision this project already made and must not relearn. Write it so a session can tell whether it is about to violate it.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "Replace with the incident that produced this decision, including a date: EXP-001: what went wrong, 2026-01-15"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-09-04"
+  }
+}

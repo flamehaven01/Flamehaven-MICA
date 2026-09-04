@@ -349,3 +349,45 @@ def test_every_fixture_appears_in_the_fixture_map():
     ]
 
     assert not missing, f"fixtures absent from fixtures/README.md: {missing}"
+
+
+# --- the starter template is a working package -------------------------------
+
+
+def test_the_minimal_template_closes_its_own_contract():
+    """A starter package that does not resolve teaches the wrong thing on the
+    first try, and a template nothing runs rots silently."""
+    import contextlib
+    import io
+
+    template = REPO_ROOT / "templates" / "minimal-package"
+    with contextlib.redirect_stdout(io.StringIO()):
+        results = mica_core.run_pct_checks(template)
+
+    assert mica_core.evaluate_axes(results)["contract"] == "CLOSED"
+
+
+def test_the_minimal_template_declares_a_supported_contract():
+    yaml_path = REPO_ROOT / "templates" / "minimal-package" / "mica.yaml"
+    declared = mica_primitives.load_yaml(yaml_path)["mica_spec"]
+
+    assert declared in mica_core.SUPPORTED_CONTRACT_VERSIONS
+
+
+def test_the_minimal_template_validates_against_the_shipped_schema():
+    yaml_path = REPO_ROOT / "templates" / "minimal-package" / "mica.yaml"
+    errors = list(_composition_validator().iter_errors(mica_primitives.load_yaml(yaml_path)))
+
+    assert not errors, [e.message for e in errors[:3]]
+
+
+def test_the_readme_invocation_template_is_reachable_from_the_starter():
+    """The block and the package are two halves of one thing. A reader who finds
+    one has to be able to find the other: memory with no entrypoint is memory
+    nothing opens."""
+    starter = (REPO_ROOT / "templates" / "minimal-package" / "mica.yaml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "MICA_README_INVOCATION.md" in starter
+    assert (REPO_ROOT / "templates" / "MICA_README_INVOCATION.md").exists()

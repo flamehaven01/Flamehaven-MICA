@@ -41,16 +41,27 @@ A portable contract for loading project memory at session start and declaring, i
 
 ## What MICA is
 
-MICA is an invocation and context-loading contract. Its job is to make sure the
-right memory surfaces are loaded when a session starts, that the session
-activates against the right invariants, and that runtime output says truthfully
-what was actually invoked.
+**A repository's README opens MICA. MICA loads that repository's memory and
+playbook. Everything else only proves that this happened truthfully.**
 
-It is a memory book with rules about how the book is opened. The archive,
-playbook, and memory-first machinery exist to serve that. They are not the
-center of the system, and MICA does not sit above the repositories that use it:
-each consumer keeps its own package in its own form and evolves on its own
-track.
+That chain is the whole system:
+
+```text
+your README            tells the session to read mica.yaml
+  └─ mica.yaml         says which files are memory, and which the session gets
+       ├─ archive      what this project has learned and must not relearn
+       └─ playbook     how work is done here
+            └─ session starts already holding both
+```
+
+The archive and the playbook are the point. They are what a session is supposed
+to receive, and MICA exists to get them there. What sits *below* them is the
+supporting layer: contract checks, invocation traces, digests, measurement. That
+machinery answers one question — did the memory actually arrive, and did
+anything arrive that should not have — and it is worth nothing on its own.
+
+MICA does not sit above the repositories that use it. Each consumer keeps its
+own package in its own form and evolves on its own track.
 
 **What it does not do.** It does not prove the code is correct, it does not
 measure whether better context produces better work, and it does not decide
@@ -61,15 +72,43 @@ delivered, so those questions can be asked with evidence instead of memory.
 
 ## 60-Second First Run
 
-Point it at any directory. No configuration needed to get a verdict.
-
 ```bash
 git clone https://github.com/flamehaven01/Flamehaven-MICA.git
 cd Flamehaven-MICA
 pip install -r requirements-dev.txt
 ```
 
-A package that resolves cleanly ends with:
+**Invoke a package.** This is the thing MICA is for: a session asks what memory
+it should be holding, and gets an answer.
+
+```text
+python tools/mica_runtime.py fixtures/memory_profiles --format text
+
+[MICA CONTRACT RESOLVED] memory-profiles v1.0.0
+Mode      : memory_injection
+Pattern   : readme_protocol (declared)
+Profile   : default
+Resolved  : archive, playbook
+Context   : archive, playbook
+Operator  : none
+Deferred  : lessons
+PCT       : CLOSED
+Invariants: 1 critical, 0 high
+
+Active critical invariant candidates:
+  DI-001: memory-is-event-shaped
+```
+
+`Resolved` is what this session receives. `Context` is what reaches the agent.
+`Deferred` is what the package has but this session does not get — `lessons`
+here, because the `default` profile did not ask for it. A `review` session
+would.
+
+The invariant is read out of the archive, so the session starts already holding
+what this project decided and must not relearn.
+
+**Then check that it was true.** Everything below is the supporting layer, and
+it exists to keep the output above honest:
 
 ```text
 python tools/mica_pct.py fixtures/flow_observation_valid
@@ -84,15 +123,7 @@ Overall: CLOSED CONTRACT
 `Contract` is the verdict that matters: the declared memory reached the session
 and nothing reached it that should not have. `Archive` and `Flow` report without
 deciding it, so a package whose memory loads correctly but whose archive carries
-ungrounded bindings gets both facts rather than one verdict. See what a session
-actually costs:
-
-```text
-python tools/mica_measure.py fixtures/memory_profiles
-
-PACKAGE                     SPEC   CONTRACT   CTX BYTES  CTX/DECL  PROFILES
-memory-profiles            0.2.8     CLOSED       1,375       2/3         3
-```
+ungrounded bindings gets both facts rather than one verdict.
 
 ## Quick Start
 
@@ -370,6 +401,9 @@ Reason    : candidate cand_00042 entered agent_context while operator_review.sta
 By task, not by version.
 
 **Adopting MICA in another repository**
+
+- [templates/MICA_README_INVOCATION.md](templates/MICA_README_INVOCATION.md) — the block that makes a README open MICA. Without it a package has memory and no way in
+- [templates/minimal-package/](templates/minimal-package/) — a complete starter: `mica.yaml`, archive, playbook. It closes its own contract, and a test keeps it that way
 
 - [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) — making a repository MICA-capable
 - [docs/MICA_CONSUMER_AUTHORING_GUIDE.md](docs/MICA_CONSUMER_AUTHORING_GUIDE.md) — authoring and operating a consumer package
