@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -119,7 +120,8 @@ def build_handoff(
     now = _iso_now()
     record: dict[str, Any] = {
         "schema_version": HANDOFF_SCHEMA_VERSION,
-        "handoff_id": f"handoff_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        "handoff_id": f"handoff_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+        f"-{secrets.token_hex(4)}",
         "created_at_utc": now,
         "project_scope": project_scope,
         "source_invocation_id": source_invocation_id,

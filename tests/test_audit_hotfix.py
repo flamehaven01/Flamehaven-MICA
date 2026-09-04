@@ -191,3 +191,89 @@ def test_a_valid_current_handoff_is_still_delivered():
     assert "handoff" in summary["agent_context_surfaces"]
     assert not summary["handoff_withheld_reason"]
     assert _axes(FIXTURES_DIR / "handoff_surface", "resume")["contract"] == "CLOSED"
+
+
+# --- P1-4: two layers claiming the same role ---------------------------------
+
+
+def test_a_duplicate_surface_role_fails_the_contract(tmp_path: Path):
+    """The runtime's path map is a dict keyed by role, so a second declaration
+    overwrote the first. A decoy file could stand in for the playbook and become
+    the recorded evidence while the contract still closed."""
+    root = _copy(tmp_path)
+    (root / "memory" / "decoy.md").write_text("## Decoy\n\nnot the playbook\n", encoding="utf-8")
+    yaml_path = root / "mica.yaml"
+    yaml_path.write_text(
+        yaml_path.read_text(encoding="utf-8").replace(
+            "invocation_protocol:",
+            "  - name: playbook\n    path: memory/decoy.md\n    format: markdown\n"
+            "    loading_hint: always\n\ninvocation_protocol:",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    status, message = _check(root, "PCT-007")
+
+    assert status == "FAIL"
+    assert "declared more than once" in message
+    assert _axes(root)["contract"] == "INCOMPLETE"
+
+
+# --- P1-5: what the capsule hash actually covers ------------------------------
+
+
+def test_the_capsule_hash_covers_the_project_it_claims():
+    """`project` is a required capsule field that sat outside the hash, so the
+    recorded name and version could be rewritten with IVC-003/004 still passing:
+    the capsule attested to an invocation of something else."""
+    import mica_evidence
+
+    assert "project" in mica_evidence._CAPSULE_HASH_FIELDS
+
+
+def test_rewriting_the_project_breaks_the_capsule_hash():
+    import mica_evidence
+
+    capsule = {
+        field: {} if field == "project" else f"value-for-{field}"
+        for field in mica_evidence._CAPSULE_HASH_FIELDS
+    }
+    capsule["project"] = {"name": "real", "version": "1.0.0"}
+    original = mica_evidence.compute_capsule_hash(capsule)
+
+    capsule["project"] = {"name": "impostor", "version": "1.0.0"}
+
+    assert mica_evidence.compute_capsule_hash(capsule) != original
+
+
+def test_every_required_capsule_field_is_hashed_or_deliberately_excluded():
+    """project_root is machine-specific and excluded on purpose. Anything else
+    outside the hash is an assertion nothing protects."""
+    import mica_evidence
+
+    excluded = set(mica_evidence._INVOCATION_REQUIRED_FIELDS) - set(
+        mica_evidence._CAPSULE_HASH_FIELDS
+    )
+
+    assert excluded == {"project_root"}, f"unprotected required capsule fields: {excluded}"
+
+
+# --- P1-8: ids that collide within a second ----------------------------------
+
+
+def test_two_handoffs_built_in_the_same_second_get_different_ids():
+    """The id was a second-resolution timestamp, so anything faster than one per
+    second produced duplicates."""
+    ids = {mica_handoff.build_handoff("scope", "inv_1")["handoff_id"] for _ in range(20)}
+
+    assert len(ids) == 20
+
+
+def test_a_generated_handoff_id_still_matches_the_shipped_schema():
+    import re
+
+    schema = json.loads((REPO_ROOT / "mica.handoff.schema.json").read_text(encoding="utf-8"))
+    pattern = schema["properties"]["handoff_id"]["pattern"]
+
+    assert re.fullmatch(pattern, mica_handoff.build_handoff("scope", "inv_1")["handoff_id"])

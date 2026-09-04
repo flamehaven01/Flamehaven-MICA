@@ -364,6 +364,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
     )
     mode = str(yd.get("mode") or "")
     declared_surfaces: list[str] = []
+    duplicate_surface_roles: list[str] = []
     invoked_surfaces: list[str] = []
     role_loading_hints: dict[str, str] = {}
     explicit_invocation = False
@@ -374,6 +375,8 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         role = layer_role(layer)
         if not role:
             continue
+        if role in declared_surfaces:
+            duplicate_surface_roles.append(role)
         declared_surfaces.append(role)
         hint = layer.get("loading_hint")
         role_loading_hints[role] = str(hint) if _is_non_empty_string(hint) else "unset"
@@ -497,6 +500,7 @@ def resolve_invocation_contract(yd: dict[str, Any], profile: str | None = None) 
         "profile_sections": profile_sections,
         "sections_for_uninvoked_surfaces": sections_for_uninvoked_surfaces,
         "declared_surfaces": declared_surfaces,
+        "duplicate_surface_roles": sorted(set(duplicate_surface_roles)),
         "loaded_surfaces": invoked_surfaces,
         "agent_context_surfaces": agent_context_surfaces,
         "deselected_agent_context_surfaces": deselected_agent_context_surfaces,
@@ -867,6 +871,14 @@ def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
         "explicit",
     }
     context_config_issues: list[str] = []
+    if contract["duplicate_surface_roles"]:
+        # Two layers claiming the same role made the surface ambiguous, and the
+        # runtime's path map resolved it by overwriting: the last declaration
+        # silently became the evidence, so a decoy file could stand in for the
+        # playbook while the contract still closed.
+        context_config_issues.append(
+            f"surface roles declared more than once {contract['duplicate_surface_roles']}"
+        )
     if invalid_context_surfaces:
         context_config_issues.append(f"invalid agent_context surfaces {invalid_context_surfaces}")
     if undeclared_context_surfaces:

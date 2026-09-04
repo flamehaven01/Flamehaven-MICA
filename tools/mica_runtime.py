@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import secrets
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -582,7 +583,8 @@ def build_invocation_trace_record(
     ]
     record = {
         "schema_version": INVOCATION_SCHEMA_V2,
-        "invocation_id": f"inv_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        "invocation_id": f"inv_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+        f"-{secrets.token_hex(4)}",
         "timestamp_utc": now,
         "project_root": summary.get("project_root"),
         "project": {

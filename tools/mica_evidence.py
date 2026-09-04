@@ -45,6 +45,12 @@ _CAPSULE_HASH_FIELDS = (
     "schema_version",
     "invocation_id",
     "timestamp_utc",
+    # `project` and `last_updated` are required capsule fields that sat outside
+    # the hash. The recorded project name, version, and archive freshness could
+    # be rewritten with IVC-003/004 still passing, so the capsule attested to an
+    # invocation of something else, or to an archive fresher than the real one.
+    "project",
+    "last_updated",
     "session_id",
     "trigger",
     "profile",
