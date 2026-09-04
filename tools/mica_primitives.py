@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-MICA_CANONICAL_VERSION = "3.0.0"
+MICA_CANONICAL_VERSION = "3.0.1"
 
 MICA_TOOL_VERSION = MICA_CANONICAL_VERSION
 

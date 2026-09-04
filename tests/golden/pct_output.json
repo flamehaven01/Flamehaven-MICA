@@ -33,7 +33,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.6 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.6 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -125,7 +125,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -217,7 +217,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -314,7 +314,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.7 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.7 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -411,7 +411,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -503,7 +503,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -595,7 +595,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -687,7 +687,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -779,7 +779,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -871,7 +871,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -963,7 +963,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1055,7 +1055,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1147,7 +1147,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1239,7 +1239,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1331,7 +1331,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1423,7 +1423,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1525,7 +1525,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1617,7 +1617,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1709,7 +1709,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1801,7 +1801,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1893,7 +1893,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1985,7 +1985,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2077,7 +2077,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2169,7 +2169,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2261,7 +2261,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2353,7 +2353,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2450,7 +2450,7 @@
   [
    "PCT-006",
    "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.0 by at least one major version; the checks here are written against canonical"
+   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",

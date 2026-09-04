@@ -6,7 +6,7 @@
   <a href="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml"><img src="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"/></a>
-  <img src="https://img.shields.io/badge/release-v3.0.0-green.svg" alt="v3.0.0"/>
+  <img src="https://img.shields.io/badge/release-v3.0.1-green.svg" alt="v3.0.1"/>
 </p>
 
 <p align="center"><b>Decide which memory a session receives, then prove it received it.</b></p>
@@ -18,6 +18,7 @@ A portable contract for loading project memory at session start and declaring, i
 
 **Release**
 
+- `v3.0.1` — current. Closes a second invocation-truth audit; see the [changelog](CHANGELOG.md).
 - `v3.0.0` — the first public release. Everything before it was internal development.
 - Adoption is 1 of 6 live consumer packages. Whether better context produces better work is not measured.
 - The next step is not more MICA-internal expansion. It is helping other repositories consume the invocation contract cleanly.

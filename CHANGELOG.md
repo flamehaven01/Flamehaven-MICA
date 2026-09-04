@@ -4,15 +4,57 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ---
 
-## Unreleased
+## v3.0.1 — Second invocation-truth audit (2026-09-04)
 
-- Close the second invocation-truth audit: selected optional surfaces now have
-  to resolve, handoff and invocation validators apply their shipped schemas,
-  and invocation traces are validated before append.
-- Make profile selection precedence explicit in consumer guidance and make the
-  fixture CLI smoke gate distinguish expected contract failures from crashes.
-- Correct v3.0.0's recorded test count and filename guidance without moving the
-  published tag.
+A second audit falsified the same claim the first one did, by a path the first
+fix did not cover. All seven findings reproduced before anything changed. Two of
+them only after correcting the counter-example itself, which had been written
+against a layer form the fixtures do not use: the findings were right, the first
+attempt to reproduce them was not.
+
+The `v3.0.0` tag is unchanged. It is public, and moving a published tag would
+make anyone who already fetched it hold something different from anyone who
+fetches it later.
+
+**Selection is a request.** `required: false` exempts a layer from being
+verified by default, and it was also exempting one the active profile had named:
+`PCT-003` passed while the runtime reported the surface missing. A surface a
+profile selects must now resolve to a readable file whatever the layer's default
+says. An optional layer no profile selected stays exempt.
+
+**The shipped schemas are applied.** `IVC-000` and `HND-000` confirmed a schema
+file was on disk and nothing validated against it, so a trace carrying a field
+the schema forbids was reported VALID, and a handoff with an empty
+`project_scope` passed every hand-written check and reached agent context.
+Publishing a schema without applying it is worse than publishing none, because
+the schema reads as the contract. `jsonschema` stays optional for vendored
+`tools/`, and its absence is reported rather than silently passing.
+
+**One function decides handoff delivery.** There were two implementations, one
+for the contract verdict and one for delivery, and fixing the first left the
+second wrong. That duplication was introduced by the previous hotfix.
+
+**A trace is validated before it is written.** The record used to be appended
+first and checked afterwards: a run could print `Trace: invalid`, leave that
+record in the file, and exit 0. The schema alone was not enough, since two roles
+pointing at one file is valid JSON and an incoherent capsule, so the writer runs
+the same capsule checks the standalone validator runs.
+
+**The consumer guides describe the contract the code implements.** All three
+told an external loader to take every `loading_hint: always` layer without
+mentioning profiles at all. A consumer AI following them loads more context than
+the package intends, and it looks correct while doing it.
+
+**The CI fixture step is a gate again.** It swallowed every failure with
+`|| true`, so a traceback and a clean INCOMPLETE were indistinguishable. Negative
+fixtures mean it cannot require exit 0, so it now separates an expected contract
+failure from a crash.
+
+Corrected in `v3.0.0`'s entry: it said 330 tests where the tag's CI and the
+release body both say 333, and the README asserted a single archive filename
+pattern most fixtures do not use.
+
+354 tests. Python 3.9, 3.11, 3.12, 3.13.
 
 ---
 
