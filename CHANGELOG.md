@@ -4,6 +4,34 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ---
 
+## Unreleased
+
+**Published version tags are immutable.** A tag ruleset on `refs/tags/v*` blocks
+updates and deletions, with no bypass actor; creating a new version tag is
+unaffected. This is the rule that matches what the project already said in
+prose: `v3.0.0` was deliberately left carrying superseded documents rather than
+moved, because a public tag that changes gives one person something different
+from another. Branch protection does not cover tags, and this repository moved a
+published tag once before the rule existed.
+
+**`main` accepts only tested commits.** Required status checks are the five CI
+jobs, strict, with force-push and deletion refused and no admin bypass. Reviews
+are not required: there is no second reviewer to wait for.
+
+Required checks are evaluated against a commit SHA, so CI now runs on every
+branch push rather than only on `main`. Without that the arrangement is
+circular -- the push that would run the checks is the push those checks gate.
+The working shape is unchanged otherwise: push a candidate to a branch, watch
+it go green, fast-forward that same SHA onto `main`. Linear history is required,
+so the commit messages this project uses as a record survive.
+
+Verified in order rather than assumed: the tag rule was proved by a refused
+force-push before anything else was enabled, the five checks were confirmed to
+attach to a SHA on a non-`main` branch, and protection was switched on *before*
+the first fast-forward so that the fast-forward was the actual test.
+
+---
+
 ## v3.0.2 — Contract versions separated from tool versions (2026-09-04)
 
 `PCT-006` measured how far a package's `mica_spec` sat from the tool's own
