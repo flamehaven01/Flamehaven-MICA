@@ -65,6 +65,15 @@ def test_consumer_workflow_keeps_memory_out_of_published_artifacts():
     assert "MICA emitted context bytes" in serialized
 
 
+def test_repository_and_consumer_workflows_use_the_same_action_generation():
+    expected = {"actions/checkout@v7", "actions/setup-python@v7"}
+
+    for relative in (".github/workflows/ci.yml", ".github/workflows/mica-consumer.yml"):
+        text = (REPO_ROOT / relative).read_text(encoding="utf-8")
+        uses = set(re.findall(r"uses:\s+([^\s]+)", text))
+        assert expected <= uses, f"{relative} action generation drifted: {sorted(uses)}"
+
+
 def test_active_guides_do_not_call_the_removed_memory_authoring_cli():
     active_guides = (
         REPO_ROOT / "README.md",

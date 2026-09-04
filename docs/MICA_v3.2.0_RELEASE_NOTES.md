@@ -51,7 +51,8 @@ The reusable [consumer workflow](../.github/workflows/mica-consumer.yml) checks
 out the released MICA runtime, validates a consumer package, and emits the
 selected context into the runner's temporary directory. Only the byte count is
 written to the job summary. Archive and playbook contents are not uploaded as
-artifacts.
+artifacts. Both repository and consumer workflows use `actions/checkout@v7`
+and `actions/setup-python@v7`, avoiding the retired Node.js 20 action runtime.
 
 This establishes `PASS[CI:context-emission]`, not proof that a model received,
 understood, or obeyed the context during another session.

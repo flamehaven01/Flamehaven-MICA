@@ -23,7 +23,8 @@ A reusable `mica-consumer.yml` workflow provides an optional deterministic
 check that the declared package validates and the selected context can be
 emitted. It reports only the context byte count and does not upload memory
 content. CI supports invocation; it does not prove that an AI understood or
-followed the emitted context.
+followed the emitted context. Repository and consumer workflows use the current
+Node.js 24 action generation.
 
 Context emission now preserves the exact bytes of full surfaces on platforms
 where text-mode reads would normalize CRLF to LF. The emitted bytes are checked

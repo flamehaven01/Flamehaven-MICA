@@ -22,17 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out consumer
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check out MICA runtime
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: flamehaven01/Flamehaven-MICA
           ref: v3.2.0
           path: .mica-tooling
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
