@@ -327,3 +327,25 @@ def test_every_family_the_tools_emit_is_one_the_gate_collects():
     assert prefixes == set(CHECK_FAMILIES), (
         f"tools emit families the gate does not collect: {sorted(prefixes - set(CHECK_FAMILIES))}"
     )
+
+
+def test_the_readme_reports_the_real_fixture_count():
+    """The README said 23 the moment a 24th was added, and only a scratch script
+    had ever checked it. Same drift as "five of seventeen shipping checks"."""
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    fixtures = [p for p in (REPO_ROOT / "fixtures").iterdir() if p.is_dir()]
+
+    assert f"{len(fixtures)} fixtures cover" in readme
+
+
+def test_every_fixture_appears_in_the_fixture_map():
+    """fixtures/README.md is what the top-level README calls the full map. A
+    fixture missing from it is undocumented, whatever the count says."""
+    fixture_map = (REPO_ROOT / "fixtures" / "README.md").read_text(encoding="utf-8")
+    missing = [
+        path.name
+        for path in sorted((REPO_ROOT / "fixtures").iterdir())
+        if path.is_dir() and path.name not in fixture_map
+    ]
+
+    assert not missing, f"fixtures absent from fixtures/README.md: {missing}"

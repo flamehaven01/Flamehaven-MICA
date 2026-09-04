@@ -84,6 +84,7 @@ to receive its memory, so they no longer break the contract.
 | `invocation_capsule_v2/` | v3.0.0 P1 | PASS | INFO | INFO | CLOSED | Digest-bound `mica.invocation.v2` capsule; committed trace is byte-bound to its surfaces |
 | `handoff_surface/` | v0.2.9 | PASS | INFO | INFO | CLOSED | Handoff surface with `default`/`resume` profiles; `resume` delivers it, `default` does not |
 | `memory_profiles/` | v3.0.0 Origin P1/P2 | PASS | INFO | INFO | CLOSED | `default`/`review`/`incident` profiles select different surfaces, and slice the playbook |
+| `contract_floor/` | v3.0.2 | PASS | PASS | N/A | CLOSED | Declares `0.2.4`, the lowest fully supported contract. Pins the floor of `SUPPORTED_CONTRACT_VERSIONS` in-repo |
 
 
 ## Expected Outputs
@@ -382,6 +383,25 @@ PCT-018 [WARN] record 1: session_id 'sess_unlinked_999' not linked to observatio
 Runtime summary should surface this as `Telemetry : WARN` while leaving `Core` unchanged.
 Overall: CLOSED CONTRACT
 ```
+
+### contract_floor (PCT-006 supported floor)
+
+`0.2.4` is the lowest contract in `SUPPORTED_CONTRACT_VERSIONS`, because that
+contract introduced `binding.origin_episode` -- the archive binding model
+`PCT-010` and `PCT-011` read. Below it those checks have nothing to check.
+
+The floor was chosen from live consumer packages, none of which live in this
+repository. An external package can change or disappear, so the boundary this
+project publishes is pinned here.
+
+```text
+python tools/mica_pct.py fixtures/contract_floor
+PCT-006 [PASS] mica_spec aligned: 0.2.4
+Overall: CLOSED CONTRACT
+```
+
+A supported contract still reports `PASS mica_spec aligned`. What a supported
+contract does not draw is the compatibility warning.
 
 ### memory_first_minimal
 

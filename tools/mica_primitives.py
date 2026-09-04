@@ -43,8 +43,11 @@ SUPPORTED_CONTRACT_VERSIONS = ("0.2.4", "0.2.5", "0.2.6", "0.2.7", "0.2.8", "0.2
 # and PCT-011 check; below it that model does not exist.
 LEGACY_RESOLVABLE_CONTRACTS = ("0.1.9",)
 
-# Retained: consumer packages vendored `from mica_core import
-# MICA_CANONICAL_VERSION`, and it has always meant the tool release.
+# Legacy name, retained because consumer packages vendored
+# `from mica_core import MICA_CANONICAL_VERSION`. It now aliases the tool
+# version. It did not always mean that: until this release the canonical spec
+# and the tool release were one number, and this constant was compared directly
+# against a package's `mica_spec`.
 MICA_CANONICAL_VERSION = MICA_TOOL_VERSION
 
 

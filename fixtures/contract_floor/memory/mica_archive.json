@@ -1,0 +1,23 @@
+{
+  "mica_spec": "0.2.4",
+  "mica_schema_version": "0.2.4",
+  "project": {
+    "name": "contract-floor",
+    "version": "1.0.0",
+    "status": "active"
+  },
+  "design_invariants": [
+    {
+      "id": "DI-001",
+      "label": "archive-binding-exists-at-this-contract",
+      "statement": "0.2.4 introduced binding.origin_episode, which is why it is the supported floor.",
+      "severity": "critical",
+      "binding": {
+        "origin_episode": "EXP-024: PCT-010 and PCT-011 have nothing to check below this contract, 2026-06-24"
+      }
+    }
+  ],
+  "operation_meta": {
+    "last_updated": "2026-09-04"
+  }
+}

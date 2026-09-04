@@ -25,7 +25,7 @@ claim support for contracts nobody has designed -- `0.2.10` and every future
 
 | Declared `mica_spec` | Verdict |
 |---|---|
-| a supported contract | nothing reported |
+| a supported contract | `PASS mica_spec aligned`; no compatibility warning added |
 | `0.1.9` | `INFO`, legacy-resolvable, full support not claimed |
 | an undefined version | `WARN`, not a contract these tools define |
 | malformed | `WARN` |
@@ -34,8 +34,9 @@ claim support for contracts nobody has designed -- `0.2.10` and every future
 Feature-level incompatibility is not guessed here. The schema and the specific
 check that depends on a feature decide that.
 
-Golden output loses 135 lines and gains none: the check now says nothing about
-packages on a contract these tools support.
+Golden output loses 135 lines and gains none: the compatibility warning is
+gone for every package on a supported contract. `PCT-006` still reports
+`PASS mica_spec aligned` as it always did.
 
 **The spec ratchet covers every check family.** It collected `PCT-\d{3}` only,
 so the entire `HND` and `IVC` families -- 13 checks -- sat outside it. `HND-005`

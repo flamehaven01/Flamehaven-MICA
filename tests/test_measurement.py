@@ -192,3 +192,24 @@ def test_cli_emits_json():
     rows = json.loads(proc.stdout)
     assert len(rows) == 1
     assert rows[0]["package"] == "memory-profiles"
+
+
+def test_the_supported_floor_is_pinned_by_a_fixture():
+    """The floor was decided from live consumer packages, none of which live in
+    this repository. An external package can change or disappear, so the
+    boundary this project publishes is pinned in-repo instead."""
+    import contextlib
+    import io
+
+    floor = min(mica_core.SUPPORTED_CONTRACT_VERSIONS, key=mica_core._parse_version)
+    fixture = Path(__file__).resolve().parent.parent / "fixtures" / "contract_floor"
+
+    declared = mica_core.load_yaml(fixture / "mica.yaml")["mica_spec"]
+    assert declared == floor, f"the floor fixture declares {declared}, the floor is {floor}"
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        results = mica_core.run_pct_checks(fixture)
+    pct006 = [(status, message) for check, status, message in results if check == "PCT-006"]
+
+    assert pct006 == [("PASS", f"mica_spec aligned: {floor}")], pct006
+    assert mica_core.evaluate_axes(results)["contract"] == "CLOSED"

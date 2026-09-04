@@ -209,7 +209,7 @@ far it is from the tool's own release number:
 
 | Declared `mica_spec` | Verdict |
 |---|---|
-| `0.2.4`–`0.2.9` | supported; nothing reported |
+| `0.2.4`–`0.2.9` | supported; `PASS mica_spec aligned`, no compatibility warning |
 | `0.1.9` | `INFO`, legacy-resolvable — read, but full support not claimed |
 | anything else, including `3.0.1` | `WARN`, not a contract these tools define |
 
@@ -279,7 +279,7 @@ repo/
     mica_playbook.md
 ```
 
-23 fixtures cover the scenarios each check exists for. Full map and expected
+24 fixtures cover the scenarios each check exists for. Full map and expected
 output: [fixtures/README.md](fixtures/README.md).
 
 ---
