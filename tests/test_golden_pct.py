@@ -92,9 +92,10 @@ def _load_golden() -> dict[str, list[list[str]]]:
 
 def _write_golden(snapshot: dict[str, list[list[str]]]) -> None:
     GOLDEN_PATH.parent.mkdir(parents=True, exist_ok=True)
-    GOLDEN_PATH.write_text(
-        json.dumps(snapshot, indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
-    )
+    # open() rather than write_text(newline=...), which is 3.10+ while this
+    # project supports 3.9. Only --update reaches here, so CI never caught it.
+    with GOLDEN_PATH.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(snapshot, indent=1, sort_keys=True) + "\n")
 
 
 def test_golden_snapshot_exists():
