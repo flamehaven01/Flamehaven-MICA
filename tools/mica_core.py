@@ -37,11 +37,20 @@ if str(_TOOLS_DIR) not in sys.path:
 
 # Re-exported so `from mica_core import load_yaml` keeps working in consumer
 # packages that vendored an earlier tools/ copy.
+from mica_primitives import (
+    LEGACY_RESOLVABLE_CONTRACTS as LEGACY_RESOLVABLE_CONTRACTS,
+)
 from mica_primitives import (  # noqa: E402
     MICA_CANONICAL_VERSION as MICA_CANONICAL_VERSION,
 )
 from mica_primitives import (
+    MICA_CONTRACT_VERSION as MICA_CONTRACT_VERSION,
+)
+from mica_primitives import (
     MICA_TOOL_VERSION as MICA_TOOL_VERSION,
+)
+from mica_primitives import (
+    SUPPORTED_CONTRACT_VERSIONS as SUPPORTED_CONTRACT_VERSIONS,
 )
 from mica_primitives import (
     _coerce as _coerce,
@@ -740,7 +749,7 @@ def _run_pct005(ctx: _PackageContext) -> list[tuple[str, str, str]]:
 
 
 def _run_pct006(ctx: _PackageContext) -> list[tuple[str, str, str]]:
-    """mica.yaml and archive agree on mica_spec, and it is not far behind canonical."""
+    """mica.yaml and archive agree on mica_spec, and it names a contract the tools define."""
     out: list[tuple[str, str, str]] = []
     yaml_spec = str(ctx.yd.get("mica_spec", ""))
     arch_spec = str(ctx.archive.get("mica_spec", ""))
@@ -753,85 +762,61 @@ def _run_pct006(ctx: _PackageContext) -> list[tuple[str, str, str]]:
 
     declared_spec = yaml_spec or arch_spec
     if declared_spec:
-        out.extend(_spec_lag_result(declared_spec))
+        out.extend(_spec_compatibility_result(declared_spec))
     return out
 
 
-def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
-    """Compare a declared mica_spec against canonical without inventing a count.
+def _spec_compatibility_result(declared_spec: str) -> list[tuple[str, str, str]]:
+    """Is this contract one the tools understand, rather than how old it is.
 
-    The original formula packed the version as major*10000 + minor*100 + patch
-    and reported the difference as "N version(s) behind". Within one minor that
-    is a true patch count, but across a minor boundary it is not a count of
-    anything: 0.1.9 against canonical 0.2.8 was reported as "99 versions
-    behind". Measuring the live packages surfaced it, since one of them
-    declares 0.1.9.
+    This check used to measure distance from the tool's own version and suggest
+    upgrading. Two things were wrong with that. The tool release and the
+    contract a package declares are different axes, so once the tools reached
+    3.x every consumer read as "a major version behind" while nothing about
+    their packages had changed. And distance is not the question a maintainer
+    has: they need to know whether these tools understand their package, not
+    whether a newer number exists.
 
-    Patch distance is only stated when the minor matches. Otherwise the gap is
-    named without a number.
+    MICA also does not push consumers toward one version -- each package carries
+    its own memory in its own form and evolves on its own track -- so a check
+    that reported a gap and recommended closing it contradicted the project's
+    own position.
 
-    The gap is reported, not prescribed. Consumer packages carry their own
-    mica.yaml and playbook in their own form and evolve on their own track;
-    that divergence is the fleet working as intended, not drift to be
-    corrected from the centre. What a maintainer needs from this check is
-    which spec their package declares and that the checks here are written
-    against canonical. The decision is theirs.
+    Feature-level incompatibility is not guessed here. The schema and the
+    specific check that depends on a feature decide that.
     """
     if not re.search(r"\d", declared_spec):
         return [
             (
                 "PCT-006",
                 "WARN",
-                f"mica_spec {declared_spec!r} contains no version number; "
-                f"cannot be compared against canonical {MICA_CANONICAL_VERSION}",
+                f"mica_spec {declared_spec!r} is not a version number, so no contract "
+                f"can be matched to it",
             )
         ]
-    can = _parse_version(MICA_CANONICAL_VERSION)
-    dec = _parse_version(declared_spec)
-    if len(can) < 3 or len(dec) < 3:
+
+    if declared_spec in SUPPORTED_CONTRACT_VERSIONS:
         return []
 
-    if dec > can:
+    if declared_spec in LEGACY_RESOLVABLE_CONTRACTS:
         return [
             (
                 "PCT-006",
-                "WARN",
-                f"mica_spec {declared_spec} is ahead of canonical "
-                f"{MICA_CANONICAL_VERSION}; no canonical schema exists for it",
+                "INFO",
+                f"mica_spec {declared_spec} is legacy-resolvable: these tools read it, "
+                f"but full contract support is not claimed for it",
             )
         ]
-    if dec[0] != can[0]:
-        return [
-            (
-                "PCT-006",
-                "WARN",
-                f"mica_spec {declared_spec} is behind canonical "
-                f"{MICA_CANONICAL_VERSION} by at least one major version; "
-                f"the checks here are written against canonical",
-            )
-        ]
-    if dec[:2] != can[:2]:
-        return [
-            (
-                "PCT-006",
-                "WARN",
-                f"mica_spec {declared_spec} is behind canonical "
-                f"{MICA_CANONICAL_VERSION} by at least one minor version; "
-                f"the checks here are written against canonical",
-            )
-        ]
-    lag = can[2] - dec[2]
-    if lag >= 2:
-        return [
-            (
-                "PCT-006",
-                "WARN",
-                f"mica_spec {declared_spec} is {lag} patch version(s) behind "
-                f"canonical {MICA_CANONICAL_VERSION}; the checks here are "
-                f"written against canonical",
-            )
-        ]
-    return []
+
+    return [
+        (
+            "PCT-006",
+            "WARN",
+            f"mica_spec {declared_spec} is not a contract version these tools define. "
+            f"Supported: {', '.join(SUPPORTED_CONTRACT_VERSIONS)}"
+            f" (legacy-resolvable: {', '.join(LEGACY_RESOLVABLE_CONTRACTS)})",
+        )
+    ]
 
 
 def handoff_is_deliverable(project_root: Path) -> tuple[bool, str]:

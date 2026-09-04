@@ -24,9 +24,28 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-MICA_CANONICAL_VERSION = "3.0.1"
+# The tool's own release version, bumped when the tools change.
+MICA_TOOL_VERSION = "3.0.1"
 
-MICA_TOOL_VERSION = MICA_CANONICAL_VERSION
+# The contract version this release implements. A package declares its contract
+# in `mica_spec`, which is a different axis from the tool release. Conflating the
+# two made every 0.2.x consumer read as "behind" the moment the tools reached
+# 3.x, which said nothing about whether the tools understand that package.
+MICA_CONTRACT_VERSION = "0.2.9"
+
+# Contracts this release understands in full. Enumerated rather than bounded: an
+# open range such as "< 4.0" would claim support for contracts nobody has
+# designed yet, including 0.2.10 and every future 3.x.
+SUPPORTED_CONTRACT_VERSIONS = ("0.2.4", "0.2.5", "0.2.6", "0.2.7", "0.2.8", "0.2.9")
+
+# Older contracts the tools still resolve without claiming full support. 0.2.4
+# is the floor because it introduced the archive binding contract that PCT-010
+# and PCT-011 check; below it that model does not exist.
+LEGACY_RESOLVABLE_CONTRACTS = ("0.1.9",)
+
+# Retained: consumer packages vendored `from mica_core import
+# MICA_CANONICAL_VERSION`, and it has always meant the tool release.
+MICA_CANONICAL_VERSION = MICA_TOOL_VERSION
 
 
 def _is_non_empty_string(value: Any) -> bool:

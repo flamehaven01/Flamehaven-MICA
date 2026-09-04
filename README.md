@@ -74,17 +74,17 @@ A package that resolves cleanly ends with:
 python tools/mica_pct.py fixtures/flow_observation_valid
 
 Contract : CLOSED
-Archive  : ISSUES
+Archive  : OK
 Flow     : OK
 
 Overall: CLOSED CONTRACT
 ```
 
 `Contract` is the verdict that matters: the declared memory reached the session
-and nothing reached it that should not have. The other two axes report without
-deciding it, which is what this fixture shows -- its archive declares an older
-`mica_spec` than canonical, so the archive axis has something to say and the
-contract closes anyway. See what a session actually costs:
+and nothing reached it that should not have. `Archive` and `Flow` report without
+deciding it, so a package whose memory loads correctly but whose archive carries
+ungrounded bindings gets both facts rather than one verdict. See what a session
+actually costs:
 
 ```text
 python tools/mica_measure.py fixtures/memory_profiles
@@ -202,6 +202,20 @@ the exit code to every axis for consumers that want a single gate.
 `PCT-009` is emitted but belongs to no axis: it restates which contract checks
 failed, and counting a summary on an axis would fail that axis twice for one
 defect. `PCT-016` is reserved and not implemented.
+
+**Contract versions are not tool versions.** A package declares its contract in
+`mica_spec`. `PCT-006` asks whether these tools define that contract, not how
+far it is from the tool's own release number:
+
+| Declared `mica_spec` | Verdict |
+|---|---|
+| `0.2.4`–`0.2.9` | supported; nothing reported |
+| `0.1.9` | `INFO`, legacy-resolvable — read, but full support not claimed |
+| anything else, including `3.0.1` | `WARN`, not a contract these tools define |
+
+The supported set is enumerated rather than bounded. An open range like
+`< 4.0` would claim support for contracts nobody has designed, `0.2.10` and
+every future `3.x` among them.
 
 **Runtime reporting.** `MICA CONTRACT RESOLVED` means the declared surface files
 were found. `Trace` is separate timestamped invocation provenance and reports

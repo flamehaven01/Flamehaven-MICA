@@ -265,7 +265,11 @@ def test_measure_exits_nonzero_when_a_root_cannot_be_read(tmp_path: Path):
 
 
 def test_malformed_spec_is_reported():
-    results = mica_core._spec_lag_result("not-a-version")
+    """The check this belonged to was rebuilt in v3.0.1 around supported
+    contracts rather than version distance. The original finding stands: a spec
+    with no version number must be reported, not silently treated as current."""
+    results = mica_core._spec_compatibility_result("not-a-version")
 
     assert results
-    assert "no version number" in results[0][2]
+    assert results[0][1] == "WARN"
+    assert "not a version number" in results[0][2]

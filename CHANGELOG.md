@@ -6,6 +6,37 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ## Unreleased
 
+**`PCT-006` answers whether the tools define a contract, not how old it is.**
+
+The check measured distance from the tool's own version and suggested closing
+the gap. Two things were wrong. The tool release and the contract a package
+declares are different axes, so when the tools reached 3.x every consumer read
+as "at least one major version behind" while nothing about their packages had
+changed -- six permanent warnings carrying no information. And MICA does not
+push consumers toward one version, so a check that reported a gap and
+recommended closing it contradicted the project's own position.
+
+The version axes are now separate: `MICA_TOOL_VERSION` is `3.0.1`,
+`MICA_CONTRACT_VERSION` is `0.2.9`, and `SUPPORTED_CONTRACT_VERSIONS`
+enumerates `0.2.4` through `0.2.9`. `0.1.9` is legacy-resolvable. The set is
+enumerated rather than bounded because an open range such as `< 4.0` would
+claim support for contracts nobody has designed -- `0.2.10` and every future
+`3.x` included.
+
+| Declared `mica_spec` | Verdict |
+|---|---|
+| a supported contract | nothing reported |
+| `0.1.9` | `INFO`, legacy-resolvable, full support not claimed |
+| an undefined version | `WARN`, not a contract these tools define |
+| malformed | `WARN` |
+| `mica.yaml` and archive disagree | `WARN`, unchanged |
+
+Feature-level incompatibility is not guessed here. The schema and the specific
+check that depends on a feature decide that.
+
+Golden output loses 135 lines and gains none: the check now says nothing about
+packages on a contract these tools support.
+
 **The spec ratchet covers every check family.** It collected `PCT-\d{3}` only,
 so the entire `HND` and `IVC` families -- 13 checks -- sat outside it. `HND-005`
 and `IVC-006` were then added in v3.0.1 with no spec and nothing failed, which is

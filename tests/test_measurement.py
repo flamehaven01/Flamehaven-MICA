@@ -9,7 +9,6 @@ consumer packages declares 0.1.9, so the false number was being shipped.
 
 from __future__ import annotations
 
-import contextlib
 import json
 import subprocess
 import sys
@@ -26,108 +25,105 @@ if str(TOOLS_DIR) not in sys.path:
 import mica_core  # noqa: E402
 import mica_measure  # noqa: E402
 
-# --- PCT-006 must not invent a count -----------------------------------------
+# --- PCT-006 answers "do these tools define this contract" -------------------
 
 
-# A fixed canonical, injected rather than read from the live constant. Deriving
-# the expectations from the real version made the file depend on that version
-# having a patch number to subtract from: the 3.0.0 release produced specs like
-# "3.0.-2" and six tests failed on a release that changed no logic.
-_TEST_CANONICAL = "1.4.6"
+def _compat(spec: str) -> tuple[str, str] | None:
+    """(status, message) for a declared contract, or None when it is supported."""
+    results = mica_core._spec_compatibility_result(spec)
+    return (results[0][1], results[0][2]) if results else None
 
 
-@contextlib.contextmanager
-def _canonical(version: str):
-    original = mica_core.MICA_CANONICAL_VERSION
-    mica_core.MICA_CANONICAL_VERSION = version
-    try:
-        yield
-    finally:
-        mica_core.MICA_CANONICAL_VERSION = original
+@pytest.mark.parametrize("spec", mica_core.SUPPORTED_CONTRACT_VERSIONS)
+def test_a_supported_contract_is_silent(spec: str):
+    """A package on a contract these tools define has nothing to report."""
+    assert _compat(spec) is None
 
 
-def _spec_behind_by(patches: int) -> str:
-    """A spec in the canonical minor, `patches` releases behind."""
-    major, minor, patch = mica_core._parse_version(_TEST_CANONICAL)[:3]
-    return f"{major}.{minor}.{patch - patches}"
+def test_the_current_contract_is_one_of_the_supported_ones():
+    assert mica_core.MICA_CONTRACT_VERSION in mica_core.SUPPORTED_CONTRACT_VERSIONS
 
 
-def _lag_message(spec: str, canonical: str = _TEST_CANONICAL) -> str | None:
-    with _canonical(canonical):
-        results = mica_core._spec_lag_result(spec)
-    return results[0][2] if results else None
+def test_the_tool_version_is_not_the_contract_version():
+    """Conflating them is what made every 0.2.x consumer read as behind the
+    moment the tools reached 3.x, while nothing about those packages changed."""
+    assert mica_core.MICA_TOOL_VERSION != mica_core.MICA_CONTRACT_VERSION
+    assert mica_core.MICA_TOOL_VERSION not in mica_core.SUPPORTED_CONTRACT_VERSIONS
 
 
-@pytest.mark.parametrize("patches", [0, 1])
-def test_current_and_adjacent_specs_are_quiet(patches: int):
-    """Being one patch behind is not worth interrupting anyone about."""
-    assert _lag_message(_spec_behind_by(patches)) is None
+@pytest.mark.parametrize("spec", mica_core.LEGACY_RESOLVABLE_CONTRACTS)
+def test_a_legacy_contract_is_informational_not_a_warning(spec: str):
+    """These tools read it. That is a different statement from supporting it,
+    and neither one is a defect in the package."""
+    status, message = _compat(spec)
+
+    assert status == "INFO"
+    assert "legacy-resolvable" in message
+    assert "full contract support is not claimed" in message
 
 
-@pytest.mark.parametrize("patches", [2, 4])
-def test_same_minor_reports_a_true_patch_count(patches: int):
-    message = _lag_message(_spec_behind_by(patches))
+@pytest.mark.parametrize("spec", ["0.2.10", "0.3.0", "3.0.0", "3.0.1", "9.9.9"])
+def test_an_undefined_contract_warns_without_claiming_to_support_it(spec: str):
+    """An open upper bound would have called 0.2.10 and every future 3.x
+    supported. None of those contracts is designed, so claiming them would be a
+    false statement about what these tools understand."""
+    status, message = _compat(spec)
 
-    assert message is not None
-    assert f"{patches} patch version(s) behind" in message
-
-
-@pytest.mark.parametrize("spec", ["1.3.9", "1.2.8", "1.0.1"])
-def test_crossing_a_minor_boundary_states_no_count(spec: str):
-    """0.1.9 was once reported as 99 versions behind canonical."""
-    message = _lag_message(spec)
-
-    assert message is not None
-    assert "at least one minor version" in message
-    for fabricated in ("99 ", "100 ", "version(s) behind canonical"):
-        assert fabricated not in message
+    assert status == "WARN"
+    assert "not a contract version these tools define" in message
+    assert "Supported:" in message
 
 
-@pytest.mark.parametrize("spec", ["0.2.8", "0.1.9"])
-def test_crossing_a_major_boundary_says_major(spec: str):
-    """The 3.0.0 release made every consumer a major version behind. Calling
-    that "at least one minor version" understated a gap it was describing."""
-    message = _lag_message(spec)
+def test_the_tools_own_release_number_is_not_a_supported_contract():
+    """3.0.1 is a tool release. A package declaring it has declared a contract
+    that does not exist."""
+    status, _ = _compat(mica_core.MICA_TOOL_VERSION)
 
-    assert message is not None
-    assert "at least one major version" in message
+    assert status == "WARN"
 
 
-def test_a_spec_ahead_of_canonical_is_flagged():
-    """A consumer declaring a spec beyond canonical has no schema to match."""
-    major, minor, patch = mica_core._parse_version(_TEST_CANONICAL)[:3]
-    for spec in (
-        f"{major}.{minor}.{patch + 1}",
-        f"{major + 1}.0.0",
-    ):
-        message = _lag_message(spec)
+def test_a_malformed_version_is_reported_rather_than_matched():
+    status, message = _compat("not-a-version")
 
-        assert message is not None, spec
-        assert "ahead of canonical" in message
+    assert status == "WARN"
+    assert "not a version number" in message
 
 
-def test_no_lag_message_claims_a_number_it_cannot_support():
-    for minor in range(0, 3):
-        for patch in range(0, 12):
-            spec = f"0.{minor}.{patch}"
-            message = _lag_message(spec)
-            if message and "patch version(s) behind" in message:
-                assert spec.split(".")[1] == mica_core.MICA_CANONICAL_VERSION.split(".")[1]
+def test_no_verdict_measures_distance_or_prescribes_an_upgrade():
+    """The old check reported how far a package was from the tool version and
+    suggested closing the gap. Distance is not the question a maintainer has,
+    and MICA does not push consumers toward one version: each package carries
+    its own memory in its own form and evolves on its own track."""
+    forbidden = (
+        "behind",
+        "ahead",
+        "consider upgrading",
+        "should upgrade",
+        "must upgrade",
+        "version(s)",
+        "canonical",
+    )
+
+    for spec in ("0.1.9", "0.2.10", "3.0.0", "not-a-version", "0.0.1"):
+        result = _compat(spec)
+        if result is None:
+            continue
+        for phrase in forbidden:
+            assert phrase not in result[1].lower(), (spec, phrase, result[1])
 
 
-def test_the_lag_check_reports_the_gap_without_prescribing_convergence():
-    """Consumer packages keep their own mica.yaml and playbook in their own
-    form and evolve on their own track. MICA says which spec a package declares
-    and that the checks are written against canonical; whether to move is that
-    package maintainer's call, not this project's."""
-    prescriptions = ("consider upgrading", "should upgrade", "must upgrade", "please")
+def test_every_supported_contract_is_a_real_version_number():
+    import re as _re
 
-    for spec in ("0.1.9", "0.0.1", _spec_behind_by(2), _spec_behind_by(4)):
-        message = _lag_message(spec)
+    for spec in (*mica_core.SUPPORTED_CONTRACT_VERSIONS, *mica_core.LEGACY_RESOLVABLE_CONTRACTS):
+        assert _re.fullmatch(r"\d+\.\d+\.\d+", spec), spec
 
-        assert message is not None, spec
-        for phrase in prescriptions:
-            assert phrase not in message.lower(), (spec, phrase)
+
+def test_supported_and_legacy_contracts_do_not_overlap():
+    """A contract is either fully supported or read on sufferance, not both."""
+    assert not set(mica_core.SUPPORTED_CONTRACT_VERSIONS) & set(
+        mica_core.LEGACY_RESOLVABLE_CONTRACTS
+    )
 
 
 # --- the measurement itself --------------------------------------------------

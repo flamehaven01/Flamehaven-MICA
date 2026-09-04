@@ -31,11 +31,6 @@
    "mica_spec aligned: 0.2.6"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.6 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -123,11 +118,6 @@
    "mica_spec aligned: 0.2.5"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -213,11 +203,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.8"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -312,11 +297,6 @@
    "mica_spec aligned: 0.2.7"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.7 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -409,11 +389,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "INFO",
    "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -499,11 +474,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.9"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -593,11 +563,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "INFO",
    "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -683,11 +648,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.9"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -777,11 +737,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "INFO",
    "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -867,11 +822,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.9"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -961,11 +911,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "INFO",
    "invocation_protocol absent (default/manual handling); invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -1051,11 +996,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.9"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1145,11 +1085,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -1235,11 +1170,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.9"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1329,11 +1259,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook, handoff; context=archive, playbook, handoff; operator=none"
@@ -1419,11 +1344,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.5"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1523,11 +1443,6 @@
    "mica_spec aligned: 0.2.8"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "WARN",
    "primary_pattern omitted; runtime default readme_protocol applies (invoked=archive, playbook; context=archive, playbook; operator=none)"
@@ -1613,11 +1528,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.8"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1707,11 +1617,6 @@
    "mica_spec aligned: 0.2.9"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.9 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: explicit; invoked=observations, slots, archive, playbook; context=archive, playbook, slots; operator=memories, recall"
@@ -1797,11 +1702,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.8"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -1891,11 +1791,6 @@
    "mica_spec aligned: 0.2.8"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -1981,11 +1876,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.8"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2075,11 +1965,6 @@
    "mica_spec aligned: 0.2.8"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook, lessons; context=archive, playbook, lessons; operator=none"
@@ -2165,11 +2050,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.8"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2259,11 +2139,6 @@
    "mica_spec aligned: 0.2.5"
   ],
   [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
-  ],
-  [
    "PCT-007",
    "PASS",
    "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
@@ -2349,11 +2224,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.5"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.5 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
@@ -2446,11 +2316,6 @@
    "PCT-006",
    "PASS",
    "mica_spec aligned: 0.2.8"
-  ],
-  [
-   "PCT-006",
-   "WARN",
-   "mica_spec 0.2.8 is behind canonical 3.0.1 by at least one major version; the checks here are written against canonical"
   ],
   [
    "PCT-007",
