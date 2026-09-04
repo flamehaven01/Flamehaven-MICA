@@ -33,7 +33,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -54,31 +54,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -120,7 +95,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -141,31 +116,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -207,7 +157,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -228,31 +178,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -294,7 +219,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -320,31 +245,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -386,7 +286,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -412,31 +312,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1174,7 +1049,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1195,31 +1070,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1261,7 +1111,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1282,31 +1132,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1348,7 +1173,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook, handoff; context=archive, playbook, handoff; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook, handoff; context=archive, playbook, handoff; operator=none"
   ],
   [
    "PCT-008",
@@ -1369,31 +1194,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1435,7 +1235,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1466,31 +1266,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1555,31 +1330,6 @@
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
   ],
   [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
-  ],
-  [
    "PCT-009",
    "PASS",
    "declared memory surfaces resolved for this session; contract closed. Resolution is not delivery -- see IVC-* for recorded invocation evidence"
@@ -1619,7 +1369,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1640,31 +1390,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1793,7 +1518,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1814,31 +1539,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1880,7 +1580,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1901,31 +1601,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -1967,7 +1642,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -1988,31 +1663,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -2054,7 +1704,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook, lessons; context=archive, playbook, lessons; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook, lessons; context=archive, playbook, lessons; operator=none"
   ],
   [
    "PCT-008",
@@ -2075,31 +1725,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -2141,7 +1766,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -2162,31 +1787,6 @@
    "PCT-012",
    "WARN",
    "archive last_updated 2020-01-01 is 2438 days old (max_archive_age_days=90)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -2228,7 +1828,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -2249,31 +1849,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -2315,7 +1890,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -2341,31 +1916,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",
@@ -2407,7 +1957,7 @@
   [
    "PCT-007",
    "PASS",
-   "primary_pattern valid: readme_protocol; invoked=archive, playbook; context=archive, playbook; operator=none"
+   "primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none"
   ],
   [
    "PCT-008",
@@ -2433,31 +1983,6 @@
    "PCT-012",
    "INFO",
    "archive freshness check not configured (set di_policy.max_archive_age_days to enable)"
-  ],
-  [
-   "PCT-013",
-   "INFO",
-   "flow disabled; observation coherence not required"
-  ],
-  [
-   "PCT-014",
-   "INFO",
-   "flow disabled; recall trace coverage not required"
-  ],
-  [
-   "PCT-015",
-   "INFO",
-   "flow disabled; promotion provenance not required"
-  ],
-  [
-   "PCT-018",
-   "INFO",
-   "flow disabled; telemetry completeness not required"
-  ],
-  [
-   "PCT-017",
-   "INFO",
-   "flow disabled; recall injection safety not required"
   ],
   [
    "PCT-009",

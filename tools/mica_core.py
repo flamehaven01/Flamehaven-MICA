@@ -18,8 +18,9 @@ v0.2.8: PCT-010 quality check (doctrinal vs incident-grounded binding),
         PCT-012 archive freshness (opt-in via di_policy.max_archive_age_days),
         PCT-006 canonical version lag warning (>= 2 minor versions behind).
 
-Unreleased working-tree draft: adds flow-plane checks PCT-013, PCT-014, PCT-015, PCT-017, and PCT-018
-for v0.2.9 observation, recall coverage, promotion provenance, injection safety, and telemetry completeness.
+v0.2.9 added optional flow-plane checks for observation, recall, promotion,
+injection safety, and telemetry completeness. They support the invocation
+contract; they are not MICA's primary product path.
 """
 
 from __future__ import annotations
@@ -153,6 +154,9 @@ _EPISODE_PATTERNS = [
     re.compile(r"#\d+"),  # issue number: #123
 ]
 
+_README_INVOCATION_DIRECTIVE = re.compile(r'<!--\s*MICA:INVOKE\s+manifest="([^"]+)"\s*-->')
+_README_ENTRYPOINT_MAX_BYTES = 8192
+
 
 # ---------------------------------------------------------------------------
 # YAML loading
@@ -165,6 +169,69 @@ def find_mica_yaml(project_root: Path) -> Path | None:
         if p.exists():
             return p
     return None
+
+
+def validate_readme_entrypoint(project_root: Path, mica_yaml_path: Path) -> tuple[bool, str]:
+    """Resolve the README's single machine-readable pointer to mica.yaml.
+
+    README prose remains owned by the consumer. MICA validates only the
+    entrypoint pointer; archive and playbook paths remain authoritative in
+    mica.yaml and are never duplicated here.
+    """
+    readme_path = project_root / "README.md"
+    if not readme_path.is_file():
+        return (False, "README.md missing")
+
+    try:
+        raw = readme_path.read_bytes()
+        text = raw.decode("utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        return (False, f"README.md unreadable as UTF-8: {exc}")
+
+    matches = list(_README_INVOCATION_DIRECTIVE.finditer(text))
+    if not matches:
+        return (
+            False,
+            'README.md lacks <!-- MICA:INVOKE manifest="mica.yaml" -->',
+        )
+    if len(matches) != 1:
+        return (False, f"README.md contains {len(matches)} MICA:INVOKE directives; expected 1")
+
+    match = matches[0]
+    if len(text[: match.start()].encode("utf-8")) > _README_ENTRYPOINT_MAX_BYTES:
+        return (
+            False,
+            f"README.md MICA:INVOKE directive appears after the first "
+            f"{_README_ENTRYPOINT_MAX_BYTES} bytes",
+        )
+
+    declared = match.group(1)
+    if "\\" in declared:
+        return (False, "README.md MICA:INVOKE manifest must use forward slashes")
+    resolved = _resolve_within_root(project_root, declared)
+    if resolved is None:
+        return (False, f"README.md MICA:INVOKE manifest escapes the package: {declared}")
+
+    try:
+        canonical = canonical_surface_path(project_root, resolved)
+    except ValueError as exc:
+        return (False, str(exc))
+    if declared != canonical:
+        return (
+            False,
+            f"README.md MICA:INVOKE manifest is not canonical: {declared!r} (use {canonical!r})",
+        )
+
+    expected = mica_yaml_path.resolve()
+    if resolved != expected:
+        expected_rel = canonical_surface_path(project_root, expected)
+        return (
+            False,
+            f"README.md points to {declared}, but package resolves {expected_rel}",
+        )
+    if not resolved.is_file():
+        return (False, f"README.md MICA:INVOKE manifest is not a readable file: {declared}")
+    return (True, f"README.md -> {canonical}")
 
 
 def find_legacy_archive(project_root: Path) -> Path | None:
@@ -668,7 +735,9 @@ def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
     # is a request, and an unreadable file is a broken request whatever the
     # layer's default says. Without this, an optional surface selected by a
     # profile was skipped here while the runtime reported it missing.
-    selected = set(resolve_invocation_contract(ctx.yd, ctx.profile)["loaded_surfaces"])
+    contract = resolve_invocation_contract(ctx.yd, ctx.profile)
+    selected = set(contract["loaded_surfaces"])
+    agent_context = set(contract["agent_context_surfaces"])
     for lyr in ctx.layers:
         if not isinstance(lyr, dict):
             continue
@@ -686,6 +755,15 @@ def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
             unusable.append(f"{rel} (escapes project root)")
         elif resolved.exists() and not resolved.is_file():
             unusable.append(f"{rel} (not a file)")
+        elif resolved.is_file() and layer_role(lyr) in selected:
+            try:
+                payload = resolved.read_bytes()
+                if layer_role(lyr) in agent_context:
+                    payload.decode("utf-8")
+            except OSError as exc:
+                unusable.append(f"{rel} (unreadable: {exc})")
+            except UnicodeDecodeError:
+                unusable.append(f"{rel} (agent-context surface is not UTF-8)")
     if unusable:
         out.append(("PCT-003", "FAIL", f"unusable layer paths: {unusable}"))
         return out
@@ -965,6 +1043,13 @@ def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
     invocation_config_issues = (
         profile_config_issues + context_config_issues + operator_config_issues
     )
+    entrypoint_detail: str | None = None
+    if pattern == "readme_protocol":
+        valid_entrypoint, entrypoint_detail = validate_readme_entrypoint(
+            ctx.project_root, ctx.mica_yaml_path
+        )
+        if not valid_entrypoint:
+            invocation_config_issues.insert(0, f"readme_protocol unresolved: {entrypoint_detail}")
 
     if pattern is None:
         if missing_invoked_surfaces:
@@ -1020,11 +1105,12 @@ def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
             )
         )
     else:
+        entrypoint_suffix = f"; entrypoint={entrypoint_detail}" if entrypoint_detail else ""
         out.append(
             (
                 "PCT-007",
                 "PASS",
-                f"primary_pattern valid: {pattern}; invoked={invoked_label}; context={context_label}; operator={operator_label}",
+                f"primary_pattern valid: {pattern}{entrypoint_suffix}; invoked={invoked_label}; context={context_label}; operator={operator_label}",
             )
         )
     return out
@@ -1222,7 +1308,9 @@ def _run_pct012(ctx: _PackageContext) -> list[tuple[str, str, str]]:
 
 def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple[str, str, str]]:
     """
-    Run PCT-001 through PCT-018. Returns list of (id, status, message).
+    Run core package checks and any explicitly declared flow checks.
+
+    Returns a list of (id, status, message).
 
     Only CONTRACT_CHECKS decide CLOSED CONTRACT; ARCHIVE_CHECKS and FLOW_CHECKS
     report on their own axes. `profile` selects a memory profile declared under
@@ -1268,19 +1356,24 @@ def run_pct_checks(project_root: Path, profile: str | None = None) -> list[tuple
     ):
         results.extend(check(ctx))
 
-    from mica_flow import (
-        _run_pct013,
-        _run_pct014,
-        _run_pct015,
-        _run_pct017,
-        _run_pct018,
-    )
+    # Flow is an opt-in memory-authoring extension. Importing it and emitting
+    # five inactive checks for every archive/playbook package made the support
+    # layer look like the product. A package that declares flow_policy still
+    # receives exactly the same checks and verdicts.
+    if isinstance(yd.get("flow_policy"), dict):
+        from mica_flow import (
+            _run_pct013,
+            _run_pct014,
+            _run_pct015,
+            _run_pct017,
+            _run_pct018,
+        )
 
-    results.append(_run_pct013(project_root, ctx.flow_policy))
-    results.append(_run_pct014(project_root, ctx.flow_policy, ctx.recall_policy))
-    results.append(_run_pct015(project_root, ctx.flow_policy))
-    results.append(_run_pct018(project_root, ctx.flow_policy))
-    results.append(_run_pct017(project_root, ctx.flow_policy, ctx.recall_policy))
+        results.append(_run_pct013(project_root, ctx.flow_policy))
+        results.append(_run_pct014(project_root, ctx.flow_policy, ctx.recall_policy))
+        results.append(_run_pct015(project_root, ctx.flow_policy))
+        results.append(_run_pct018(project_root, ctx.flow_policy))
+        results.append(_run_pct017(project_root, ctx.flow_policy, ctx.recall_policy))
 
     fails = [r[0] for r in results if r[1] == "FAIL" and r[0] in CONTRACT_CHECKS]
     if fails:

@@ -5,19 +5,21 @@
 If another repository is expected to use MICA, do not hand it only a raw archive JSON or a playbook markdown.
 The target repository must receive a loadable MICA package contract.
 
-The entry point is `mica.yaml`.
-The rest of the memory surface is discovered through `layers`.
+The entry point is the target repository's README. Its `MICA:INVOKE` directive
+resolves `mica.yaml`; the manifest then selects the archive and playbook through
+`layers`.
 
 For the actual authoring and AI session behavior, use the
 [MICA Consumer Authoring Guide](MICA_CONSUMER_AUTHORING_GUIDE.md) and its
-[minimal template](../templates/mica-consumer-minimal.yaml). This guide selects a package
+[complete minimal package](../templates/minimal-package/). This guide selects a package
 shape; the authoring guide defines how the consumer writes and invokes it.
 
 ## Minimal rule
 
 A target repository can be considered MICA-capable only when all of the following are true:
 
-- a `mica.yaml` entrypoint exists at repo root or `memory/mica.yaml`
+- README contains exactly one valid `MICA:INVOKE` directive near the top
+- that directive resolves the package's `mica.yaml`
 - the contract declares at least `archive` and `playbook`
 - declared layer paths exist inside the target repo
 - the consumer can load every `loading_hint: always` layer without guessing filenames
@@ -26,18 +28,19 @@ Raw files without a contract are legacy assets, not a portable MICA package.
 
 ## What the loader should do
 
-1. Find `mica.yaml` in repo root, else `memory/mica.yaml`.
-2. Parse `mica_spec`, `mode`, `layers`, and `invocation_protocol`.
-3. **If a profile applies, the profile decides.** A requested profile, or
+1. Read the README's `MICA:INVOKE` directive and resolve its manifest path.
+2. Run `mica_runtime.py --format context`; do not substitute a validator summary.
+3. Parse `mica_spec`, `mode`, `layers`, and `invocation_protocol`.
+4. **If a profile applies, the profile decides.** A requested profile, or
    `profiles.default` when none is requested, names exactly the surfaces this
    session receives. `loading_hint` does not override it: a layer marked
    `always` that the active profile does not name is deselected, not loaded.
-4. Only when the package declares no profiles: load every layer marked
+5. Only when the package declares no profiles: load every layer marked
    `loading_hint: always`, and `on_demand` layers when task scope requires them.
-5. Deliver to the agent only what `agent_context_surfaces` permits, and never a
+6. Deliver to the agent only what `agent_context_surfaces` permits, and never a
    surface listed in `operator_only_surfaces`.
-6. Respect `mode`.
-7. Treat flow-plane files as optional unless `flow_policy.enabled=true`.
+7. Respect `mode`.
+8. Treat flow-plane files as optional unless `flow_policy.enabled=true`.
 
 Loading every `always` layer regardless of the active profile is the most
 likely way to get this wrong, because it looks correct and quietly delivers
@@ -51,13 +54,14 @@ Closest fixture: [`fixtures/memory_profiles`](../fixtures/memory_profiles)
 
 Use this when:
 
-- the target repo needs one governed memory package
+- the target repo needs one portable memory package
 - path stability matters more than versioned file names
 - you want the easiest adoption contract
 
 Shape:
 
 - `mica.yaml`
+- `README.md`
 - `memory/mica_archive.json`
 - `memory/mica_playbook.md`
 
@@ -113,10 +117,11 @@ This is the best profile for large target repos.
 - Distributed read-only deployed copies: use the STEM-BIO-AI profile.
 - Legacy packages with filename rotation: tolerate the historical versioned profile (2), but do not treat it as the default future shape.
 
-## Canonical cross-repo handoff format
+## Canonical cross-repo package
 
 When handing MICA to another repo, give it this bundle:
 
+- `README.md` with the invocation directive
 - `mica.yaml`
 - `memory/` directory with every referenced layer
 - optional flow-plane files only if the target actually uses flow validation:
@@ -136,6 +141,7 @@ For new repos, prefer this shape:
 
 ```text
 repo/
+  README.md
   mica.yaml
   memory/
     mica_archive.json
@@ -181,28 +187,12 @@ If the goal is "show this MICA to another repo and let that repo use it," the pa
 
 Everything else should be treated as compatibility mode, not the preferred forward shape.
 
-## When the target repo needs live memory, not only governed exports
+## Optional structured-memory tooling
 
-If the target repository is expected to capture sessions, maintain live memory objects,
-or project slots and graph state locally, the minimal archive-plus-playbook package is not
-enough.
-
-Use the memory-first draft instead:
-
-- [MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md)
-- [templates/mica-v0.2.9-memory-first.yaml](../templates/mica-v0.2.9-memory-first.yaml)
-
-Rule:
-
-- if the target only needs portable governed memory, use the minimal or router package
-- if the target must operate MICA as a live memory substrate, install the memory-first shape
-
-Consumer entrypoint:
-
-- once the memory-first shape is installed, the target repo can rebuild its derived MICA surfaces with a single command:
-  `python tools/mica_memory.py <target_repo> materialize`
-- this command synthesizes candidate memories from observations, rewrites archive/playbook exports, and refreshes slots/graph projections
-- review and promotion remain explicit; `materialize` does not auto-approve memories
+Some consumers capture sessions or maintain structured memory records. The
+`mica_memory.py` utility remains available for those repositories, but it is not
+part of the minimum MICA contract. Do not install it merely because it exists.
+The stable adoption target is README, `mica.yaml`, archive, and playbook.
 
 ## Acceptance checklist for a target repo
 

@@ -6,28 +6,41 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ## Unreleased
 
-**Profile outcome pilot, protocol only.** Every release note says whether
-better context produces better work is not measured. `experiments/
-profile-outcome-pilot-v1/` is the first attempt to measure it: paired replay of
-six tasks inside one consumer, load-everything against profile-selected context,
-twelve sessions.
+No changes yet.
 
-Nothing is selected and nothing has run. The directory holds `PROTOCOL.md` and
-two schemas, in that order deliberately -- the task set is frozen before the
-randomisation seed exists, because generating the seed first would allow
-choosing tasks with the allocation already visible. No empty `allocation.json`
-was created: a schema and a record of what was actually drawn are different
-things, and an empty one blurs them.
+---
 
-The protocol fixes in advance what would make the pilot wrong, including
-re-running a session whose result was unwelcome and reading a six-pair
-difference as an effect size. It states plainly that six pairs can indicate a
-direction inside one package and nothing more.
+## v3.1.0 — README invokes, runtime emits context (2026-09-04)
 
-Schema metavalidation reached only the repository root, so these two would not
-have been checked. It now covers every `*.schema.json` outside the gitignored
-trees -- `.claude` and `Legacy` are excluded so the collected test count is the
-same on a developer machine and on CI.
+**The README, archive, and playbook are the product path again.** v3.0.0 made
+invocation evidence more truthful, but the repository then spent more surface
+area explaining and testing governance, flow, handoff, measurement, and a
+planned outcome experiment than it spent making memory enter a session. The
+support layer had become the visible product.
+
+`readme_protocol` was the clearest functional gap: it was accepted as an enum
+value even when no README existed. An explicitly declared README protocol now
+requires exactly one machine-readable `MICA:INVOKE` directive near the top of
+`README.md`, and that directive must resolve to the same `mica.yaml` the tools
+use. Archive and playbook paths remain declared only in `mica.yaml`.
+
+`mica_runtime.py --format context` now emits the exact selected agent-context
+bytes, including profile-selected playbook sections, after checking them against
+the resolution digest. It refuses an incomplete contract, a missing surface,
+or bytes that change between resolution and emission. Operator-only surfaces
+are never emitted by this path.
+
+The public README was reduced to the invocation chain, adoption, profiles, and
+truth boundaries. The unexecuted profile-outcome pilot and superseded evolution,
+execution, recovery, memory-engine, and context-continuity plans were removed
+from the current tree. Git history retains them. Existing optional flow,
+handoff, trace, and structured-memory tools remain compatible, but are no longer
+presented as MICA's center.
+
+A read-only census of six known consumers found five that explicitly declare
+`readme_protocol` without a directive; they now report INCOMPLETE. The sixth
+does not declare that protocol and retains its prior compatibility behavior.
+No consumer repository was modified as part of this change.
 
 **The measurement tool disagreed with the check it reports on.** `_spec_note`
 read `PCT-006`'s own output rather than recomputing a second opinion, then

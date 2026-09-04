@@ -1,7 +1,7 @@
 """P1 coverage for digest-bound invocation evidence (mica.invocation.v2).
 
-Each negative test corresponds to a failure class named in
-docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md section 10 (P1).
+These tests preserve the original negative cases without depending on a
+superseded planning document.
 """
 
 from __future__ import annotations

@@ -301,18 +301,6 @@ def test_no_tracked_file_points_at_a_private_repository():
     assert not offenders, "private repositories named in public files:\n  " + "\n  ".join(offenders)
 
 
-def test_the_readme_reports_the_real_check_counts():
-    """The README said "five of seventeen" while the tools emitted thirty. A
-    number written by hand in prose drifts from the code the moment either
-    moves, so it is asserted here instead."""
-    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    emitted, documented, backlog = _emitted_checks(), _documented_checks(), SPEC_BACKLOG
-
-    assert f"MICA emits {len(emitted)} checks" in readme
-    assert f"{len(documented)} have a spec" in readme
-    assert f"The other {len(backlog)} predate" in readme
-
-
 def test_every_family_the_tools_emit_is_one_the_gate_collects():
     """A family absent from CHECK_FAMILIES is a family this gate cannot see,
     which is how HND and IVC went unnoticed."""
@@ -327,15 +315,6 @@ def test_every_family_the_tools_emit_is_one_the_gate_collects():
     assert prefixes == set(CHECK_FAMILIES), (
         f"tools emit families the gate does not collect: {sorted(prefixes - set(CHECK_FAMILIES))}"
     )
-
-
-def test_the_readme_reports_the_real_fixture_count():
-    """The README said 23 the moment a 24th was added, and only a scratch script
-    had ever checked it. Same drift as "five of seventeen shipping checks"."""
-    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    fixtures = [p for p in (REPO_ROOT / "fixtures").iterdir() if p.is_dir()]
-
-    assert f"{len(fixtures)} fixtures cover" in readme
 
 
 def test_every_fixture_appears_in_the_fixture_map():
@@ -381,13 +360,11 @@ def test_the_minimal_template_validates_against_the_shipped_schema():
     assert not errors, [e.message for e in errors[:3]]
 
 
-def test_the_readme_invocation_template_is_reachable_from_the_starter():
-    """The block and the package are two halves of one thing. A reader who finds
-    one has to be able to find the other: memory with no entrypoint is memory
-    nothing opens."""
-    starter = (REPO_ROOT / "templates" / "minimal-package" / "mica.yaml").read_text(
-        encoding="utf-8"
-    )
+def test_the_minimal_template_contains_a_real_readme_entrypoint():
+    template = REPO_ROOT / "templates" / "minimal-package"
+    mica_yaml = template / "mica.yaml"
 
-    assert "MICA_README_INVOCATION.md" in starter
-    assert (REPO_ROOT / "templates" / "MICA_README_INVOCATION.md").exists()
+    assert mica_core.validate_readme_entrypoint(template, mica_yaml) == (
+        True,
+        "README.md -> mica.yaml",
+    )

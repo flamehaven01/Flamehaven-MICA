@@ -3,6 +3,7 @@
 MICA runtime summary utility v0.2.9.
 
 Usage:
+    python tools/mica_runtime.py [project_root] --format context
     python tools/mica_runtime.py [project_root] --format text
     python tools/mica_runtime.py [project_root] --format hook
     python tools/mica_runtime.py [project_root] --format json
@@ -13,8 +14,8 @@ v0.2.6: PCT-010 escalates from WARN to FAIL when mica.yaml sets
 v0.2.7: COMPACT_MODE formally defined; di_policy.namespace_mode added. No runtime
         behavior changes required -- COMPACT_MODE uses existing LEGACY_MODE path.
 
-Unreleased working-tree draft: text/json output can surface separate Core and Flow
-states for v0.2.9 flow-enabled packages without changing legacy hook output.
+The context format emits the selected memory itself. Text, JSON, hook, traces,
+and flow state are supporting diagnostics around that path.
 """
 
 from __future__ import annotations
@@ -35,6 +36,7 @@ if str(_TOOLS_DIR) not in sys.path:
 from mica_core import (
     INVOCATION_SCHEMA_V2,
     MICA_TOOL_VERSION,
+    _resolve_within_root,
     canonical_surface_path,
     compute_capsule_hash,
     find_flow_artifact,
@@ -743,6 +745,69 @@ def emit_text(summary: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def emit_context(project_root: Path, summary: dict[str, Any]) -> str:
+    """Emit the exact agent-context payload selected for this session.
+
+    The summary format says which surfaces resolve. This format is the loading
+    path: it reads those bytes, reapplies any declared markdown section slice,
+    verifies them against the evidence created during resolution, and emits no
+    operator-only surface.
+    """
+    if summary.get("state") == "INACTIVE":
+        raise RuntimeError("cannot emit context: no MICA package found")
+    if summary.get("state") != "LEGACY_MODE" and summary.get("core_state") != "CLOSED":
+        raise RuntimeError("cannot emit context: invocation contract is incomplete")
+
+    roles = [str(role) for role in summary.get("agent_context_surfaces") or []]
+    evidence_by_role = {
+        str(entry.get("role")): entry
+        for entry in summary.get("surface_evidence") or []
+        if isinstance(entry, dict) and entry.get("audience") == "agent_context"
+    }
+    if set(evidence_by_role) != set(roles):
+        raise RuntimeError(
+            "cannot emit context: agent-context surfaces and byte evidence do not match"
+        )
+
+    lines = [
+        f"[MICA CONTEXT] {summary.get('name') or 'unknown'}",
+        f"Profile: {summary.get('active_profile') or 'default (mode)'}",
+    ]
+    for role in roles:
+        entry = evidence_by_role[role]
+        relative = entry.get("path")
+        if not isinstance(relative, str):
+            raise RuntimeError(f"cannot emit context: {role} has no canonical path")
+        path = _resolve_within_root(project_root, relative)
+        if path is None or not path.is_file():
+            raise RuntimeError(f"cannot emit context: {role} path is unavailable: {relative}")
+        try:
+            payload = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise RuntimeError(f"cannot emit context: {role} is not readable UTF-8: {exc}") from exc
+
+        sections = entry.get("sections")
+        if isinstance(sections, list) and sections:
+            payload, missing = select_markdown_sections(payload, [str(value) for value in sections])
+            if missing:
+                raise RuntimeError(f"cannot emit context: {role} sections disappeared: {missing}")
+
+        payload_bytes = payload.encode("utf-8")
+        digest, size = hash_bytes(payload_bytes)
+        if digest != entry.get("sha256") or size != entry.get("bytes"):
+            raise RuntimeError(f"cannot emit context: {role} bytes changed after resolution")
+
+        lines.extend(
+            [
+                "",
+                f"--- MICA SURFACE BEGIN role={role} path={relative} sha256={digest} ---",
+                payload.rstrip("\n"),
+                f"--- MICA SURFACE END role={role} ---",
+            ]
+        )
+    return "\n".join(lines)
+
+
 def emit_hook(summary: dict[str, Any]) -> str:
     if summary["state"] == "INACTIVE":
         return "[MICA] INACTIVE -- no mica.yaml or legacy archive found."
@@ -791,7 +856,7 @@ def emit_hook(summary: dict[str, Any]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Emit portable MICA runtime summaries.")
     parser.add_argument("project_root", nargs="?", default=".")
-    parser.add_argument("--format", choices=["text", "json", "hook"], default="text")
+    parser.add_argument("--format", choices=["context", "text", "json", "hook"], default="text")
     parser.add_argument("--write-invocation-trace", action="store_true")
     parser.add_argument("--trace-file")
     parser.add_argument(
@@ -817,7 +882,13 @@ def main() -> None:
         summary["invocation_trace_path"] = str(trace_path)
         summary["invocation_evidence"] = _invocation_evidence_status(trace_path, project_root)
 
-    if args.format == "json":
+    if args.format == "context":
+        try:
+            print(emit_context(project_root, summary))
+        except RuntimeError as exc:
+            print(f"[ERROR] {exc}", file=sys.stderr)
+            sys.exit(1)
+    elif args.format == "json":
         print(json.dumps(summary, indent=2))
     elif args.format == "hook":
         print(emit_hook(summary))

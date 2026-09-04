@@ -16,6 +16,8 @@ Replace `<path>` and the profile names. Delete lines that do not apply.
 ```markdown
 ## MICA memory
 
+<!-- MICA:INVOKE manifest="mica.yaml" -->
+
 This repository carries its memory as a MICA package. Before doing work here,
 load it.
 
@@ -24,9 +26,9 @@ load it.
 2. Read the archive it names. That is what this project has already decided and
    must not relearn. Its design invariants are binding.
 3. Read the playbook it names. That is how work is done here.
-4. State which surfaces you loaded before making changes.
+4. Load the selected surfaces into this session before making changes.
 
-    python tools/mica_runtime.py . --format text
+    python tools/mica_runtime.py . --format context
 
    Use `--profile <name>` when the task matches one:
 
@@ -51,15 +53,14 @@ stop and report that rather than proceeding without it.
 The block is not decoration. A session that reads it must be able to reach the
 memory without asking anything else:
 
-- `mica.yaml` must exist at the path the block names
+- exactly one `MICA:INVOKE` directive must point to the package's `mica.yaml`
 - the archive and playbook it declares must exist and be readable
 - the profiles the table lists must exist in `invocation_protocol.profiles`
 
-`python tools/mica_pct.py <path>` checks the second and third. Whether the
-README itself carries this block is, as of `v3.0.2`, **not** checked: a package
-can declare `primary_pattern: readme_protocol` with no README at all and still
-close its contract. That gap is recorded in the changelog and is being closed;
-until it is, this block is a convention the tools do not enforce.
+`python tools/mica_pct.py <path>` checks the directive, manifest, archive,
+playbook, and declared profiles. It does not parse or standardise the surrounding
+prose. The consumer owns its README; MICA verifies only that the entrypoint is
+real and resolves to the same manifest the tools use.
 
 ## Where the block goes
 

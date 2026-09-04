@@ -7,13 +7,14 @@ will operate that package. MICA is an invocation and context-loading contract: i
 the session which memory surfaces to load, which invariants apply, and what was actually
 invoked. It is not a request to turn the target repository into a generic memory engine.
 
-## Start With a Package Shape
+## Start With the Complete Package
 
-Use [mica-consumer-minimal.yaml](../templates/mica-consumer-minimal.yaml) for a normal,
-single-domain repository. It establishes stable paths:
+Use [the minimal package](../templates/minimal-package/) for a normal,
+single-domain repository. It establishes the whole invocation chain:
 
 ```text
 repo/
+  README.md
   mica.yaml
   memory/
     mica_archive.json
@@ -25,7 +26,14 @@ separate operational lanes. Keep every `always` surface short enough to be read 
 session start. A package is invalid if the agent must guess which file contains the
 current archive or procedure.
 
-## Write the Three Surfaces
+## Write the Four Assets
+
+### `README.md`
+
+Put exactly one `<!-- MICA:INVOKE manifest="mica.yaml" -->` directive near the
+top and tell the session to run `python tools/mica_runtime.py . --format
+context`. Keep archive and playbook paths out of README prose; `mica.yaml` owns
+them.
 
 ### `mica.yaml`
 
@@ -56,13 +64,13 @@ Replace every placeholder and remove instructions that do not apply to the targe
 
 An AI operating a MICA-enabled repository must:
 
-1. Resolve `mica.yaml` before relying on memory files.
-2. Resolve the active memory profile first: a requested one, or `default` if
+1. Read the README invocation directive rather than guessing the manifest path.
+2. Run the context emitter and stop if the contract is incomplete.
+3. Resolve the active memory profile first: a requested one, or `default` if
    the package declares profiles. What it names is what this session loads.
    Fall back to `always` layers plus task-relevant on-demand layers only when
    the package declares no profiles at all.
-3. Name the invoked surfaces in its session report.
-4. Follow archive invariants and playbook procedures before local preference.
+4. Follow the emitted archive invariants and playbook procedures before local preference.
 5. Stop and report a missing, conflicting, or unverifiable required surface.
 6. Keep operator-review material separate from agent context unless explicitly declared otherwise.
 7. Report verification actually run, rather than claiming a generic ready state.
@@ -101,9 +109,10 @@ standard into every consumer repository.
 
 ## Acceptance Check
 
-- `mica.yaml` exists at root or `memory/mica.yaml`.
+- README contains one valid `MICA:INVOKE` directive near the top.
+- The directive resolves to the package's `mica.yaml`.
 - Every `always` layer exists and can be loaded without filename inference.
 - The playbook contains a concrete session-start sequence and a project verification route.
-- The README points maintainers to the MICA entrypoint.
-- The package's runtime report distinguishes resolved surfaces from recorded trace evidence.
+- `mica_runtime.py --format context` emits archive and playbook bytes.
+- The package distinguishes resolved, emitted, and recorded states.
 - A target that consumes archive values in code resolves the archive through `mica.yaml`.

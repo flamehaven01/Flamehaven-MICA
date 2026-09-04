@@ -1,8 +1,8 @@
 # Copy this directory into <target-repo>/, then replace the placeholder values.
 # Keep paths stable: the loader must never infer archive or playbook filenames.
 #
-# The README block in ../MICA_README_INVOCATION.md is the other half of this.
-# Without it the package has memory and no way in.
+# README.md is the entrypoint. Its MICA:INVOKE directive points here; this file
+# remains the only authority for archive and playbook paths.
 mica_spec: "0.2.9"
 name: example-project
 mode: memory_injection

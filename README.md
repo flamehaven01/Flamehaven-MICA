@@ -6,71 +6,54 @@
   <a href="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml"><img src="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"/></a>
-  <img src="https://img.shields.io/badge/release-v3.0.2-green.svg" alt="v3.0.2"/>
+  <img src="https://img.shields.io/badge/release-v3.1.0-green.svg" alt="v3.1.0"/>
 </p>
 
-<p align="center"><b>Decide which memory a session receives, then prove it received it.</b></p>
+<p align="center"><b>README invokes. MICA loads memory and playbook.</b></p>
 
-<p align="center">
-A portable contract for loading project memory at session start and declaring, in bytes, what actually arrived.<br/>
-<b>No service &middot; no API key &middot; plain YAML, JSON, and Markdown your team already reads.</b>
-</p>
-
-**Release**
-
-- `v3.0.2` — current. Contract versions separated from tool versions; see the [changelog](CHANGELOG.md).
-- `v3.0.1` — closed a second invocation-truth audit.
-- `v3.0.0` — the first public release. Everything before it was internal development.
-- Adoption is 1 of 6 live consumer packages. Whether better context produces better work is not measured.
-- The next step is not more MICA-internal expansion. It is helping other repositories consume the invocation contract cleanly.
-
----
-
-**Navigation:**
-[What It Is](#what-mica-is) •
-[60-Second Run](#60-second-first-run) •
-[Two Halves](#invocation-has-two-halves) •
-[Verdict Axes](#three-axes-one-verdict) •
-[Package Surface](#package-surface) •
-[Deployment Modes](#deployment-modes) •
-[Verification](#verification-path) •
-[Document Map](#document-map) •
-[Changelog](CHANGELOG.md)
-
----
-
-## What MICA is
-
-**A repository's README opens MICA. MICA loads that repository's memory and
-playbook. Everything else only proves that this happened truthfully.**
-
-That chain is the whole system:
+MICA is **Memory Invocation & Context Archive**. It gives a repository a small,
+portable way to tell an AI session what the project already knows and how work
+must be done.
 
 ```text
-your README            tells the session to read mica.yaml
-  └─ mica.yaml         says which files are memory, and which the session gets
-       ├─ archive      what this project has learned and must not relearn
-       └─ playbook     how work is done here
-            └─ session starts already holding both
+README.md              session entrypoint
+  -> mica.yaml         manifest and selection
+       -> archive      retained decisions and invariants
+       -> playbook     operating instructions
+            -> session context
 ```
 
-The archive and the playbook are the point. They are what a session is supposed
-to receive, and MICA exists to get them there. What sits *below* them is the
-supporting layer: contract checks, invocation traces, digests, measurement. That
-machinery answers one question — did the memory actually arrive, and did
-anything arrive that should not have — and it is worth nothing on its own.
+That is the product. Validation, traces, digests, handoff, flow checks, and
+measurement are optional support. They must not replace or obscure this path.
 
-MICA does not sit above the repositories that use it. Each consumer keeps its
-own package in its own form and evolves on its own track.
+## The Core Contract
 
-**What it does not do.** It does not prove the code is correct, it does not
-measure whether better context produces better work, and it does not decide
-anything for you at runtime. It records what was selected and what was
-delivered, so those questions can be asked with evidence instead of memory.
+**README invokes.** A repository using `readme_protocol` carries one directive
+near the top of its README:
 
----
+```markdown
+<!-- MICA:INVOKE manifest="mica.yaml" -->
+```
 
-## 60-Second First Run
+The surrounding explanation belongs to the repository. MICA verifies only that
+the directive exists once and resolves to the same manifest the tools use.
+
+**`mica.yaml` selects.** It is the single authority for archive and playbook
+paths. Those paths are not repeated in the README.
+
+**The archive remembers.** It contains decisions, invariants, and the evidence
+or incident that made them durable. It is not a session log or a dump of every
+past interaction.
+
+**The playbook instructs.** It tells a human or AI how this repository is
+actually operated: what to read, what to preserve, how to verify work, and what
+to do when memory conflicts with current reality.
+
+**The runtime emits context.** It reads exactly the selected agent-context
+surfaces, verifies their bytes, and writes their contents to stdout. An
+incomplete contract emits no context.
+
+## First Run
 
 ```bash
 git clone https://github.com/flamehaven01/Flamehaven-MICA.git
@@ -78,87 +61,85 @@ cd Flamehaven-MICA
 pip install -r requirements-dev.txt
 ```
 
-**Invoke a package.** This is the thing MICA is for: a session asks what memory
-it should be holding, and gets an answer.
+Load the complete starter package:
 
 ```text
-python tools/mica_runtime.py fixtures/memory_profiles --format text
-
-[MICA CONTRACT RESOLVED] memory-profiles v1.0.0
-Mode      : memory_injection
-Pattern   : readme_protocol (declared)
-Profile   : default
-Resolved  : archive, playbook
-Context   : archive, playbook
-Operator  : none
-Deferred  : lessons
-PCT       : CLOSED
-Invariants: 1 critical, 0 high
-
-Active critical invariant candidates:
-  DI-001: memory-is-event-shaped
+python tools/mica_runtime.py templates/minimal-package --format context
+[MICA CONTEXT] example-project
+Profile: default
+--- MICA SURFACE BEGIN role=archive path=memory/mica_archive.json
+...
+--- MICA SURFACE BEGIN role=playbook path=memory/mica_playbook.md
+...
 ```
 
-`Resolved` is what this session receives. `Context` is what reaches the agent.
-`Deferred` is what the package has but this session does not get — `lessons`
-here, because the `default` profile did not ask for it. A `review` session
-would.
+The output between each `BEGIN` and `END` marker is the actual selected memory,
+not a summary of filenames. Pipe or attach that output to the session mechanism
+used by your agent host.
 
-The invariant is read out of the archive, so the session starts already holding
-what this project decided and must not relearn.
-
-**Then check that it was true.** Everything below is the supporting layer, and
-it exists to keep the output above honest:
+Check the entrypoint and package composition separately:
 
 ```text
-python tools/mica_pct.py fixtures/flow_observation_valid
-
+python tools/mica_pct.py templates/minimal-package
+PCT-007 [PASS] primary_pattern valid: readme_protocol; entrypoint=README.md -> mica.yaml; invoked=archive, playbook; context=archive, playbook; operator=none
 Contract : CLOSED
-Archive  : OK
-Flow     : OK
-
 Overall: CLOSED CONTRACT
 ```
 
-`Contract` is the verdict that matters: the declared memory reached the session
-and nothing reached it that should not have. `Archive` and `Flow` report without
-deciding it, so a package whose memory loads correctly but whose archive carries
-ungrounded bindings gets both facts rather than one verdict.
+`CLOSED` means the declared entrypoint and selected files resolved. It does not
+prove that an external agent host attached stdout to a model. A digest-bound
+invocation trace can record the selected bytes, but it remains evidence about
+the invocation mechanism, not proof of model cognition.
 
-## Quick Start
+## Adopt MICA
 
-```bash
-# Validate a package
-python tools/mica_pct.py [project_root]
-python tools/mica_pct.py [project_root] --profile review   # under one profile
-python tools/mica_pct.py [project_root] --strict           # exit on any axis
+Start with [templates/minimal-package/](templates/minimal-package/). It contains
+the complete four-file shape:
 
-# Runtime summary
-python tools/mica_runtime.py [project_root] --format text
-python tools/mica_runtime.py [project_root] --format hook
-
-# Context budget, in numbers
-python tools/mica_measure.py [project_root]
-
-# Handoff surface: bounded state carried to the next session
-python tools/mica_handoff.py [project_root]
-
-# Invocation trace provenance
-python tools/mica_invocation.py [trace_file_or_project_root]
-
-# Memory-first utility
-python tools/mica_memory.py [project_root] paths
-python tools/mica_memory.py [project_root] dump slots
-python tools/mica_memory.py [project_root] materialize    # synthesize + export + rebuild
+```text
+README.md
+mica.yaml
+memory/
+  mica_archive.json
+  mica_playbook.md
 ```
 
----
+Copy those files and the portable `tools/` directory into the target repository,
+then replace the example memory and instructions. The detailed block is in
+[templates/MICA_README_INVOCATION.md](templates/MICA_README_INVOCATION.md).
 
-## Invocation has two halves
+A minimal manifest is deliberately small:
 
-Deciding which memory a session receives, and proving it received it. MICA once
-had roughly 580 lines for the second half and two hardcoded lists for the first.
-Selection is now declared:
+```yaml
+mica_spec: "0.2.9"
+name: example-project
+mode: memory_injection
+
+layers:
+  - name: archive
+    path: memory/mica_archive.json
+    format: json
+    loading_hint: always
+  - name: playbook
+    path: memory/mica_playbook.md
+    format: markdown
+    loading_hint: always
+
+invocation_protocol:
+  primary_pattern: readme_protocol
+  agent_context_surfaces: [archive, playbook]
+  profiles:
+    default:
+      surfaces: [archive, playbook]
+```
+
+Run `python tools/mica_runtime.py . --format context` from the consumer root.
+Do not proceed if it refuses to emit.
+
+## Profiles
+
+Profiles are optional selectors, not a second memory system. They let a task
+receive only the relevant parts of a playbook while the archive remains present.
 
 ```yaml
 invocation_protocol:
@@ -166,321 +147,76 @@ invocation_protocol:
   profiles:
     default:
       surfaces: [archive, playbook]
-    review:
-      surfaces: [archive, playbook, lessons]
-```
-
-```bash
-python tools/mica_runtime.py . --profile review
-```
-
-A profile names the surfaces that session needs, so a review session and a
-routine session need not be handed the same memory. Requesting an undeclared
-profile, or naming a surface that is not a declared layer, fails the contract.
-Packages that declare no profiles fall back to the mode defaults and resolve
-exactly as before.
-
-**The playbook is addressable.** A profile may select sections of a markdown
-surface rather than the whole file:
-
-```yaml
     incident:
       surfaces: [archive, playbook]
       sections:
         playbook: [Incident Runbook]
 ```
 
-An incident session receives the runbook without the review procedure. The
-capsule digest then covers the delivered slice, not the file it came from:
-hashing a whole file while delivering part of it would describe context the
-session never received. Drift is scoped the same way, so editing a section the
-profile did not deliver is not drift.
-
-**Specialised surfaces.** A package that keeps several playbooks apart names
-them `playbook-eqa`, `playbook-bav`. Those are distinct surfaces when a profile
-selects one, and playbooks when MICA decides who may receive them. A qualifier
-after the first hyphen narrows a surface without moving it to another audience,
-so `sessions-2024` stays out of agent context exactly as `sessions` does.
-
-**The ceiling and the selection.** `agent_context_surfaces` is a ceiling, what
-may reach the agent at all. The active profile decides what does. A permitted
-surface the profile did not select is deselected, not missing. Without profiles
-the two are the same thing, so an uninvoked permitted surface still fails the
-contract there.
-
-**What was left out, and why.** `deferred_surfaces` names the declared surfaces
-this session did not get. `deferred_surfaces_basis` says which rule did the
-leaving out, whether the profile did not name it, an explicit `loading_hint`
-never fired, or the mode default does not reach that far, plus what the surface
-itself declared. This is not evidence that omitting a surface changed anything.
-That question needs a session with a control. It is what such a question would
-need later, instead of only a name.
-
----
-
-## Three axes, one verdict
-
-| Axis | Question | Checks |
-|---|---|---|
-| `Contract` | Did the declared memory reach this session, and did anything reach it that should not have? | PCT-001/002/003/004/007/008/017 |
-| `Archive` | Is the memory content well formed? | PCT-005/006/010/011/012 |
-| `Flow` | Is the memory-authoring pipeline coherent? | PCT-013/014/015/018 |
-
-Only the contract axis decides `CLOSED CONTRACT`. A package whose memory loads
-correctly but whose archive carries ungrounded bindings has a closed contract
-and a failing archive axis, and both are reported. `mica_pct.py --strict` widens
-the exit code to every axis for consumers that want a single gate.
-
-`PCT-009` is emitted but belongs to no axis: it restates which contract checks
-failed, and counting a summary on an axis would fail that axis twice for one
-defect. `PCT-016` is reserved and not implemented.
-
-**Contract versions are not tool versions.** A package declares its contract in
-`mica_spec`. `PCT-006` asks whether these tools define that contract, not how
-far it is from the tool's own release number:
-
-| Declared `mica_spec` | Verdict |
-|---|---|
-| `0.2.4`–`0.2.9` | supported; `PASS mica_spec aligned`, no compatibility warning |
-| `0.1.9` | `INFO`, legacy-resolvable — read, but full support not claimed |
-| anything else, including `3.0.1` | `WARN`, not a contract these tools define |
-
-The supported set is enumerated rather than bounded. An open range like
-`< 4.0` would claim support for contracts nobody has designed, `0.2.10` and
-every future `3.x` among them.
-
-**Runtime reporting.** `MICA CONTRACT RESOLVED` means the declared surface files
-were found. `Trace` is separate timestamped invocation provenance and reports
-`absent`, `invalid`, `stale`, or `recorded`. `stale` means the recorded capsule
-no longer matches the bytes on disk: still a truthful account of a past
-invocation, but no longer a description of the current surfaces.
-
----
-
-## Package surface
-
-Three assets form the minimal package:
-
-| Asset | Format | Role |
-|---|---|---|
-| `mica.yaml` | YAML | Composition contract: what files exist and how the package is invoked |
-| the archive file | JSON | Institutional memory, design invariants, provenance. `mica.yaml` names the path, so any filename works; `memory/mica_archive.json` is the recommended default and older packages use a versioned `*.mica.*.json` form |
-| the playbook file | Markdown | Human and AI operating guide. Same rule: `memory/mica_playbook.md` is the recommended default |
-
-Tools:
-
-| File | Role |
-|---|---|
-| `tools/mica_primitives.py` | Loading, hashing, path canonicalization, markdown sections (no internal deps) |
-| `tools/mica_core.py` | Contract resolution, PCT-001..012, verdict axes |
-| `tools/mica_evidence.py` | Capsule and invocation-trace validation (`IVC-*`) |
-| `tools/mica_flow.py` | Memory-authoring pipeline checks (PCT-013/014/015/017/018) |
-| `tools/mica_measure.py` | Context budget and surface resolution, in numbers |
-| `tools/mica_handoff.py` | Handoff surface validation (`HND-*`) and writer |
-| `tools/mica_pct.py` | Package contract validator |
-| `tools/mica_runtime.py` | Portable runtime summary and hook emitter |
-| `tools/mica_invocation.py` | Standalone validator for `mica.invocation.jsonl` provenance |
-| `tools/mica_memory.py` | Memory-first read/write for sessions, memories, graph edges, slots |
-
-Module layering is acyclic:
-
 ```text
-mica_primitives          no internal imports
-    ^-- mica_evidence    capsule and trace validation
-    ^-- mica_flow        memory-authoring pipeline checks
-            ^-- mica_core  contract resolution, PCT-001..012, axes
+python tools/mica_runtime.py fixtures/memory_profiles --profile incident --format context
+[MICA CONTEXT] memory-profiles
+Profile: incident
+--- MICA SURFACE BEGIN role=archive path=memory/mica_archive.json
+...
+--- MICA SURFACE BEGIN role=playbook path=memory/mica_playbook.md
+## Incident Runbook
+...
 ```
 
-`mica_core` re-exports the primitive and evidence names it used to define, so
-`from mica_core import ...` keeps working in consumer packages that vendored an
-earlier `tools/` copy.
+The context emitter excludes unselected sections and every operator-only
+surface. The digest describes the emitted slice, not the whole source file.
 
-A memory-first package looks like this:
+## Support Tools
 
-```text
-repo/
-  mica.yaml
-  memory/
-    mica.sessions.jsonl
-    mica.observe.jsonl
-    mica.memories.jsonl
-    mica.recall.jsonl
-    mica.slots.json
-    mica.graph.jsonl
-    mica_archive.json
-    mica_playbook.md
-```
+These tools support the core contract; none is required to write useful memory
+or a useful playbook.
 
-24 fixtures cover the scenarios each check exists for. Full map and expected
-output: [fixtures/README.md](fixtures/README.md).
+| Tool | Purpose |
+|---|---|
+| `mica_runtime.py` | Resolve and emit selected session context |
+| `mica_pct.py` | Validate the README entrypoint and package composition |
+| `mica_invocation.py` | Inspect invocation trace evidence |
+| `mica_handoff.py` | Validate optional cross-session handoff state |
+| `mica_memory.py` | Optional structured memory authoring and projection |
+| `mica_measure.py` | Report context size; it does not measure work quality |
 
----
+Flow, candidate promotion, recall telemetry, and handoff remain available for
+consumers that explicitly need them. They are extensions below the core and are
+disabled by default.
 
-## Deployment modes
+## Truth Boundaries
 
-| Mode | Condition | Verdict |
-|---|---|---|
-| `INVOCATION_MODE` | `mica.yaml` present | `CLOSED` or `INCOMPLETE` |
-| `COMPACT_MODE` | No `mica.yaml`, intentional | `LEGACY` (correct, non-defective) |
-| `LEGACY_MODE` | No `mica.yaml`, pre-migration | `LEGACY` (upgrade recommended) |
-| `INACTIVE` | Nothing detected | `INACTIVE` |
+- `resolved` means MICA found and read the selected bytes.
+- `emitted` means `--format context` wrote those bytes to stdout.
+- `recorded` means an invocation trace describes selected bytes.
+- None of these alone proves an external model received, understood, or obeyed
+  the context.
+- Archive memory can become stale. When memory and current repository reality
+  disagree, report the conflict; do not silently prefer either.
 
-### DI namespace modes
-
-```yaml
-di_policy:
-  namespace_mode: domain_namespaced   # or: sequential (default) | legacy_inv
-  critical_binding_required: true     # optional: escalates PCT-010 to FAIL
-```
-
-| Form | Example | Mode |
-|---|---|---|
-| `DI-NNN` | `DI-001` | `sequential` (default) |
-| `DI-[DOMAIN]-NNN` | `DI-EQA-001`, `DI-BIO-003` | `domain_namespaced` |
-| `INV-NNN` | `INV-009` | `legacy_inv` (grandfathered) |
-
----
-
-## Verification path
-
-The same surface CI runs:
+## Development
 
 ```bash
-pip install -r requirements-dev.txt
 pytest -v
 ruff check tools/ tests/
 ruff format --check tools/ tests/
 ```
 
-Beyond generic linting, CI gates what is specific to MICA:
+The fixture map and expected behavior live in
+[fixtures/README.md](fixtures/README.md). Intentional validator-output changes
+must regenerate `tests/golden/pct_output.json` with
+`python tests/test_golden_pct.py --update`.
 
-| Gate | What it catches |
-|---|---|
-| `tests/test_golden_pct.py` | Any change to what any check says about any fixture, under every profile it declares. Intentional changes regenerate the snapshot and the diff appears in review |
-| `tests/test_repo_self_consistency.py` | The declared canonical version with no changelog entry; a shipping check with no spec; a summary check drifting onto an axis |
-| `tools/mica_measure.py` | Context budget reported rather than silently drifting |
+## Documents
 
-Regenerate the golden snapshot after an intentional change, and commit it with
-the change that caused it:
-
-```bash
-python tests/test_golden_pct.py --update
-```
-
-Sample check output:
-
-```text
-python tools/mica_pct.py fixtures/flow_observation_valid
-PCT-013 [PASS] memory/mica.observe.jsonl parseable and hash-chain coherent (2 records)
-```
-
-```text
-python tools/mica_pct.py fixtures/flow_candidates_broken_provenance
-PCT-015 [FAIL] cand_00044: unknown source_event_ids ['obs_missing_999']
-Overall: CLOSED CONTRACT
-```
-
-That pairing is the axis split working: promotion provenance is broken, and the
-invocation contract still closed, because `PCT-015` reports on the flow axis and
-only the contract axis decides the verdict.
-
-```text
-python tools/mica_runtime.py fixtures/flow_recall_agent_context_violation --format text
-Core      : INCOMPLETE
-Flow      : FLOW_DEGRADED
-Recall    : PASS
-Telemetry : PASS
-Promotion gate: FAIL
-Reason    : candidate cand_00042 entered agent_context while operator_review.state=pending
-```
-
----
-
-## Document Map
-
-By task, not by version.
-
-**Adopting MICA in another repository**
-
-- [templates/MICA_README_INVOCATION.md](templates/MICA_README_INVOCATION.md) — the block that makes a README open MICA. Without it a package has memory and no way in
-- [templates/minimal-package/](templates/minimal-package/) — a complete starter: `mica.yaml`, archive, playbook. It closes its own contract, and a test keeps it that way
-
-- [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) — making a repository MICA-capable
-- [docs/MICA_CONSUMER_AUTHORING_GUIDE.md](docs/MICA_CONSUMER_AUTHORING_GUIDE.md) — authoring and operating a consumer package
-- [fixtures/README.md](fixtures/README.md) — every fixture and what it is meant to prove
-
-**Current release**
-
-- [docs/MICA_v3.0.1_RELEASE_NOTES.md](docs/MICA_v3.0.1_RELEASE_NOTES.md) — current: the second audit, what it found, and the known limits that remain
-- [docs/MICA_v3.0.0_RELEASE_NOTES.md](docs/MICA_v3.0.0_RELEASE_NOTES.md) — what the first public release was, and what the pre-release audit found
-- [CHANGELOG.md](CHANGELOG.md) — v3.0.0, then the internal history it came from
-- [docs/MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md) — the last internal migration guide, for packages still on v0.2.8
-
-**Direction and architecture**
-
-- [docs/MICA_v3.0.0_DECLARATION.md](docs/MICA_v3.0.0_DECLARATION.md) — the invocation-first reset and its release boundary
-- [docs/MICA_v3.0.0_ORIGIN_RELEASE_NOTES.md](docs/MICA_v3.0.0_ORIGIN_RELEASE_NOTES.md) — Origin P0-P4: what changed, what it measured, what it does not establish
-- [docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md](docs/MICA_v3.0.0_CONTEXT_CONTINUITY_PLAN.md) — invocation capsule and handoff surface architecture
-- [docs/MICA_INVOCATION_RECOVERY_PLAN.md](docs/MICA_INVOCATION_RECOVERY_PLAN.md) — restoring invocation as the primary objective
-- [docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md](docs/MICA_v0.2.9_MEMORY_FIRST_ARCHITECTURE.md) — from governed exports to a memory-first substrate
-- [docs/MICA_v0.2.9_EVOLUTION_BLUEPRINT.md](docs/MICA_v0.2.9_EVOLUTION_BLUEPRINT.md) — memory flow layer above external memory engines
-
-**Runtime and check specs**
-
-- [docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md](docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md) — Core/Flow reporting contract for truthful output
-- [docs/PCT-013_v0.2.9_SPEC.md](docs/PCT-013_v0.2.9_SPEC.md) — observation coherence when flow is enabled
-- [docs/PCT-014_v0.2.9_SPEC.md](docs/PCT-014_v0.2.9_SPEC.md) — recall trace coverage for active recall surfaces
-- [docs/PCT-015_v0.2.9_SPEC.md](docs/PCT-015_v0.2.9_SPEC.md) — promotion provenance for approved lessons
-- [docs/PCT-017_v0.2.9_SPEC.md](docs/PCT-017_v0.2.9_SPEC.md) — runtime injection safety for unapproved candidates
-- [docs/PCT-018_v0.2.9_SPEC.md](docs/PCT-018_v0.2.9_SPEC.md) — telemetry completeness for joinable flow traces
-- [docs/HND-005_v3.0.1_SPEC.md](docs/HND-005_v3.0.1_SPEC.md) — applying the shipped handoff schema, and why it is separate from HND-002
-- [docs/IVC-006_v3.0.1_SPEC.md](docs/IVC-006_v3.0.1_SPEC.md) — applying the shipped invocation schema to every capsule in a trace
-
-MICA emits 30 checks across three families: `PCT-*` for the package contract,
-`HND-*` for the handoff surface, `IVC-*` for invocation evidence. Of those,
-7 have a spec. The other 23 predate the practice and are frozen in
-`SPEC_BACKLOG` in `tests/test_repo_self_consistency.py`, which may shrink and
-never grow.
-
-That gate only counted `PCT-*` until `v3.0.1`, so the `HND` and `IVC` families
-sat outside it entirely and two new checks shipped undocumented without failing
-anything. It covers all three families now, and the counts above are asserted
-against the code rather than written by hand.
-
-**Schemas**
-
-| Schema | Covers |
-|---|---|
-| [mica.yaml.schema.json](mica.yaml.schema.json) | The composition contract |
-| [mica.invocation.schema.json](mica.invocation.schema.json) | Invocation trace; `v1` history and `v2` digest-bound capsules |
-| [mica.handoff.schema.json](mica.handoff.schema.json) | Bounded state carried into the next session |
-| [mica-v0.2.7-archive-di-binding.schema.json](mica-v0.2.7-archive-di-binding.schema.json) | Archive DI binding |
-| [mica.sessions.schema.json](mica.sessions.schema.json) | Session envelope |
-| [mica.observe.schema.json](mica.observe.schema.json) | Observation records |
-| [mica.memories.schema.json](mica.memories.schema.json) | Durable memory records |
-| [mica.candidates.schema.json](mica.candidates.schema.json) | Candidate registry |
-| [mica.recall.schema.json](mica.recall.schema.json) | Recall traces |
-| [mica.slots.schema.json](mica.slots.schema.json) | Stable slot projections |
-| [mica.graph.schema.json](mica.graph.schema.json) | Memory graph edges |
-
-**Templates and profiles**
-
-Bootstrap templates are in [templates/](templates/), and DI binding and hook
-output profiles in [profiles/](profiles/).
-
-Per-version approval notes, changelogs, and migration guides for `v0.2.3`
-through `v0.2.8` are not published: they are internal records for versions that
-were never released, and the [CHANGELOG](CHANGELOG.md) summarises what they
-decided.
-
----
+- [Consumer authoring guide](docs/MICA_CONSUMER_AUTHORING_GUIDE.md)
+- [Cross-repository adoption guide](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md)
+- [v3.0.0 declaration](docs/MICA_v3.0.0_DECLARATION.md)
+- [v3.1.0 release notes](docs/MICA_v3.1.0_RELEASE_NOTES.md)
+- [v3.0.1 release notes](docs/MICA_v3.0.1_RELEASE_NOTES.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
-<p align="center">
-  <b>Flamehaven Initiative</b> •
-  <a href="https://github.com/flamehaven01/Flamehaven-MICA/issues">Issues</a> •
-  <a href="docs/">Docs</a>
-</p>
+MIT. See [LICENSE](LICENSE).
