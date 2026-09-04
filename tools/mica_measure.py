@@ -10,7 +10,7 @@ What it measures:
   - context budget: bytes delivered to agent context, per profile
   - surface resolution: declared / invoked / agent_context / operator_only
   - capsule coverage: whether the exact invoked bytes can be identified
-  - verdict axes and mica_spec lag
+  - verdict axes and contract compatibility
 
 What it does NOT measure: whether any of this improves task outcomes. That
 needs sessions with a control, not a static scan. Do not read these numbers as
@@ -46,14 +46,21 @@ __version__ = MICA_TOOL_VERSION
 
 
 def _spec_note(results: list[tuple[str, str, str]]) -> str | None:
-    """Whatever PCT-006 said about the declared spec, rather than a second opinion.
+    """Whatever PCT-006 warned about the declared contract, verbatim.
 
-    An earlier draft of this tool recomputed the version gap itself. Two
-    implementations of the same comparison is exactly the drift MICA exists to
-    catch, so it reads the check's own output instead.
+    An earlier draft recomputed the version gap itself. Two implementations of
+    one comparison is the drift MICA exists to catch, so this reads the check's
+    own output.
+
+    It then filtered that output on the substring "canonical", which put the
+    second opinion back in a smaller place: v3.0.2 rewrote PCT-006 around
+    supported contracts and the word disappeared, so a package the check warned
+    about reported `spec_note: null` here. Matching on wording means every
+    rewording silently drops a warning. There is no filter now -- if PCT-006
+    warns, the measurement carries what it said.
     """
     for pid, status, message in results:
-        if pid == "PCT-006" and status == "WARN" and "canonical" in message:
+        if pid == "PCT-006" and status == "WARN":
             return message
     return None
 

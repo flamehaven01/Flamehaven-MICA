@@ -213,3 +213,89 @@ def test_the_supported_floor_is_pinned_by_a_fixture():
 
     assert pct006 == [("PASS", f"mica_spec aligned: {floor}")], pct006
     assert mica_core.evaluate_axes(results)["contract"] == "CLOSED"
+
+
+# --- the instrument agrees with the check it reports on ----------------------
+
+
+def _measured_spec_note(tmp_path: Path, spec: str) -> str | None:
+    """Build a package at `spec` and read what mica_measure records for it."""
+    import shutil
+
+    import mica_measure
+
+    root = tmp_path / "pkg"
+    shutil.copytree(Path(__file__).resolve().parent.parent / "fixtures" / "contract_floor", root)
+    for relative in ("mica.yaml", "memory/mica_archive.json"):
+        path = root / relative
+        path.write_text(path.read_text(encoding="utf-8").replace("0.2.4", spec), encoding="utf-8")
+    return mica_measure.measure(root, None)["spec_note"]
+
+
+def _pct006_warning(tmp_path_root: Path) -> str | None:
+    import contextlib
+    import io
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        results = mica_core.run_pct_checks(tmp_path_root)
+    return next((m for c, s, m in results if c == "PCT-006" and s == "WARN"), None)
+
+
+@pytest.mark.parametrize("spec", ["0.2.4", "0.2.9"])
+def test_a_supported_contract_records_no_note(tmp_path: Path, spec: str):
+    assert _measured_spec_note(tmp_path, spec) is None
+
+
+def test_a_legacy_contract_records_no_warning_because_it_is_informational(tmp_path: Path):
+    """0.1.9 is reported as INFO, not WARN. The measurement carries warnings."""
+    assert _measured_spec_note(tmp_path, "0.1.9") is None
+
+
+def test_an_unknown_contract_is_carried_into_the_measurement(tmp_path: Path):
+    """The filter matched on the substring "canonical", so when v3.0.2 rewrote
+    PCT-006 around supported contracts the word vanished and a package the check
+    warned about recorded `spec_note: null`. The instrument disagreed with the
+    check it reports on."""
+    note = _measured_spec_note(tmp_path, "0.2.10")
+
+    assert note is not None
+    assert "not a contract version these tools define" in note
+
+
+def test_a_yaml_archive_mismatch_is_carried_too(tmp_path: Path):
+    """A different PCT-006 warning, and one whose wording never mentioned
+    contracts or canonical. Both must reach the measurement."""
+    import shutil
+
+    import mica_measure
+
+    root = tmp_path / "pkg"
+    shutil.copytree(FIXTURES_DIR / "contract_floor", root)
+    yaml_path = root / "mica.yaml"
+    yaml_path.write_text(
+        yaml_path.read_text(encoding="utf-8").replace('mica_spec: "0.2.4"', 'mica_spec: "0.2.9"'),
+        encoding="utf-8",
+    )
+
+    note = mica_measure.measure(root, None)["spec_note"]
+
+    assert note is not None
+    assert "drift" in note
+
+
+def test_the_measurement_note_is_exactly_what_the_check_said(tmp_path: Path):
+    """No paraphrase and no second opinion: two implementations of one
+    comparison is the drift this project exists to catch."""
+    import shutil
+
+    import mica_measure
+
+    root = tmp_path / "pkg"
+    shutil.copytree(FIXTURES_DIR / "contract_floor", root)
+    for relative in ("mica.yaml", "memory/mica_archive.json"):
+        path = root / relative
+        path.write_text(
+            path.read_text(encoding="utf-8").replace("0.2.4", "9.9.9"), encoding="utf-8"
+        )
+
+    assert mica_measure.measure(root, None)["spec_note"] == _pct006_warning(root)

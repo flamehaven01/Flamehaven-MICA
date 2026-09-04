@@ -6,6 +6,21 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ## Unreleased
 
+**The measurement tool disagreed with the check it reports on.** `_spec_note`
+read `PCT-006`'s own output rather than recomputing a second opinion, then
+filtered that output on the substring `canonical`. v3.0.2 rewrote `PCT-006`
+around supported contracts and the word disappeared, so a package the check
+warns about recorded `spec_note: null`. A `0.2.10` package showed
+`PCT-006 [WARN]` and a null note in the same run.
+
+Matching on wording is a second opinion in a smaller place: every rewording
+silently drops a warning. There is no filter now. The tool also described itself
+as measuring `mica_spec lag`, which stopped being what `PCT-006` does.
+
+Four regression cases cover the axis the filter was blind to -- supported,
+legacy, unknown and yaml/archive mismatch -- plus one asserting the recorded
+note is character-for-character what the check said.
+
 **Published version tags are immutable.** A tag ruleset on `refs/tags/v*` blocks
 updates and deletions, with no bypass actor; creating a new version tag is
 unaffected. This is the rule that matches what the project already said in
