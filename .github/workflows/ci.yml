@@ -1,8 +1,12 @@
 name: CI
 
 on:
+  # Every branch, not just main. Required status checks are evaluated against a
+  # commit SHA, so a SHA has to carry passing checks *before* it can land on a
+  # protected main. With CI running only on main that is circular: the push
+  # that would trigger the checks is the push the checks would gate.
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
     branches: [main]
 
