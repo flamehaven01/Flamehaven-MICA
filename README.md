@@ -362,7 +362,8 @@ By task, not by version.
 
 **Current release**
 
-- [docs/MICA_v3.0.0_RELEASE_NOTES.md](docs/MICA_v3.0.0_RELEASE_NOTES.md) — what v3.0.0 is, what an audit found, and its known limits
+- [docs/MICA_v3.0.1_RELEASE_NOTES.md](docs/MICA_v3.0.1_RELEASE_NOTES.md) — current: the second audit, what it found, and the known limits that remain
+- [docs/MICA_v3.0.0_RELEASE_NOTES.md](docs/MICA_v3.0.0_RELEASE_NOTES.md) — what the first public release was, and what the pre-release audit found
 - [CHANGELOG.md](CHANGELOG.md) — v3.0.0, then the internal history it came from
 - [docs/MICA_v0.2.9_MIGRATION_GUIDE.md](docs/MICA_v0.2.9_MIGRATION_GUIDE.md) — the last internal migration guide, for packages still on v0.2.8
 
@@ -383,10 +384,19 @@ By task, not by version.
 - [docs/PCT-015_v0.2.9_SPEC.md](docs/PCT-015_v0.2.9_SPEC.md) — promotion provenance for approved lessons
 - [docs/PCT-017_v0.2.9_SPEC.md](docs/PCT-017_v0.2.9_SPEC.md) — runtime injection safety for unapproved candidates
 - [docs/PCT-018_v0.2.9_SPEC.md](docs/PCT-018_v0.2.9_SPEC.md) — telemetry completeness for joinable flow traces
+- [docs/HND-005_v3.0.1_SPEC.md](docs/HND-005_v3.0.1_SPEC.md) — applying the shipped handoff schema, and why it is separate from HND-002
+- [docs/IVC-006_v3.0.1_SPEC.md](docs/IVC-006_v3.0.1_SPEC.md) — applying the shipped invocation schema to every capsule in a trace
 
-Five of seventeen shipping checks have a spec. The remaining twelve are named in
+MICA emits 30 checks across three families: `PCT-*` for the package contract,
+`HND-*` for the handoff surface, `IVC-*` for invocation evidence. Of those,
+7 have a spec. The other 23 predate the practice and are frozen in
 `SPEC_BACKLOG` in `tests/test_repo_self_consistency.py`, which may shrink and
-never grow: a new check without a spec fails CI.
+never grow.
+
+That gate only counted `PCT-*` until `v3.0.1`, so the `HND` and `IVC` families
+sat outside it entirely and two new checks shipped undocumented without failing
+anything. It covers all three families now, and the counts above are asserted
+against the code rather than written by hand.
 
 **Schemas**
 

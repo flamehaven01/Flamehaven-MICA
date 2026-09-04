@@ -4,6 +4,30 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ---
 
+## Unreleased
+
+**The spec ratchet covers every check family.** It collected `PCT-\d{3}` only,
+so the entire `HND` and `IVC` families -- 13 checks -- sat outside it. `HND-005`
+and `IVC-006` were then added in v3.0.1 with no spec and nothing failed, which is
+exactly the promise the gate makes. It now collects all three families, and a
+further test asserts no family the tools emit is missing from the list it
+collects.
+
+Specs written for `HND-005` and `IVC-006` rather than filing them in the
+backlog: the backlog is for checks that predate the practice, not for new ones.
+30 checks emitted, 7 with a spec, 23 frozen.
+
+The README said "five of seventeen shipping checks" where the real figure was
+seven of thirty. Its counts are now asserted against the code, because a number
+written by hand in prose drifts the moment either side moves.
+
+`docs/MICA_v3.0.1_RELEASE_NOTES.md` added. The GitHub release body already
+carried this content; what was missing was a copy that lives in the repository
+and survives independent of the release page. The README document map points at
+it.
+
+---
+
 ## v3.0.1 — Second invocation-truth audit (2026-09-04)
 
 A second audit falsified the same claim the first one did, by a path the first

@@ -26,8 +26,15 @@ import mica_primitives  # noqa: E402
 # Checks that shipped before specs were written for them. This list may shrink,
 # never grow: a new check without a document fails the coverage test below.
 # Removing an entry is what writing its spec looks like.
+#
+# The ratchet used to collect `PCT-\d{3}` only, so the whole HND and IVC
+# families sat outside it -- thirteen checks nothing asked about. HND-005 and
+# IVC-006 were then added with no spec and nothing failed, which is exactly the
+# promise this gate makes. Both now have specs; the families that predate the
+# practice are frozen here.
 SPEC_BACKLOG = frozenset(
     {
+        # package contract
         "PCT-001",
         "PCT-002",
         "PCT-003",
@@ -40,12 +47,30 @@ SPEC_BACKLOG = frozenset(
         "PCT-010",
         "PCT-011",
         "PCT-012",
+        # handoff surface
+        "HND-000",
+        "HND-001",
+        "HND-002",
+        "HND-003",
+        "HND-004",
+        # invocation evidence
+        "IVC-000",
+        "IVC-001",
+        "IVC-002",
+        "IVC-003",
+        "IVC-004",
+        "IVC-005",
     }
 )
 
+# Every check family the tools emit. A family missing here is a family the
+# documentation gate cannot see.
+CHECK_FAMILIES = ("PCT", "HND", "IVC")
+_CHECK_ID = re.compile(rf"(?:{'|'.join(CHECK_FAMILIES)})-\d{{3}}")
+
 
 def _emitted_checks() -> set[str]:
-    """Every check id the tools can actually emit.
+    """Every check id the tools can actually emit, across every family.
 
     Not the same as axis membership: PCT-009 is emitted but belongs to no axis,
     because it only restates which contract checks failed. Counting a summary
@@ -54,7 +79,7 @@ def _emitted_checks() -> set[str]:
     return {
         match
         for path in TOOLS_DIR.glob("*.py")
-        for match in re.findall(r"PCT-\d{3}", path.read_text(encoding="utf-8"))
+        for match in _CHECK_ID.findall(path.read_text(encoding="utf-8"))
     }
 
 
@@ -63,11 +88,7 @@ def _axis_checks() -> set[str]:
 
 
 def _documented_checks() -> set[str]:
-    return {
-        match.group(0)
-        for path in DOCS_DIR.iterdir()
-        if (match := re.match(r"PCT-\d{3}", path.name))
-    }
+    return {match.group(0) for path in DOCS_DIR.iterdir() if (match := _CHECK_ID.match(path.name))}
 
 
 # --- the version the tools declare is the version the changelog records ------
@@ -97,8 +118,9 @@ def test_every_check_outside_the_backlog_has_a_spec():
     undocumented = _emitted_checks() - _documented_checks() - SPEC_BACKLOG
 
     assert not undocumented, (
-        f"checks with no docs/PCT-XXX_*.md spec: {sorted(undocumented)}. "
-        "Write the spec, or add the id to SPEC_BACKLOG with a reason."
+        f"checks with no docs/<ID>_*_SPEC.md: {sorted(undocumented)}. "
+        "Write the spec. Adding to SPEC_BACKLOG is for checks that predate the "
+        "practice, not for new ones."
     )
 
 
@@ -277,3 +299,31 @@ def test_no_tracked_file_points_at_a_private_repository():
     ]
 
     assert not offenders, "private repositories named in public files:\n  " + "\n  ".join(offenders)
+
+
+def test_the_readme_reports_the_real_check_counts():
+    """The README said "five of seventeen" while the tools emitted thirty. A
+    number written by hand in prose drifts from the code the moment either
+    moves, so it is asserted here instead."""
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    emitted, documented, backlog = _emitted_checks(), _documented_checks(), SPEC_BACKLOG
+
+    assert f"MICA emits {len(emitted)} checks" in readme
+    assert f"{len(documented)} have a spec" in readme
+    assert f"The other {len(backlog)} predate" in readme
+
+
+def test_every_family_the_tools_emit_is_one_the_gate_collects():
+    """A family absent from CHECK_FAMILIES is a family this gate cannot see,
+    which is how HND and IVC went unnoticed."""
+    import re as _re
+
+    prefixes = {
+        match
+        for path in TOOLS_DIR.glob("*.py")
+        for match in _re.findall(r"\b([A-Z]{3})-\d{3}\b", path.read_text(encoding="utf-8"))
+    }
+
+    assert prefixes == set(CHECK_FAMILIES), (
+        f"tools emit families the gate does not collect: {sorted(prefixes - set(CHECK_FAMILIES))}"
+    )
