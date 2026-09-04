@@ -109,6 +109,18 @@ existing package shape.
   support code without reducing it.
 - No claim is made that MICA improves task outcomes without a controlled study.
 
+## Verification
+
+- Local suite: 376 passed, 1 skipped.
+- Remote CI: Python 3.9, 3.11, 3.12, and 3.13 plus the memory-contract job.
+- `mica-context` passed the skill validator.
+- A known CRLF-based consumer emitted 98,061 context bytes successfully through
+  the released runtime path.
+
+These checks establish package resolution, exact context emission, and the
+distribution surface. They do not establish that an external model understood
+or followed the emitted context.
+
 ## Version Axes
 
 - Tool release: `3.2.0`

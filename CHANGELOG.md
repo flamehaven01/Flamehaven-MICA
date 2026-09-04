@@ -37,6 +37,10 @@ test suite were removed. The runtime still supports pre-materialized
 remain invocable. This removes an unconsumed authoring subsystem without
 turning repository-specific memory into a single mandatory schema.
 
+Pre-release verification completed with 376 passed and 1 skipped locally, the
+five-job remote matrix green, a valid `mica-context` skill, and successful
+98,061-byte emission from a CRLF-based consumer.
+
 See [the v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md).
 
 ---
