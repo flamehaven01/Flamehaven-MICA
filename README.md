@@ -357,7 +357,6 @@ By task, not by version.
 
 - [docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md) — making a repository MICA-capable
 - [docs/MICA_CONSUMER_AUTHORING_GUIDE.md](docs/MICA_CONSUMER_AUTHORING_GUIDE.md) — authoring and operating a consumer package
-- [docs/CONSUMER_ADOPTION_COCOMINI_STORE_AI.md](docs/CONSUMER_ADOPTION_COCOMINI_STORE_AI.md) — a worked consumer pattern with a separate RAG harness
 - [fixtures/README.md](fixtures/README.md) — every fixture and what it is meant to prove
 
 **Current release**
@@ -378,7 +377,6 @@ By task, not by version.
 **Runtime and check specs**
 
 - [docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md](docs/MICA_v0.2.9_RUNTIME_STATUS_CONTRACT.md) — Core/Flow reporting contract for truthful output
-- [docs/MICA_v0.2.7_RUNTIME_PROTOCOL.md](docs/MICA_v0.2.7_RUNTIME_PROTOCOL.md) — deployment model and PCT matrix
 - [docs/PCT-013_v0.2.9_SPEC.md](docs/PCT-013_v0.2.9_SPEC.md) — observation coherence when flow is enabled
 - [docs/PCT-014_v0.2.9_SPEC.md](docs/PCT-014_v0.2.9_SPEC.md) — recall trace coverage for active recall surfaces
 - [docs/PCT-015_v0.2.9_SPEC.md](docs/PCT-015_v0.2.9_SPEC.md) — promotion provenance for approved lessons
@@ -405,12 +403,15 @@ never grow: a new check without a spec fails CI.
 | [mica.slots.schema.json](mica.slots.schema.json) | Stable slot projections |
 | [mica.graph.schema.json](mica.graph.schema.json) | Memory graph edges |
 
-**Version history**
+**Templates and profiles**
 
-Per-version release notes, changelogs, migration guides, and approval notes for
-v0.2.4 through v0.2.8 live in [docs/](docs/). Bootstrap templates are in
-[templates/](templates/), and DI binding and hook output profiles in
-[profiles/](profiles/).
+Bootstrap templates are in [templates/](templates/), and DI binding and hook
+output profiles in [profiles/](profiles/).
+
+Per-version approval notes, changelogs, and migration guides for `v0.2.3`
+through `v0.2.8` are not published: they are internal records for versions that
+were never released, and the [CHANGELOG](CHANGELOG.md) summarises what they
+decided.
 
 ---
 

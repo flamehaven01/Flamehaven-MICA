@@ -82,3 +82,62 @@ def test_a_documented_command_names_a_file_that_exists(command: str, expected: l
     for token in command.split()[1:]:
         if token.startswith(("tools/", "fixtures/", "tests/")):
             assert (REPO_ROOT / token).exists(), f"{command} names a missing path: {token}"
+
+
+# --- every link the README makes actually resolves ---------------------------
+
+
+def _local_links(text: str) -> list[str]:
+    return [
+        target
+        for target in re.findall(r"\]\(([^)]+)\)", text)
+        if not target.startswith(("http://", "https://", "#"))
+    ]
+
+
+def test_every_local_link_in_the_readme_resolves():
+    """Moving two docs out of the published tree left two dead links behind.
+    Until now this was only ever checked by hand."""
+    broken = [
+        target
+        for target in _local_links(README.read_text(encoding="utf-8"))
+        if not (REPO_ROOT / target.split("#", 1)[0]).exists()
+    ]
+
+    assert not broken, f"README links to files that do not exist: {broken}"
+
+
+def test_every_local_link_in_the_changelog_resolves():
+    changelog = REPO_ROOT / "CHANGELOG.md"
+    broken = [
+        target
+        for target in _local_links(changelog.read_text(encoding="utf-8"))
+        if not (REPO_ROOT / target.split("#", 1)[0]).exists()
+    ]
+
+    assert not broken, f"CHANGELOG links to files that do not exist: {broken}"
+
+
+def test_every_local_link_in_the_published_docs_resolves():
+    """A doc that points at a sibling which has since moved is as broken as a
+    dead README link, and nothing looked at those either."""
+    broken = []
+    for doc in sorted((REPO_ROOT / "docs").glob("*.md")):
+        for target in _local_links(doc.read_text(encoding="utf-8")):
+            resolved = (doc.parent / target.split("#", 1)[0]).resolve()
+            if not resolved.exists():
+                broken.append(f"{doc.name} -> {target}")
+
+    assert not broken, "dead links inside docs/:\n  " + "\n  ".join(broken[:10])
+
+
+def test_every_navigation_anchor_has_a_heading():
+    text = README.read_text(encoding="utf-8")
+    headings = {
+        re.sub(r"[^a-z0-9 -]", "", heading.lower()).replace(" ", "-")
+        for heading in re.findall(r"^#{2,3} (.+)$", text, re.MULTILINE)
+    }
+    anchors = re.findall(r"\]\(#([^)]+)\)", text)
+
+    assert anchors, "no navigation anchors found; the pattern went stale"
+    assert not set(anchors) - headings, f"anchors with no heading: {set(anchors) - headings}"

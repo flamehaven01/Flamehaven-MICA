@@ -211,3 +211,69 @@ def test_the_schema_accepts_a_layer_declared_by_kind():
     }
 
     assert not list(validator.iter_errors(document))
+
+
+# --- nothing machine-specific or private reaches the published tree ----------
+
+
+def _tracked_text_files() -> list[Path]:
+    import subprocess
+
+    listing = subprocess.run(
+        ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=True
+    )
+    paths = []
+    for line in listing.stdout.splitlines():
+        path = REPO_ROOT / line
+        if path.suffix.lower() in {".png", ".jpg", ".gif", ".ico", ".pdf"}:
+            continue
+        if path.exists():
+            paths.append(path)
+    return paths
+
+
+# Path-escape test data: these assert that an absolute path is refused, so the
+# absolute path is the point.
+_PATH_LITERAL_EXEMPT = {
+    "test_invocation_capsule_v2.py",
+    "test_schema_metavalidation.py",
+    # A gate has to name what it forbids, so it matches itself.
+    "test_repo_self_consistency.py",
+}
+
+
+def test_no_tracked_file_carries_a_local_machine_path():
+    """The repository is public. Four docs shipped `D:/Sanctum/...` links that
+    resolve on exactly one machine, and one of them named a private customer
+    codebase."""
+    drive = re.compile(r"(?:^|[^A-Za-z0-9])[A-Za-z]:[\/]")
+    home = re.compile(r"/(?:home|Users)/[A-Za-z0-9._-]+/")
+
+    offenders = []
+    for path in _tracked_text_files():
+        if path.name in _PATH_LITERAL_EXEMPT:
+            continue
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            stripped = re.sub(r"https?://\S+", "", line)
+            if drive.search(stripped) or home.search(stripped):
+                offenders.append(
+                    f"{path.relative_to(REPO_ROOT).as_posix()}:{number}: {line.strip()[:70]}"
+                )
+
+    assert not offenders, "local machine paths in tracked files:\n  " + "\n  ".join(offenders[:8])
+
+
+def test_no_tracked_file_points_at_a_private_repository():
+    """Naming a private repository as a "representative example" gives a public
+    reader something they cannot open, and publishes the internal roster."""
+    private = ("Flamehaven-CAS", "flamehaven-space")
+
+    offenders = [
+        f"{path.relative_to(REPO_ROOT).as_posix()}: {name}"
+        for path in _tracked_text_files()
+        if path.name not in _PATH_LITERAL_EXEMPT
+        for name in private
+        if name in path.read_text(encoding="utf-8")
+    ]
+
+    assert not offenders, "private repositories named in public files:\n  " + "\n  ".join(offenders)

@@ -37,7 +37,7 @@ Raw files without a contract are legacy assets, not a portable MICA package.
 
 ### 1. Minimal portable package
 
-Best representative: [Flamehaven-CAS mica.yaml](D:/Sanctum/Flamehaven-CAS/mica.yaml:1)
+Closest fixture: [`fixtures/memory_profiles`](../fixtures/memory_profiles)
 
 Use this when:
 
@@ -55,7 +55,7 @@ This should be the default profile for new target repos.
 
 ### 2. Historical versioned package
 
-Representative: [flamehaven-space mica.yaml](D:/Sanctum/WEB%205.0+AI/web%205.0/flamehaven-space/mica.yaml:1)
+In use by one internal package. No public example ships for this shape.
 
 Use this when:
 
@@ -74,7 +74,7 @@ Recommendation:
 
 ### 3. Distributed read-only consumer package
 
-Representative: [STEM-BIO-AI memory/mica.yaml](D:/Sanctum/STEM-BIO-AI/memory/mica.yaml:1)
+Public example: [STEM-BIO-AI](https://github.com/flamehaven01/STEM-BIO-AI) (`memory/mica.yaml`)
 
 Use this when:
 
@@ -86,7 +86,7 @@ This is the right profile for mirrored or shipped skill packages.
 
 ### 4. Router plus domain-island package
 
-Best scalable representative: [flamehaven-audit-reports mica.yaml](D:/Sanctum/flamehaven-audit-reports/mica.yaml:1)
+Public example: [flamehaven-audit-reports](https://github.com/flamehaven01/flamehaven-audit-reports) (`mica.yaml`), the package measured in the v3.0.0 release notes
 
 Use this when:
 
@@ -98,10 +98,10 @@ This is the best profile for large target repos.
 
 ## Best recommendation by target type
 
-- Small or single-domain repo: use the Flamehaven-CAS profile.
+- Small or single-domain repo: use the minimal portable profile (1).
 - Large multi-domain repo: use the flamehaven-audit-reports profile.
 - Distributed read-only deployed copies: use the STEM-BIO-AI profile.
-- Legacy packages with filename rotation: tolerate the flamehaven-space profile, but do not treat it as the default future shape.
+- Legacy packages with filename rotation: tolerate the historical versioned profile (2), but do not treat it as the default future shape.
 
 ## Canonical cross-repo handoff format
 

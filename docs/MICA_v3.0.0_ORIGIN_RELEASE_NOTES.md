@@ -180,7 +180,7 @@ Six live consumer packages, measured at this milestone:
 | flamehaven-cas | 0.2.10 | CLOSED | 3,998 | — |
 | stem-ai-bio | 0.2.4 | CLOSED | 51,056 | — |
 | cocomini-ultimatepos | 0.2.8 | CLOSED | 16,406 | — |
-| flamehaven-space-maintainer | 0.1.9 | CLOSED | 97,560 | — |
+| (internal package, not public) | 0.1.9 | CLOSED | 97,560 | — |
 
 All six close the contract. All six carry a digest for every invoked surface,
 so the exact bytes are identifiable.

@@ -6,3 +6,12 @@
 *.toml text eol=lf
 *.txt text eol=lf
 *.yml text eol=lf
+
+# Images and other binaries: never line-ending converted. `text=auto` already
+# detects them, but stating it means a future edit to the rules above cannot
+# quietly corrupt the logo.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary

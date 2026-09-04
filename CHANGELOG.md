@@ -169,5 +169,6 @@ that nothing used them. `v0.2.10` was the first consumer adopting them, and the
 three defects that trying to adopt exposed. `v0.2.11` was the audit hotfix,
 folded into the release above.
 
-Per-version release notes, migration guides, and approval notes remain in
-[docs/](docs/).
+Per-version approval notes, changelogs, and migration guides for those
+versions are not published. They are internal records for releases nobody
+outside the project saw, and the summary above is what they decided.
