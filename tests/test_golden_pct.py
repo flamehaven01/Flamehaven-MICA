@@ -22,6 +22,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -60,8 +61,25 @@ def build_golden() -> dict[str, list[list[str]]]:
         for profile in [None, *_declared_profiles(package)]:
             with contextlib.redirect_stdout(io.StringIO()):
                 results = mica_core.run_pct_checks(package, profile)
-            snapshot[f"{package.name}|{profile}"] = [list(row) for row in results]
+            snapshot[f"{package.name}|{profile}"] = _stabilise([list(row) for row in results])
     return snapshot
+
+
+# PCT-012 reports an archive's age against the clock, so its message changes
+# every day even when nothing in the repository does. Snapshotting it verbatim
+# meant this gate passed on the day it was written and would have failed the
+# next morning on unmodified code. The age is normalised; the fact that the
+# check fired, and on which fixture, is still compared exactly.
+_VOLATILE = ((re.compile(r"\d+ days old"), "<N> days old"),)
+
+
+def _stabilise(rows: list[list[str]]) -> list[list[str]]:
+    stabilised = []
+    for check, status, message in rows:
+        for pattern, placeholder in _VOLATILE:
+            message = pattern.sub(placeholder, message)
+        stabilised.append([check, status, message])
+    return stabilised
 
 
 def _load_golden() -> dict[str, list[list[str]]]:
@@ -113,6 +131,22 @@ def test_check_output_matches_the_snapshot(key: str):
         f"{key} changed length: recorded {len(expected)} checks, current {len(actual)}. "
         "If intended: python tests/test_golden_pct.py --update"
     )
+
+
+def test_the_snapshot_holds_no_value_that_changes_with_the_clock():
+    """The gate must fail for a code change and only for a code change.
+
+    Written after the snapshot recorded `2437 days old` and began disagreeing
+    with itself the following morning.
+    """
+    offenders = [
+        (key, check, message)
+        for key, rows in _load_golden().items()
+        for check, _, message in rows
+        if re.search(r"\d+ days old", message)
+    ]
+
+    assert not offenders, f"clock-derived values recorded verbatim: {offenders[:3]}"
 
 
 def test_messages_do_not_leak_the_host_path_style():

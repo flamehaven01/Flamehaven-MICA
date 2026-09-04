@@ -651,7 +651,11 @@ def _run_pct003(ctx: _PackageContext) -> list[tuple[str, str, str]]:
         if not isinstance(lyr, dict) or not lyr.get("required", True):
             continue
         rel = lyr.get("path")
-        if not isinstance(rel, str):
+        if not isinstance(rel, str) or not rel.strip():
+            # Skipping this let a package delete `path:` from its archive and
+            # still close the contract: nothing else in the check chain looks
+            # at files, so an unresolvable surface became an invisible one.
+            unusable.append(f"{layer_role(lyr) or '<unnamed layer>'} (no usable path declared)")
             continue
         resolved = _resolve_within_root(ctx.project_root, rel)
         if resolved is None:
@@ -805,6 +809,32 @@ def _spec_lag_result(declared_spec: str) -> list[tuple[str, str, str]]:
     return []
 
 
+def _handoff_is_deliverable(project_root: Path) -> tuple[bool, str]:
+    """Whether a handoff document may enter agent context.
+
+    mica_handoff imports only mica_primitives, so reading it here adds no cycle.
+    """
+    try:
+        import mica_handoff
+    except ImportError:  # pragma: no cover - tools/ is always on the path
+        return (True, "handoff validator unavailable")
+
+    statuses: dict[str, str] = {}
+    messages: dict[str, str] = {}
+    for check, status, message in mica_handoff.run_handoff_checks(project_root):
+        statuses[check] = status
+        messages[check] = message
+
+    if statuses.get("HND-001") == "INFO":
+        return (False, "no handoff document present")
+    for check in ("HND-001", "HND-002", "HND-004"):
+        if statuses.get(check) == "FAIL":
+            return (False, messages.get(check, f"{check} failed"))
+    if statuses.get("HND-003") in {"WARN", "INFO"}:
+        return (False, messages.get("HND-003", "handoff is not current"))
+    return (True, "valid and current")
+
+
 def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
     """The invocation protocol resolves: pattern, profile, surfaces, audiences."""
     out: list[tuple[str, str, str]] = []
@@ -847,6 +877,15 @@ def _run_pct007(ctx: _PackageContext) -> list[tuple[str, str, str]]:
         context_config_issues.append(
             f"agent_context surfaces not session-start invoked {non_invoked_context_surfaces}"
         )
+    # A handoff that fails its own integrity check, or one that has expired or
+    # been superseded, is withheld from agent context at runtime. The contract
+    # has to agree: a named surface that does not reach the session is not a
+    # closed contract, and reporting CLOSED here while the runtime withholds it
+    # would make the two disagree about the same session.
+    if "handoff" in context_surfaces:
+        deliverable, reason = _handoff_is_deliverable(ctx.project_root)
+        if not deliverable:
+            context_config_issues.append(f"handoff named for agent_context but withheld: {reason}")
     operator_config_issues: list[str] = []
     if invalid_operator_only_surfaces:
         operator_config_issues.append(

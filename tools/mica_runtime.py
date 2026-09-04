@@ -153,6 +153,31 @@ def _resolve_declared_layer_paths(project_root: Path, yd: dict[str, Any]) -> dic
     return result
 
 
+def handoff_delivery_state(project_root: Path) -> tuple[bool, str]:
+    """Whether a handoff document may enter agent context, and why not.
+
+    HND-* existed only as a standalone command, so an expired handoff and one
+    whose hash had been rewritten were both delivered exactly like a valid one.
+    A record that fails its own integrity check is not memory this session
+    should be given, and the documented rule for an expired handoff is to
+    exclude it unless an operator reactivates it.
+    """
+    import mica_handoff
+
+    results = mica_handoff.run_handoff_checks(project_root)
+    statuses = {check: status for check, status, _ in results}
+    messages = {check: message for check, _, message in results}
+
+    if statuses.get("HND-001") == "INFO":
+        return (False, "no handoff surface present")
+    for check in ("HND-001", "HND-002", "HND-004"):
+        if statuses.get(check) == "FAIL":
+            return (False, f"{check}: {messages.get(check, 'invalid handoff')}")
+    if statuses.get("HND-003") in {"WARN", "INFO"}:
+        return (False, f"HND-003: {messages.get('HND-003', 'handoff is not current')}")
+    return (True, "handoff is valid and current")
+
+
 def _build_surface_evidence(
     project_root: Path,
     layer_paths: dict[str, Path],
@@ -324,13 +349,27 @@ def _build_invocation_summary(
     deferred = list(contract["deferred_surfaces"])
     missing = [role for role in expected_loaded if role not in loaded]
     agent_context_surfaces = [role for role in contract["agent_context_surfaces"] if role in loaded]
-    if not agent_context_surfaces:
-        agent_context_surfaces = [role for role in loaded]
     operator_only_surfaces = list(contract.get("operator_only_surfaces") or [])
+    # There used to be a fallback here: an empty agent context was refilled with
+    # every loaded surface. A package declaring `agent_context_surfaces: []` and
+    # `operator_only_surfaces: [archive, playbook]` therefore handed the agent
+    # exactly the surfaces it had marked operator-only. An empty selection is a
+    # truthful answer and is reported as one. A surface named in both lists is a
+    # contradiction the contract refuses outright (PCT-007), so there is nothing
+    # left to filter here.
+
+    handoff_withheld_reason = ""
+    if "handoff" in agent_context_surfaces:
+        deliverable, reason = handoff_delivery_state(project_root)
+        if not deliverable:
+            agent_context_surfaces = [r for r in agent_context_surfaces if r != "handoff"]
+            loaded = [r for r in loaded if r != "handoff"]
+            handoff_withheld_reason = reason
 
     return {
         "session_id": _resolve_active_session_id(project_root),
         "invocation_contract": contract["invocation_contract"],
+        "handoff_withheld_reason": handoff_withheld_reason,
         "declared_profiles": contract["declared_profiles"],
         "active_profile": contract["active_profile"],
         "declared_surfaces": declared,
