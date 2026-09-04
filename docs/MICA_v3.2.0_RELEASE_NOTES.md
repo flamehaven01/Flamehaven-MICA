@@ -111,8 +111,10 @@ existing package shape.
 
 ## Verification
 
-- Local suite: 376 passed, 1 skipped.
-- Remote CI: Python 3.9, 3.11, 3.12, and 3.13 plus the memory-contract job.
+- Test collection: 378 tests.
+- Local Windows suite: 377 passed, 1 symbolic-link case skipped.
+- Remote Linux CI: all 378 passed on Python 3.9, 3.11, 3.12, and 3.13;
+  the memory-contract job also passed.
 - `mica-context` passed the skill validator.
 - A known CRLF-based consumer emitted 98,061 context bytes successfully through
   the released runtime path.

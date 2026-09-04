@@ -6,7 +6,9 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ## Unreleased
 
-No changes yet.
+Documentation correction: the v3.2.0 tree collects 378 tests. Windows ran 377
+and skipped one symbolic-link case; the remote Linux matrix ran all 378. The
+published `v3.2.0` tag remains unchanged.
 
 ---
 
@@ -37,9 +39,10 @@ test suite were removed. The runtime still supports pre-materialized
 remain invocable. This removes an unconsumed authoring subsystem without
 turning repository-specific memory into a single mandatory schema.
 
-Pre-release verification completed with 376 passed and 1 skipped locally, the
-five-job remote matrix green, a valid `mica-context` skill, and successful
-98,061-byte emission from a CRLF-based consumer.
+Pre-release verification collected 378 tests: 377 passed and one symbolic-link
+case skipped locally on Windows, while the five-job remote Linux matrix ran all
+378 green. The `mica-context` skill validated, and a CRLF-based consumer emitted
+98,061 bytes successfully.
 
 See [the v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md).
 
