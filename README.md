@@ -6,7 +6,7 @@
   <a href="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml"><img src="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"/></a>
-  <img src="https://img.shields.io/badge/release-v3.2.0-green.svg" alt="v3.2.0"/>
+  <img src="https://img.shields.io/badge/release-v3.3.0-green.svg" alt="v3.3.0"/>
 </p>
 
 <p align="center"><b>README invokes. MICA loads memory and playbook.</b></p>
@@ -177,7 +177,7 @@ Consumers may call the reusable workflow without copying MICA's CI policy:
 ```yaml
 jobs:
   mica:
-    uses: flamehaven01/Flamehaven-MICA/.github/workflows/mica-consumer.yml@v3.2.0
+    uses: flamehaven01/Flamehaven-MICA/.github/workflows/mica-consumer.yml@v3.3.0
     with:
       project-root: .
       profile: default
@@ -264,10 +264,12 @@ must regenerate `tests/golden/pct_output.json` with
 - [Consumer authoring guide](docs/MICA_CONSUMER_AUTHORING_GUIDE.md)
 - [Cross-repository adoption guide](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md)
 - [Thin Claude/Codex adapters](templates/adapters/)
+- [v3.3.0 release notes](docs/MICA_v3.3.0_RELEASE_NOTES.md)
 - [v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md)
-- [v3.0.0 declaration](docs/MICA_v3.0.0_DECLARATION.md)
 - [v3.1.0 release notes](docs/MICA_v3.1.0_RELEASE_NOTES.md)
 - [v3.0.1 release notes](docs/MICA_v3.0.1_RELEASE_NOTES.md)
+- [v3.0.0 declaration](docs/MICA_v3.0.0_DECLARATION.md)
+- [Static analysis snapshot (2026-09-04)](docs/MICA_SLOP_SCAN_2026-09-04.md)
 - [Changelog](CHANGELOG.md)
 
 ## License

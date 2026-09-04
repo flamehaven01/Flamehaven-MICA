@@ -6,6 +6,12 @@ Most recent first. Release notes and migration guides live in [docs/](docs/).
 
 ## Unreleased
 
+No unreleased changes.
+
+---
+
+## v3.3.0 — repository-owned memory lifecycle (2026-09-04)
+
 Documentation correction: the v3.2.0 tree collects 378 tests. Windows ran 377
 and skipped one symbolic-link case; the remote Linux matrix ran all 378. The
 published `v3.2.0` tag remains unchanged.
@@ -19,6 +25,12 @@ Added a separate `mica-author` skill and lifecycle guidance for explicitly
 creating, maintaining, optimizing, or retiring future repository-owned MICA
 packages. Existing consumer packages remain independent and unchanged. This
 adds no runtime, schema, PCT, or automatic memory-generation machinery.
+
+Recorded a read-only structural analysis snapshot. It identifies complexity
+hotspots but intentionally adds no complexity gate or refactor: no observed
+finding changed emitted context or demonstrated a consumer failure.
+
+See [the v3.3.0 release notes](docs/MICA_v3.3.0_RELEASE_NOTES.md).
 
 ---
 
