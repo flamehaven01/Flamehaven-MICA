@@ -70,7 +70,8 @@ def build_golden() -> dict[str, list[list[str]]]:
 # meant this gate passed on the day it was written and would have failed the
 # next morning on unmodified code. The age is normalised; the fact that the
 # check fired, and on which fixture, is still compared exactly.
-_VOLATILE = ((re.compile(r"\d+ days old"), "<N> days old"),)
+_DAYS_OLD = re.compile(r"\b\d+ days old\b")
+_VOLATILE = ((_DAYS_OLD, "<N> days old"),)
 
 
 def _stabilise(rows: list[list[str]]) -> list[list[str]]:
@@ -144,7 +145,7 @@ def test_the_snapshot_holds_no_value_that_changes_with_the_clock():
         (key, check, message)
         for key, rows in _load_golden().items()
         for check, _, message in rows
-        if re.search(r"\d+ days old", message)
+        if _DAYS_OLD.search(message)
     ]
 
     assert not offenders, f"clock-derived values recorded verbatim: {offenders[:3]}"
