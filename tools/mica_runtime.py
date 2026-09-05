@@ -34,6 +34,7 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from mica_core import (
+    CONTRACT_CHECKS,
     INVOCATION_SCHEMA_V2,
     MICA_TOOL_VERSION,
     _resolve_within_root,
@@ -472,7 +473,11 @@ def pct_status(project_root: Path) -> str:
 
 def build_summary(project_root: Path, profile: str | None = None) -> dict[str, Any]:
     state, mica_yaml, legacy_archive = detect_state(project_root)
-    base: dict[str, Any] = {"state": state, "project_root": str(project_root)}
+    base: dict[str, Any] = {
+        "state": state,
+        "project_root": str(project_root),
+        "contract_failures": [],
+    }
 
     if state == "INACTIVE":
         base.update(
@@ -527,6 +532,11 @@ def build_summary(project_root: Path, profile: str | None = None) -> dict[str, A
     hook_output_raw = inv.get("hook_output") if isinstance(inv.get("hook_output"), dict) else {}
     proj = archive.get("project") if isinstance(archive.get("project"), dict) else {}
     pct_results = run_pct_checks(project_root, profile)
+    contract_failures = [
+        {"id": check_id, "message": message}
+        for check_id, status, message in pct_results
+        if status == "FAIL" and check_id in CONTRACT_CHECKS
+    ]
     core_state = "CLOSED" if is_closed_contract(pct_results) else "INCOMPLETE"
     flow_summary = _build_flow_summary(project_root, yd, pct_results)
     invocation_summary = _build_invocation_summary(
@@ -549,6 +559,7 @@ def build_summary(project_root: Path, profile: str | None = None) -> dict[str, A
             "last_updated": (archive.get("operation_meta") or {}).get("last_updated"),
             "hook_output": hook_output_raw,
             "core_state": core_state,
+            "contract_failures": contract_failures,
         }
     )
     base.update(flow_summary)
@@ -755,7 +766,19 @@ def emit_context_bytes(project_root: Path, summary: dict[str, Any]) -> bytes:
     if summary.get("state") == "INACTIVE":
         raise RuntimeError("cannot emit context: no MICA package found")
     if summary.get("state") != "LEGACY_MODE" and summary.get("core_state") != "CLOSED":
-        raise RuntimeError("cannot emit context: invocation contract is incomplete")
+        failures = summary.get("contract_failures") or []
+        details = [
+            f"{entry.get('id')} [FAIL] {entry.get('message')}"
+            for entry in failures
+            if isinstance(entry, dict)
+            and isinstance(entry.get("id"), str)
+            and isinstance(entry.get("message"), str)
+        ]
+        diagnostic = "cannot emit context: invocation contract is incomplete"
+        if details:
+            diagnostic += "\n" + "\n".join(details)
+        diagnostic += "\nrun: python <MICA_ROOT>/tools/mica_pct.py <TARGET_REPO>"
+        raise RuntimeError(diagnostic)
 
     roles = [str(role) for role in summary.get("agent_context_surfaces") or []]
     evidence_by_role = {

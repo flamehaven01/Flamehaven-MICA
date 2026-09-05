@@ -264,3 +264,21 @@ def test_context_cli_emits_nothing_for_an_incomplete_contract(tmp_path: Path):
     assert result.returncode == 1
     assert result.stdout == ""
     assert "invocation contract is incomplete" in result.stderr
+    assert "PCT-007 [FAIL]" in result.stderr
+    assert "README.md missing" in result.stderr
+    assert "run: python <MICA_ROOT>/tools/mica_pct.py <TARGET_REPO>" in result.stderr
+
+
+def test_context_diagnostic_keeps_contract_failure_out_of_trace_record():
+    root = REPO_ROOT / "fixtures" / "flow_recall_agent_context_violation"
+    summary = mica_runtime.build_summary(root)
+
+    assert summary["contract_failures"] == [
+        {
+            "id": "PCT-017",
+            "message": "candidate cand_00042 entered agent_context while operator_review.state=pending",
+        }
+    ]
+
+    record = mica_runtime.build_invocation_trace_record(summary)
+    assert "contract_failures" not in record

@@ -8,6 +8,12 @@ summaries remain on GitHub Releases rather than the current product surface.
 
 ## Unreleased
 
+Preserved existing Contract-axis PCT failure details in runtime summaries. A
+failed `--format context` invocation now writes the relevant PCT IDs, their
+existing messages, and the `mica_pct.py` follow-up command to stderr while
+continuing to emit zero context bytes and exit with status `1`. Invocation
+traces and capsule hashes remain unchanged.
+
 ---
 
 ## v3.3.1 — applied contract surface (2026-09-05)
@@ -20,10 +26,9 @@ guard so old versioned MICA documents and legacy document directories cannot
 silently return to `main`.
 
 Added an external field-validation issue form and a reproduce-before-change
-intake protocol. Grouped machine-readable schemas under `schemas/`, with the
-versioned DI-binding compatibility schema under `schemas/compat/`. MICA tools
-now resolve shipped schemas through one shared path helper. Retained schema
-filenames and `$id` values are unchanged.
+intake protocol. Grouped the three retained machine-readable schemas under
+`schemas/`. MICA tools now resolve shipped schemas through one shared path
+helper. Retained schema filenames and `$id` values are unchanged.
 
 Removed seven flow/memory schemas that no runtime validator applied, plus the
 unused versioned DI-binding compatibility schema and its historical profiles.
