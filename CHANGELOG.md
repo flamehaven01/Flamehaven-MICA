@@ -1,12 +1,19 @@
 # MICA Changelog
 
-Most recent first. Release notes and migration guides live in [docs/](docs/).
+Most recent first. Current operating documents live in [docs/](docs/). Older
+documents remain recoverable from Git history and versioned tags; release
+summaries remain on GitHub Releases rather than the current product surface.
 
 ---
 
 ## Unreleased
 
-No unreleased changes.
+Defined the v3.3.0 product boundary and change-admission filter. Historical
+release, migration, declaration, and superseded runtime-status documents were
+removed from current `docs/`. Git history and versioned tags retain the files,
+while GitHub Releases retain published release summaries. Added a regression
+guard so old versioned MICA documents and legacy document directories cannot
+silently return to `main`.
 
 ---
 
@@ -66,7 +73,7 @@ case skipped locally on Windows, while the five-job remote Linux matrix ran all
 378 green. The `mica-context` skill validated, and a CRLF-based consumer emitted
 98,061 bytes successfully.
 
-See [the v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md).
+See [the v3.2.0 GitHub Release](https://github.com/flamehaven01/Flamehaven-MICA/releases/tag/v3.2.0).
 
 ---
 
@@ -213,10 +220,9 @@ The README said "five of seventeen shipping checks" where the real figure was
 seven of thirty. Its counts are now asserted against the code, because a number
 written by hand in prose drifts the moment either side moves.
 
-`docs/MICA_v3.0.1_RELEASE_NOTES.md` added. The GitHub release body already
-carried this content; what was missing was a copy that lives in the repository
-and survives independent of the release page. The README document map points at
-it.
+An in-repository release-note copy was added at the time. Current `main` keeps
+historical release records in the immutable tag and GitHub Release instead of
+presenting them as active product documentation.
 
 ---
 

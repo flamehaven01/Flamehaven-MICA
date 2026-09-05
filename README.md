@@ -261,14 +261,11 @@ must regenerate `tests/golden/pct_output.json` with
 
 ## Documents
 
+- [Product boundary and change filter](docs/MICA_PRODUCT_BOUNDARY.md)
 - [Consumer authoring guide](docs/MICA_CONSUMER_AUTHORING_GUIDE.md)
 - [Cross-repository adoption guide](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md)
 - [Thin Claude/Codex adapters](templates/adapters/)
 - [v3.3.0 release notes](docs/MICA_v3.3.0_RELEASE_NOTES.md)
-- [v3.2.0 release notes](docs/MICA_v3.2.0_RELEASE_NOTES.md)
-- [v3.1.0 release notes](docs/MICA_v3.1.0_RELEASE_NOTES.md)
-- [v3.0.1 release notes](docs/MICA_v3.0.1_RELEASE_NOTES.md)
-- [v3.0.0 declaration](docs/MICA_v3.0.0_DECLARATION.md)
 - [Static analysis snapshot (2026-09-04)](docs/MICA_SLOP_SCAN_2026-09-04.md)
 - [Changelog](CHANGELOG.md)
 

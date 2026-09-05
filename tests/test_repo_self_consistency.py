@@ -109,6 +109,33 @@ def test_the_canonical_version_is_a_release_number():
     assert re.fullmatch(r"\d+\.\d+\.\d+", mica_primitives.MICA_CANONICAL_VERSION)
 
 
+def test_current_docs_keep_only_the_current_mica_release_document():
+    """Immutable tags keep history; current docs should not reactivate it."""
+    versioned = {path.name for path in DOCS_DIR.glob("MICA_v*.md")}
+    expected = {f"MICA_v{mica_primitives.MICA_TOOL_VERSION}_RELEASE_NOTES.md"}
+
+    assert versioned == expected, (
+        f"current docs should contain only {sorted(expected)}, found {sorted(versioned)}"
+    )
+
+
+def test_retired_document_collections_do_not_return():
+    forbidden = {"archive", "drafts", "legacy"}
+    present = {
+        path.name.lower()
+        for path in DOCS_DIR.iterdir()
+        if path.is_dir() and path.name.lower() in forbidden
+    }
+
+    assert not present, f"retired document collections returned: {sorted(present)}"
+
+
+def test_readme_exposes_the_product_boundary():
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "docs/MICA_PRODUCT_BOUNDARY.md" in readme
+
+
 # --- a check that ships has a document describing it -------------------------
 
 

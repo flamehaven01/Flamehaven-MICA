@@ -39,6 +39,14 @@ dist/
 htmlcov/
 coverage.xml
 
+# Local research and retired-document staging -- not MICA product surfaces
+/bench/
+/experiments/
+/docs/archive/
+/docs/drafts/
+/docs/legacy/
+/slop.json
+
 # Editors
 .idea/
 .vscode/
