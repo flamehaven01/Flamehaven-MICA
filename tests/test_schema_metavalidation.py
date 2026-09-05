@@ -14,10 +14,17 @@ import jsonschema
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-# Root-level schemas are the shipped package contract. The rglob also reaches
-# schemas under experiments/, because a schema that does not parse is broken
-# wherever it lives, and the metavalidation costs nothing per file.
-SHIPPED_SCHEMA_FILES = sorted(REPO_ROOT.glob("*.schema.json"))
+SCHEMAS_DIR = REPO_ROOT / "schemas"
+ACTIVE_SCHEMA_NAMES = {
+    "mica.handoff.schema.json",
+    "mica.invocation.schema.json",
+    "mica.yaml.schema.json",
+}
+# Schemas are a shipped package contract, grouped outside the product entrypoint.
+# The rglob also reaches schemas under experiments/, because a schema that does
+# not parse is broken wherever it lives, and the metavalidation costs nothing
+# per file.
+SHIPPED_SCHEMA_FILES = sorted(SCHEMAS_DIR.rglob("*.schema.json"))
 # `.claude` holds agent worktrees and `Legacy` holds untracked history; both are
 # gitignored and absent on CI, so including them would make the collected test
 # count differ between a developer machine and the runner.
@@ -32,8 +39,14 @@ def _load(path: Path) -> dict:
 
 
 def test_schema_files_are_discovered():
-    assert SHIPPED_SCHEMA_FILES, "expected shipped *.schema.json files at the repository root"
+    assert SHIPPED_SCHEMA_FILES, "expected shipped *.schema.json files in schemas/"
     assert len(SCHEMA_FILES) >= len(SHIPPED_SCHEMA_FILES)
+    assert {path.name for path in SHIPPED_SCHEMA_FILES} == ACTIVE_SCHEMA_NAMES
+
+
+def test_shipped_schemas_do_not_clutter_the_repository_root():
+    assert not list(REPO_ROOT.glob("*.schema.json"))
+    assert (SCHEMAS_DIR / "mica.yaml.schema.json").is_file()
 
 
 @pytest.mark.parametrize("schema_path", SCHEMA_FILES, ids=lambda p: p.name)
@@ -48,7 +61,7 @@ def test_schema_passes_metavalidation(schema_path: Path):
 
 @pytest.fixture(scope="module")
 def invocation_validator():
-    schema = _load(REPO_ROOT / "mica.invocation.schema.json")
+    schema = _load(SCHEMAS_DIR / "mica.invocation.schema.json")
     return jsonschema.validators.validator_for(schema)(schema)
 
 

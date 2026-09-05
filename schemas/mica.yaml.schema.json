@@ -362,7 +362,7 @@
             "legacy_inv"
           ],
           "default": "sequential",
-          "description": "DI ID namespace convention for this archive. sequential: canonical DI-NNN. domain_namespaced: DI-[DOMAIN]-NNN for multi-lane systems (e.g. DI-EQA-001). legacy_inv: INV-NNN grandfathered prefix. All modes validated by mica-v0.2.7-archive-di-binding.schema.json pattern ^(DI|INV)(-[A-Z][A-Z0-9]*)?-\\d+$."
+          "description": "DI ID namespace convention for this archive. sequential: canonical DI-NNN. domain_namespaced: DI-[DOMAIN]-NNN for multi-lane systems (e.g. DI-EQA-001). legacy_inv: INV-NNN grandfathered prefix. Runtime DI policy accepts ^(DI|INV)(-[A-Z][A-Z0-9]*)?-\\d+$."
         },
         "max_archive_age_days": {
           "type": "integer",
@@ -391,7 +391,7 @@
     },
     "diBinding": {
       "type": "object",
-      "description": "Evidence block for mica.yaml drift_profile.classes DIs. For archive design_invariants, use mica-v0.2.7-archive-di-binding.schema.json.",
+      "description": "Evidence block for mica.yaml drift_profile.classes DIs. Archive design_invariant bindings are checked by PCT-010.",
       "required": [
         "origin_episode"
       ],

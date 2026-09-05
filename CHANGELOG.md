@@ -8,12 +8,27 @@ summaries remain on GitHub Releases rather than the current product surface.
 
 ## Unreleased
 
+---
+
+## v3.3.1 — applied contract surface (2026-09-05)
+
 Defined the v3.3.0 product boundary and change-admission filter. Historical
 release, migration, declaration, and superseded runtime-status documents were
 removed from current `docs/`. Git history and versioned tags retain the files,
 while GitHub Releases retain published release summaries. Added a regression
 guard so old versioned MICA documents and legacy document directories cannot
 silently return to `main`.
+
+Added an external field-validation issue form and a reproduce-before-change
+intake protocol. Grouped machine-readable schemas under `schemas/`, with the
+versioned DI-binding compatibility schema under `schemas/compat/`. MICA tools
+now resolve shipped schemas through one shared path helper. Retained schema
+filenames and `$id` values are unchanged.
+
+Removed seven flow/memory schemas that no runtime validator applied, plus the
+unused versioned DI-binding compatibility schema and its historical profiles.
+The retained schemas cover only the manifest, invocation trace, and optional
+handoff artifacts that MICA actually validates.
 
 ---
 
@@ -37,7 +52,7 @@ Recorded a read-only structural analysis snapshot. It identifies complexity
 hotspots but intentionally adds no complexity gate or refactor: no observed
 finding changed emitted context or demonstrated a consumer failure.
 
-See [the v3.3.0 release notes](docs/MICA_v3.3.0_RELEASE_NOTES.md).
+See [the v3.3.0 GitHub Release](https://github.com/flamehaven01/Flamehaven-MICA/releases/tag/v3.3.0).
 
 ---
 

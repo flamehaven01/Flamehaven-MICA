@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 # The tool's own release version, bumped when the tools change.
-MICA_TOOL_VERSION = "3.3.0"
+MICA_TOOL_VERSION = "3.3.1"
 
 # The contract version this release implements. A package declares its contract
 # in `mica_spec`, which is a different axis from the tool release. Conflating the
@@ -200,8 +200,13 @@ def find_flow_artifact(project_root: Path, filename: str) -> Path | None:
     return None
 
 
+def find_shipped_schema(filename: str) -> Path:
+    """Return a bundled schema without exposing the repository root layout."""
+    return Path(__file__).resolve().parent.parent / "schemas" / filename
+
+
 def find_invocation_schema() -> Path:
-    return Path(__file__).resolve().parent.parent / "mica.invocation.schema.json"
+    return find_shipped_schema("mica.invocation.schema.json")
 
 
 def canonical_surface_path(project_root: Path, target: Path) -> str:

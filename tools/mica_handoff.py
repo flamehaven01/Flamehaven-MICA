@@ -37,6 +37,7 @@ from mica_primitives import (  # noqa: E402
     _is_non_empty_string,
     _normalized_json_text,
     find_flow_artifact,
+    find_shipped_schema,
     format_tool_banner,
     hash_bytes,
     load_json,
@@ -83,7 +84,7 @@ _HASH_FIELDS = (
 
 
 def find_handoff_schema() -> Path:
-    return Path(__file__).resolve().parent.parent / "mica.handoff.schema.json"
+    return find_shipped_schema("mica.handoff.schema.json")
 
 
 def compute_handoff_hash(record: dict[str, Any]) -> str:

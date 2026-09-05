@@ -39,7 +39,9 @@ def test_consumer_archetype_matches_the_shipped_composition_schema(fixture: str)
     manifest = mica_core.find_mica_yaml(root)
     assert manifest is not None
 
-    schema = json.loads((REPO_ROOT / "mica.yaml.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.yaml.schema.json").read_text(encoding="utf-8")
+    )
     validator_class = validator_for(schema)
     validator_class.check_schema(schema)
     document = yaml.safe_load(manifest.read_text(encoding="utf-8"))

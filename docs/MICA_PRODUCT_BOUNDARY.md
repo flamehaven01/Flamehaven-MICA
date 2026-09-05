@@ -1,6 +1,6 @@
 # MICA Product Boundary
 
-Status: **FROZEN at v3.3.0 until external evidence justifies a change.**
+Status: **FROZEN at v3.3.1 until external evidence justifies a change.**
 
 ## Definition
 
@@ -46,6 +46,36 @@ If either answer is no, route the work outside MICA core.
 | Outcome comparison or causal benchmark | Separate research repository |
 | Author identity, signing, or organizational approval | Consumer governance layer |
 | Automatic summarization, synthesis, or retrieval | Reject as a MICA core feature |
+
+## External Field Validation
+
+An independent consumer's first attempt is evidence. Do not replace it with a
+guided second attempt before recording what happened. Ask the consumer to keep
+the target repository, MICA release, host, task, commands, outputs, and first
+blocking ambiguity identifiable. Secrets and private repository content must be
+removed before public submission.
+
+For each report, record:
+
+- whether the task was adoption or operation
+- target revision, MICA release, host, model, operating system, and Python version
+- public instructions discovered and the order in which they were used
+- exact commands, exit codes, and the first unexpected result
+- emitted context byte count and how the host was asked to attach that context
+- files created or changed, any intervention received, and expected versus actual behavior
+
+Respond in this order:
+
+1. Preserve the original report and acknowledge its current evidence boundary.
+2. Reproduce against the reported MICA release and consumer shape before editing.
+3. Classify the result using the destination table above.
+4. Make a MICA change only for a reproduced core-contract defect or ambiguity.
+5. Verify the narrow failure path and report remaining uncertainty. Do not turn
+   successful resolution or emission into a claim about comprehension or outcome.
+
+One consumer's preference is not automatically a product requirement. One
+reproducible correctness defect can be sufficient; adoption friction should be
+repeated or independently corroborated before expanding the product surface.
 
 ## Explicit Non-Goals
 

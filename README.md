@@ -6,7 +6,7 @@
   <a href="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml"><img src="https://github.com/flamehaven01/Flamehaven-MICA/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"/></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"/></a>
-  <img src="https://img.shields.io/badge/release-v3.3.0-green.svg" alt="v3.3.0"/>
+  <img src="https://img.shields.io/badge/release-v3.3.1-green.svg" alt="v3.3.1"/>
 </p>
 
 <p align="center"><b>README invokes. MICA loads memory and playbook.</b></p>
@@ -177,7 +177,7 @@ Consumers may call the reusable workflow without copying MICA's CI policy:
 ```yaml
 jobs:
   mica:
-    uses: flamehaven01/Flamehaven-MICA/.github/workflows/mica-consumer.yml@v3.3.0
+    uses: flamehaven01/Flamehaven-MICA/.github/workflows/mica-consumer.yml@v3.3.1
     with:
       project-root: .
       profile: default
@@ -262,10 +262,12 @@ must regenerate `tests/golden/pct_output.json` with
 ## Documents
 
 - [Product boundary and change filter](docs/MICA_PRODUCT_BOUNDARY.md)
+- [External field-validation report](.github/ISSUE_TEMPLATE/field-validation.yml)
+- [Machine-readable schemas](schemas/README.md)
 - [Consumer authoring guide](docs/MICA_CONSUMER_AUTHORING_GUIDE.md)
 - [Cross-repository adoption guide](docs/MICA_CROSS_REPO_ADOPTION_GUIDE.md)
 - [Thin Claude/Codex adapters](templates/adapters/)
-- [v3.3.0 release notes](docs/MICA_v3.3.0_RELEASE_NOTES.md)
+- [v3.3.1 release notes](docs/MICA_v3.3.1_RELEASE_NOTES.md)
 - [Static analysis snapshot (2026-09-04)](docs/MICA_SLOP_SCAN_2026-09-04.md)
 - [Changelog](CHANGELOG.md)
 

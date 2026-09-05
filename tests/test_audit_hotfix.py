@@ -276,7 +276,9 @@ def test_two_handoffs_built_in_the_same_second_get_different_ids():
 def test_a_generated_handoff_id_still_matches_the_shipped_schema():
     import re
 
-    schema = json.loads((REPO_ROOT / "mica.handoff.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.handoff.schema.json").read_text(encoding="utf-8")
+    )
     pattern = schema["properties"]["handoff_id"]["pattern"]
 
     assert re.fullmatch(pattern, mica_handoff.build_handoff("scope", "inv_1")["handoff_id"])

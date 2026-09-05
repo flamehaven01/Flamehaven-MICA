@@ -138,11 +138,8 @@ def test_an_invalid_trust_tier_is_rejected(tmp_path: Path):
     assert "trust_tier" in _message(results, "HND-002")
 
 
-def test_trust_vocabulary_matches_the_observation_schema():
-    """One vocabulary, not two. A third set of trust words would be drift."""
-    observe = json.loads((REPO_ROOT / "mica.observe.schema.json").read_text(encoding="utf-8"))
-
-    assert list(mica_handoff.ARTIFACT_TRUST_TIERS) == observe["properties"]["trust_tier"]["enum"]
+def test_handoff_trust_vocabulary_is_explicit():
+    assert mica_handoff.ARTIFACT_TRUST_TIERS == ("native", "attested", "opaque")
 
 
 # --- freshness: a stale handoff is not current state -------------------------
@@ -212,13 +209,17 @@ def test_candidate_references_are_allowed(tmp_path: Path):
 
 
 def test_handoff_schema_metavalidates():
-    schema = json.loads((REPO_ROOT / "mica.handoff.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.handoff.schema.json").read_text(encoding="utf-8")
+    )
 
     jsonschema.validators.validator_for(schema).check_schema(schema)
 
 
 def test_the_written_handoff_satisfies_the_shipped_schema():
-    schema = json.loads((REPO_ROOT / "mica.handoff.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.handoff.schema.json").read_text(encoding="utf-8")
+    )
     validator = jsonschema.validators.validator_for(schema)(schema)
     record = json.loads((FIXTURE / "memory" / "mica_handoff.json").read_text(encoding="utf-8"))
 

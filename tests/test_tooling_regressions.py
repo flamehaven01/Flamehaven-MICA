@@ -68,7 +68,9 @@ def test_find_legacy_archive_uses_last_updated_as_tiebreaker(tmp_path: Path):
 
 
 def test_schema_supports_memory_first_mode():
-    schema = json.loads((REPO_ROOT / "mica.yaml.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.yaml.schema.json").read_text(encoding="utf-8")
+    )
 
     assert "memory_first" in schema["properties"]["mode"]["enum"]
     assert "memory_policy" in schema["properties"]
@@ -80,28 +82,10 @@ def test_schema_supports_memory_first_mode():
     assert "operator_only_surfaces" in schema["$defs"]["invocationProtocol"]["properties"]
 
 
-def test_memory_first_record_schemas_exist_and_expose_expected_versions():
-    expected = {
-        "mica.sessions.schema.json": ("Session", "mica.sessions.v1"),
-        "mica.memories.schema.json": ("Memory", "mica.memories.v1"),
-        "mica.invocation.schema.json": ("Invocation", "mica.invocation.v1"),
-        "mica.slots.schema.json": ("Slot", "mica.slots.v1"),
-        "mica.graph.schema.json": ("Graph", "mica.graph.v1"),
-    }
-
-    for filename, (title_fragment, version_const) in expected.items():
-        schema = json.loads((REPO_ROOT / filename).read_text(encoding="utf-8"))
-        assert title_fragment in schema["title"]
-        declared = schema["properties"]["schema_version"]
-        if "enum" in declared:
-            # The invocation schema accepts v1 history alongside v2 capsules.
-            assert version_const in declared["enum"]
-        else:
-            assert declared["const"] == version_const
-
-
 def test_invocation_schema_accepts_v1_history_and_v2_capsules():
-    schema = json.loads((REPO_ROOT / "mica.invocation.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.invocation.schema.json").read_text(encoding="utf-8")
+    )
     versions = schema["properties"]["schema_version"]["enum"]
 
     assert versions == ["mica.invocation.v1", "mica.invocation.v2"]

@@ -1,0 +1,83 @@
+name: External field validation
+description: Report a first independent attempt to adopt or operate MICA in a real repository.
+title: "[Field validation] "
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Preserve the first attempt, including failures and ambiguities. Remove secrets and private repository content before submitting. A closed contract or emitted bytes do not prove that a model received, understood, or used the context.
+
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task type
+      options:
+        - Adopt MICA in a repository without a package
+        - Operate an existing MICA package
+    validations:
+      required: true
+
+  - type: input
+    id: mica_version
+    attributes:
+      label: MICA release or revision
+      placeholder: v3.3.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Target repository and revision, agent host, model, OS, and Python version. A private repository may be described without naming it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: discovery
+    attributes:
+      label: Discovery path
+      description: Which public files or instructions did you find, and in what order?
+    validations:
+      required: true
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands and outputs
+      description: Include exact commands, exit codes, and sanitized output around the first unexpected result.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: first_friction
+    attributes:
+      label: First ambiguity, failure, or unnecessary friction
+      description: What did you expect, what happened, and where did you first have to guess?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context_delivery
+    attributes:
+      label: Context delivery
+      description: Record emitted byte count, selected profile if any, and how the agent host was asked to attach the emitted context. State not reached or unknown when applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: changes_and_help
+    attributes:
+      label: Changes and intervention
+      description: List files created or changed and any help, prior knowledge, retry, or workaround used.
+    validations:
+      required: true
+
+  - type: textarea
+    id: remove_or_improve
+    attributes:
+      label: What should be removed or improved?
+      description: Prefer concrete friction and deletions over new feature ideas.

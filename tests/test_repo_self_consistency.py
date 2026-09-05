@@ -207,7 +207,9 @@ def _composition_validator():
 
     import jsonschema
 
-    schema = json.loads((REPO_ROOT / "mica.yaml.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads(
+        (REPO_ROOT / "schemas" / "mica.yaml.schema.json").read_text(encoding="utf-8")
+    )
     return jsonschema.validators.validator_for(schema)(schema)
 
 
